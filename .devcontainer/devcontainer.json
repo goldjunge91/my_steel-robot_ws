@@ -18,16 +18,28 @@
 		// uncomment to use intel iGPU
 		// "--device=/dev/dri"
 	],
-	"mounts": [
-		"source=${localEnv:HOME}/.ssh,target=/home/ros/.ssh,type=bind,consistency=cached",
-		"source=${localEnv:HOME}/.gitconfig,target=/home/ros/.gitconfig,type=bind,consistency=cached"
-	],
+	// "mounts": [
+	// 	"source=${localEnv:HOME}/.ssh,target=/home/ros/.ssh,type=bind,consistency=cached",
+	// 	"source=${localEnv:HOME}/.gitconfig,target=/home/ros/.gitconfig,type=bind,consistency=cached"
+	// ],
 	"containerEnv": {
 		"DISPLAY": "${localEnv:DISPLAY}", // Needed for GUI try ":0" for windows
 		"WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
 		"XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}",
 		"PULSE_SERVER": "${localEnv:PULSE_SERVER}",
-		"LIBGL_ALWAYS_SOFTWARE": "1" // Commented out for native WSL2 hardware rendering
+		"LIBGL_ALWAYS_SOFTWARE": "1", // Commented out for native WSL2 hardware rendering
+		// Forward SSH agent socket if present on host
+		"SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}",
+		// Forward git identity from host if set
+		"GIT_AUTHOR_NAME": "${localEnv:GIT_AUTHOR_NAME:-Goldjunge91}",
+		"GIT_AUTHOR_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL:-30201929+goldjunge91@users.noreply.github.com}",
+		"GIT_COMMITTER_NAME": "${localEnv:GIT_COMMITTER_NAME:-Goldjunge91}",
+		"GIT_COMMITTER_EMAIL": "${localEnv:GIT_COMMITTER_EMAIL:-30201929+goldjunge91@users.noreply.github.com}",
+		// "GIT_AUTHOR_NAME": "${localEnv:GIT_AUTHOR_NAME}",
+		// "GIT_AUTHOR_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL}",
+		// "GIT_COMMITTER_NAME": "${localEnv:GIT_COMMITTER_NAME}",
+		// "GIT_COMMITTER_EMAIL": "${localEnv:GIT_COMMITTER_EMAIL}",
+		"DOPPLER_TOKEN": "${localEnv:DOPPLER_TOKEN}"
 	},
 	// Set *default* container specific settings.json values on container create.
 	"customizations": {
