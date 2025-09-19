@@ -18,17 +18,9 @@ repositories:
     type: git
     url: git@github.com:goldjunge91/robot.git
     version: humble
-  ros_arduino_raspberry_bridge:
-    type: git
-    url: git@github.com:goldjunge91/ros_arduino_raspberry_bridge.git
-    version: main
   drive_arduino:
     type: git
     url: git@github.com:goldjunge91/drive_arduino.git
-    version: main
-  pi_pico_testing:
-    type: git
-    url: git@github.com:goldjunge91/pi_pico_testing.git
     version: main
   serial:
     type: git
