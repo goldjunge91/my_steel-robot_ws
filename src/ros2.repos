@@ -17,4 +17,4 @@ repositories:
   robot:
     type: git
     url: https://github.com/goldjunge91/robot.git
-    version: 001-title-omnidirectional-ros2
+    version: humble
