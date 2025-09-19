@@ -18,6 +18,10 @@
 		// uncomment to use intel iGPU
 		// "--device=/dev/dri"
 	],
+	"mounts": [
+		"source=${localEnv:HOME}/.ssh,target=/home/ros/.ssh,type=bind,consistency=cached",
+		"source=${localEnv:HOME}/.gitconfig,target=/home/ros/.gitconfig,type=bind,consistency=cached"
+	],
 	"containerEnv": {
 		"DISPLAY": "${localEnv:DISPLAY}", // Needed for GUI try ":0" for windows
 		"WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
