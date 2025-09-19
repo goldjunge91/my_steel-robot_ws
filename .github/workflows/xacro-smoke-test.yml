@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout Workspace
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build and Run Checks
         shell: bash
