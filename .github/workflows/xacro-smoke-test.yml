@@ -20,6 +20,7 @@ jobs:
         run: |
           set -e # Bricht bei Fehlern sofort ab
           
+          ./setup.sh
           # --- 1. ROS-Umgebung & Abhängigkeiten ---
           source /opt/ros/humble/setup.bash
           sudo apt-get update > /dev/null
@@ -52,4 +53,5 @@ jobs:
           else
             echo "❌ ERROR: GazeboSystem not found in robot_sim.urdf"
             exit 1
+
           fi
