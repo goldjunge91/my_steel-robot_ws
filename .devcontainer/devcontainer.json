@@ -59,7 +59,11 @@
 				"twxs.cmake",
 				"yzhang.markdown-all-in-one",
 				"zachflower.uncrustify",
-				"zodiac-robotics.ros2-click-rviz2"
+				"zodiac-robotics.ros2-click-rviz2",
+				"doppler.doppler-vscode",
+				"VisualStudioExptTeam.vscodeintellicode",
+				"VisualStudioExptTeam.vscodeintellicode-completions",
+				"openai.chatgpt"
 			]
 		}
 	}
