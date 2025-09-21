@@ -1,6 +1,6 @@
 # # List of repositories to use within your workspace
 # # See https://github.com/dirk-thomas/vcstool
-# ############ 
+# ############
 # # Example:
 # ############
 # repositories:
@@ -10,17 +10,17 @@
 #     version: humble
 # # List of repositories to use within your workspace
 # # See https://github.com/dirk-thomas/vcstool
-# ############ 
+# ############
 # # Example:
 # ############
 repositories:
   robot:
     type: git
-    url: git@github.com:goldjunge91/robot.git
+    url: https://github.com/goldjunge91/robot.git
     version: humble
-  drive_arduino:
+  mecabridge_hardware:
     type: git
-    url: git@github.com:goldjunge91/drive_arduino.git
+    url: git@github.com:goldjunge91/mecabridge_hardware.git
     version: main
   serial:
     type: git

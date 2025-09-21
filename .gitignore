@@ -2,3 +2,28 @@ build/*
 install/*
 log/*
 site/*
+.pytest_cache
+src/husarion rosbot_ros jazzy rosbot_controller/CHANGELOG.rst
+src/husarion rosbot_ros jazzy rosbot_controller/package.xml
+src/husarion rosbot_ros jazzy rosbot_controller/setup.cfg
+src/husarion rosbot_ros jazzy rosbot_controller/setup.py
+src/husarion rosbot_ros jazzy rosbot_controller/config/rosbot/diff_drive_controller.yaml
+src/husarion rosbot_ros jazzy rosbot_controller/config/rosbot/mecanum_drive_controller.yaml
+src/husarion rosbot_ros jazzy rosbot_controller/config/rosbot_xl/diff_drive_controller.yaml
+src/husarion rosbot_ros jazzy rosbot_controller/config/rosbot_xl/diff_drive_manipulator_controller.yaml
+src/husarion rosbot_ros jazzy rosbot_controller/config/rosbot_xl/mecanum_drive_controller.yaml
+src/husarion rosbot_ros jazzy rosbot_controller/config/rosbot_xl/mecanum_drive_manipulator_controller.yaml
+src/husarion rosbot_ros jazzy rosbot_controller/launch/controller.launch.py
+src/husarion rosbot_ros jazzy rosbot_controller/launch/manipulator.launch.py
+src/husarion rosbot_ros jazzy rosbot_controller/resource/rosbot_controller
+src/husarion rosbot_ros jazzy rosbot_controller/test/test_pep257.py
+src/husarion rosbot_ros jazzy rosbot_controller/test/test_xacro.py
+src/husarion rosbot_ros jazzy rosbot_joy/CHANGELOG.rst
+src/husarion rosbot_ros jazzy rosbot_joy/CMakeLists.txt
+src/husarion rosbot_ros jazzy rosbot_joy/package.xml
+src/husarion rosbot_ros jazzy rosbot_joy/config/joy.yaml
+src/husarion rosbot_ros jazzy rosbot_joy/launch/joy.launch.py
+specs/001-feature-hal-mit/contracts/tests/__pycache__/test_enable_service.cpython-310-pytest-6.2.5.pyc
+/__pycache__/
+*/__pycache__/
+/__pycache__/*

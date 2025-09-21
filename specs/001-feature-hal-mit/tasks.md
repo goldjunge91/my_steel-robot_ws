@@ -7,29 +7,29 @@ Notes:
 - [P] indicates tasks that can be executed in parallel where dependencies allow.
 - Files referenced are repo-relative paths under the feature directory or `src/` when creating code.
 
-T001 - ✅ COMPLETED: Setup: Workspace bootstrap and dependencies
+T001 - Setup: Workspace bootstrap and dependencies
  - Description: Ensure ROS 2 Humble environment and required packages are available for development and CI.
  - Actions:
-   1. ✅ Document required system deps (ros2_control, ros2_controllers, gz_ros2_control) in feature README.
-   2. ✅ Confirm dev container or developer machine can run Gazebo and ROS 2 Humble.
+   1. Document required system deps (ros2_control, ros2_controllers, gz_ros2_control) in feature README.
+   2. Confirm dev container or developer machine can run Gazebo and ROS 2 Humble.
  - Path: /workspaces/my_steel-robot_ws/.github (update docs)
  - Depends on: none
 
-T002 - ✅ COMPLETED: Setup: Create `src/mecabridge_hardware` ament_cmake package (scaffold)
+T002 - Setup: Create `src/mecabridge_hardware` ament_cmake package (scaffold)
  - Description: Add package skeleton with `package.xml`, `CMakeLists.txt`, basic folder layout and a placeholder `mecabridge_node`.
  - Actions:
-   1. ✅ Create `src/mecabridge_hardware/package.xml` listing dependencies: rclcpp, hardware_interface, controller_manager, pluginlib, ros2_control, std_srvs.
-   2. ✅ Create `src/mecabridge_hardware/CMakeLists.txt` with a target for `mecabridge_node` and the hardware interface library.
-   3. ✅ Add `src/mecabridge_hardware/src/mecabridge_node.cpp` that reads parameter `mecabridge_hardware.mode` and logs initial state.
+   1. Create `src/mecabridge_hardware/package.xml` listing dependencies: rclcpp, hardware_interface, controller_manager, pluginlib, ros2_control, std_srvs.
+   2. Create `src/mecabridge_hardware/CMakeLists.txt` with a target for `mecabridge_node` and the hardware interface library.
+   3. Add `src/mecabridge_hardware/src/mecabridge_node.cpp` that reads parameter `mecabridge_hardware.mode` and logs initial state.
  - Path: /workspaces/my_steel-robot_ws/src/mecabridge_hardware
  - Depends on: T001
 
-T003 [P] - 🔄 IN PROGRESS: Test: Contract test - SwitchMode service
+T003 [P] - Test: Contract test - SwitchMode service
  - Description: Add a failing contract test asserting `/mecabridge/switch_mode` exists with request `mode:string` and response `(success:bool, reason:string)`.
  - Actions:
-   1. ✅ Create custom SwitchMode.srv service definition
-   2. ✅ Update package.xml and CMakeLists.txt for message generation
-   3. 🔄 Create comprehensive contract test for service schema and availability
+   1. Create custom SwitchMode.srv service definition
+   2. Update package.xml and CMakeLists.txt for message generation
+   3. Create comprehensive contract test for service schema and availability
  - File: /workspaces/my_steel-robot_ws/specs/001-feature-hal-mit/contracts/tests/test_switch_mode.py
  - Runner: pytest (initial failing test)
  - Depends on: T002
