@@ -1,88 +1,89 @@
-# Feature Specification: HAL mit Robot Simulation (Gazebo)
+# Feature Specification: HAL with Robot Simulation (Gazebo)
 
 **Feature Branch**: `001-feature-hal-mit`  
 **Created**: 2025-09-21  
 **Status**: Draft  
-**Input**: User description: "Feature HAL mit Robot simulaton entwickeln wir werden unseren robot umgebung, mit dem hardware layer "mecabridge_hardware" verbinden dabei aber nicht die möglichkeit verlieren auf dem remote pc gazebo zu starten und manuell so zu steuern. 
+**Input**: User description: "Develop the HAL with robot simulation feature: connect our robot environment with the `mecabridge_hardware` layer without losing the ability to start Gazebo on the remote PC and drive the robot manually."  
 
-Update: "update the spec.md and add the HAL folder "src/mecabridge_hardware" and the robot that in "src/robot", specify this feature is for gazebo and all around running simulated robot with the full implementation of ros2-control mecanum driver control" 
+Update: "Update `spec.md` and add the HAL folder `src/mecabridge_hardware` and the robot under `src/robot`. Clarify that this feature targets Gazebo and the end-to-end simulated robot with a full implementation of the ros2-control mecanum drive controller."
 
-# Projektbeschreibung: Omnidirektionaler ROS2-Roboter
+# Project Description: Omnidirectional ROS2 Robot
 
-## 1. Vision & Zielsetzung
-Ziel dieses Projekts ist die Entwicklung einer kostengünstigen, modularen und leistungsfähigen mobilen Roboterplattform, die auf dem **Robot Operating System 2 (ROS2)** basiert. Die Plattform dient als Alternative zu kommerziellen Systemen wie dem TurtleBot und kombiniert fortschrittliche Navigationsfähigkeiten mit einer interaktiven, durch Computer Vision gesteuerten Funktion: einem Nerf-Dart-Launcher, der Gesichter erkennen und anvisieren kann.
+## 1. Vision & Objectives
+The goal of this project is to create an affordable, modular, and capable mobile robot platform built on **Robot Operating System 2 (ROS2)**. The platform is positioned as an alternative to commercial systems such as TurtleBot and combines advanced navigation with an interactive computer-vision-driven feature: a Nerf dart launcher that can detect and aim at faces.
 
-Das Projekt verbindet anspruchsvolle Robotik-Konzepte wie **autonome Navigation (SLAM)** und Sensorfusion mit unterhaltsamen, interaktiven Elementen.
+The project brings together advanced robotics concepts such as **autonomous navigation (SLAM)** and sensor fusion with engaging interactive elements.
 
-## 2. Kernfunktionen
+## 2. Core Capabilities
 
-* **Omnidirektionale Mobilität:** Dank des Mecanum-Radantriebs kann sich der Roboter frei in alle Richtungen bewegen (vorwärts/rückwärts, seitwärts, diagonal) und auf der Stelle drehen.
+* **Omnidirectional Mobility:** Thanks to the mecanum wheel drive, the robot can move freely in any direction (forward/backward, sideways, diagonal) and rotate on the spot.
 
-* **Autonome Navigation & Kartierung:** Mithilfe eines LiDAR-Sensors und eines 9-Achsen-IMU (Inertial Measurement Unit) ist der Roboter in der Lage, seine Umgebung zu kartieren (SLAM) und sich darin autonom zu lokalisieren und zu bewegen.
+* **Autonomous Navigation & Mapping:** With a LiDAR sensor and a 9-axis IMU, the robot can build maps of its environment (SLAM) and localise itself for autonomous motion.
 
-* **Hinderniserkennung:** Ein VL53L0X Time-of-Flight-Sensor liefert zusätzliche Distanzdaten zur Erkennung von nahen Objekten und zur Unterstützung der Navigation.
+* **Obstacle Detection:** A VL53L0X time-of-flight sensor provides close-range distance measurements to detect obstacles and support navigation.
 
-* **Intelligenter Nerf-Launcher:** Eine integrierte USB-Kamera ermöglicht die Implementierung von Computer-Vision-Algorithmen. Das primäre Anwendungsziel ist die **Gesichtserkennung**, um den Nerf-Launcher automatisch auf erkannte Personen auszurichten und auf Befehl abzufeuern.
+* **Intelligent Nerf Launcher:** An integrated USB camera enables computer-vision algorithms. The primary application is **face detection**, allowing the Nerf launcher to automatically aim at detected people and fire on command.
 
-* **Fernsteuerung & Telemetrie:** Der Roboter kann manuell über einen Xbox-Controller gesteuert werden. Ein Web-Dashboard visualisiert wichtige Telemetriedaten wie Batteriestatus und Sensordaten in Echtzeit.
+* **Remote Control & Telemetry:** The robot can be driven manually with an Xbox controller. A web dashboard visualises critical telemetry such as battery state and sensor streams in real time.
 
-## 3. Systemarchitektur
+## 3. System Architecture
 
-Die Architektur ist in zwei Steuerungsebenen unterteilt, um eine effiziente Aufgabenverteilung zu gewährleisten:
+The architecture is split into two control layers to distribute responsibilities efficiently:
 
-1. **High-Level-Steuerung (Raspberry Pi 4B):**
+1. **High-Level Control (Raspberry Pi 4B):**
 
-   * **Gehirn des Roboters:** Führt das ROS2-Framework aus.
+   * **Robot brain:** Executes the ROS2 framework.
 
-   * **Aufgaben:** Verarbeitet Daten von LiDAR, Kamera und Abstandssensoren, führt SLAM-Algorithmen aus, plant Pfade, hostet das Web-Dashboard und führt die Gesichtserkennungs-Software aus.
+   * **Responsibilities:** Processes LiDAR, camera, and distance sensor data; runs SLAM algorithms; plans paths; hosts the web dashboard; performs face detection.
 
-   * **Kommunikation:** Sendet hochrangige Bewegungsbefehle (z.B. "fahre nach links mit 0,5 m/s") an die Low-Level-Steuerung.
+   * **Communication:** Sends high-level motion commands (for example, "drive left at 0.5 m/s") to the low-level controller.
 
-2. **Low-Level-Steuerung (Raspberry Pi Pico):**
+2. **Low-Level Control (Raspberry Pi Pico):**
 
-   * **Echtzeit-Controller:** Verantwortlich für die direkte, präzise Ansteuerung der Hardware.
+   * **Real-time controller:** Responsible for precise hardware actuation.
 
-   * **Aufgaben:** Empfängt Befehle vom Pi 4B und übersetzt sie in exakte PWM-Signale für die vier DC-Motortreiber (TB6612FNG). Steuert die Servos und Brushless-Motoren des Nerf-Launchers.
+   * **Responsibilities:** Receives commands from the Pi 4B and converts them into PWM signals for the four DC motor drivers (TB6612FNG). Drives the servos and brushless motors for the Nerf launcher.
 
-   * **Vorteil:** Entlastet den Raspberry Pi 4B von Echtzeitaufgaben und sorgt für eine zuverlässige und jitterfreie Motorsteuerung.
+   * **Benefit:** Offloads real-time tasks from the Raspberry Pi 4B and guarantees reliable, low-jitter motor control.
 
-## 4. Technische Komponenten
+## 4. Technical Components
 
-| **Kategorie** | **Komponente** | **Zweck** |
-| **Chassis & Antrieb** | 4x DC-Getriebemotoren (GM3865-520) mit Hall-Encodern | Kraftvoller Antrieb und Feedback zur Raddrehung |
-|  | 4x 80mm Mecanum-Räder | Ermöglichen die omnidirektionale Bewegung |
-|  | 4x TB6612FNG Motortreiber | Ansteuerung der DC-Motoren |
-| **Steuerung & Sensorik** | Raspberry Pi 4B (8GB) | High-Level-Steuerung, ROS2, Computer Vision |
-|  | Raspberry Pi Pico | Low-Level-Steuerung (Motoren, Servos) |
-|  | Lidar LDS01RR | 360°-Umgebungsscans für SLAM |
-|  | ICM-20948 (9-DoF IMU) | Erfassung von Beschleunigung, Rotation und Ausrichtung (Sensorfusion) |
-|  | VL53L0X Time-of-Flight-Sensor | Präzise Abstandsmessung für Hinderniserkennung |
-|  | USB-Kamera (1080p) | Video-Streaming und Input für die Gesichtserkennung |
-| **Nerf-Launcher** | 2x RS2205 Brushless-Motoren & 2x 40A ESCs | Beschleunigung der Nerf-Darts |
-|  | 1x Digital-Servo (22kg) & 1x 9g Servo | Zielen des Launchers (Pan/Tilt) |
-| **Energieversorgung** | 3S Li-Ion Akku-Pack (18650 Zellen) | Mobile Stromversorgung |
-|  | 3S Batterieschutzplatine (BMS) | Schutz vor Überladung, Tiefentladung und Kurzschluss |
-|  | INA3221 Sensor | Überwachung von Spannung und Stromverbrauch |
-| **Bedienung & Interface** | Xbox Controller | Manuelle Fernsteuerung |
-|  | 10" / 5" Display | Lokale Anzeige von Statusinformationen oder Kamerabild |
-|  | TM1637 LED-Anzeige | Schnelle Anzeige von Statuscodes oder Werten |"
+| **Category**           | **Component**                                  | **Purpose**                                              |
+|------------------------|-------------------------------------------------|----------------------------------------------------------|
+| **Chassis & Drive**    | 4x DC gear motors (GM3865-520) with Hall encoders | Powerful drive with wheel rotation feedback              |
+|                        | 4x 80 mm mecanum wheels                         | Enable omnidirectional movement                          |
+|                        | 4x TB6612FNG motor drivers                      | Motor control                                            |
+| **Control & Sensing**  | Raspberry Pi 4B (8GB)                           | High-level control, ROS2, computer vision                |
+|                        | Raspberry Pi Pico                               | Low-level control (motors, servos)                       |
+|                        | LiDAR LDS01RR                                   | 360° environment scans for SLAM                          |
+|                        | ICM-20948 (9-DoF IMU)                           | Measures acceleration, rotation, and orientation         |
+|                        | VL53L0X time-of-flight sensor                   | Precise distance measurement for obstacle detection      |
+|                        | USB camera (1080p)                              | Video streaming and face detection input                 |
+| **Nerf Launcher**      | 2x RS2205 brushless motors & 2x 40A ESCs        | Accelerate the Nerf darts                                |
+|                        | 1x 22 kg digital servo & 1x 9 g servo           | Aim the launcher (pan/tilt)                              |
+| **Power**              | 3S Li-ion battery pack (18650 cells)            | Mobile power supply                                      |
+|                        | 3S battery management system                    | Protects against overcharge, deep discharge, shorting    |
+|                        | INA3221 sensor                                  | Monitors voltage and current draw                        |
+| **User Interaction**   | Xbox controller                                 | Manual remote control                                    |
+|                        | 10" / 5" display                                | Local status or camera feed                              |
+|                        | TM1637 LED display                              | Quick display of status codes or values                  |
 
 ---
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### Primary User Story
-Als Entwickler möchte ich die Roboterumgebung mit dem Hardware-Layer "mecabridge_hardware" verbinden, dabei aber nicht die Möglichkeit verlieren, Gazebo auf dem Remote-PC zu starten und den Roboter manuell zu steuern. Das Feature soll sich auf die Gazebo-Simulation konzentrieren und eine vollständige Implementierung des ros2-control Mecanum-Treibers für die omnidirektionale Steuerung bieten.
+As a developer, I want to connect the robot environment to the `mecabridge_hardware` layer while retaining the ability to launch Gazebo on the remote PC and drive the robot manually. The feature focuses on the Gazebo simulation and delivers a full implementation of the ros2-control mecanum drive controller for omnidirectional motion.
 
 ### Acceptance Scenarios
-1. **Given** der Roboter ist im Simulationsmodus, **When** ich Gazebo auf dem Remote-PC starte, **Then** kann ich den Roboter manuell steuern.
-2. **Given** der Roboter ist mit der Hardware verbunden, **When** ich in den Hardware-Modus wechsle, **Then** verwendet das System den mecabridge_hardware Layer für die Steuerung.
-3. **Given** die HAL-Integration ist aktiv, **When** ich zwischen Simulation und Hardware wechsle, **Then** bleibt die Funktionalität des Roboters erhalten.
+1. **Given** the robot runs in simulation mode, **when** I launch Gazebo on the remote PC, **then** I can manually drive the robot.
+2. **Given** the robot is connected to the hardware, **when** I switch to hardware mode, **then** the system uses the `mecabridge_hardware` layer for control.
+3. **Given** the HAL integration is active, **when** I switch between simulation and hardware, **then** the robot remains fully functional.
 
 ### Edge Cases
-- Was passiert, wenn die Hardware nicht verfügbar ist, aber der Hardware-Modus aktiviert wird?
-- Wie verhält sich das System beim Wechsel zwischen Modi während der Roboter in Bewegung ist?
-- Wie wird mit Fehlern im mecabridge_hardware Layer umgegangen?
+- What happens if the hardware is unavailable but hardware mode is selected?
+- How does the system behave while switching modes if the robot is already moving?
+- How does the system react to errors within the `mecabridge_hardware` layer?
 
 ## Requirements *(mandatory)*
 
@@ -98,13 +99,13 @@ Als Entwickler möchte ich die Roboterumgebung mit dem Hardware-Layer "mecabridg
 - **FR-009**: System MUST provide real-time telemetry visualization through a web dashboard.
 - **FR-010**: System MUST ensure safe operation with fail-safe mechanisms for actuator control.
 - **FR-011**: System MUST implement full ros2-control mecanum driver control for omnidirectional mobility in both simulation and hardware modes.
-- **FR-012**: System MUST provide comprehensive gazebo simulation environment for testing and development of the omnidirectional robot.
+- **FR-012**: System MUST provide comprehensive Gazebo simulation environment for testing and development of the omnidirectional robot.
 
 ### Key Entities *(include if feature involves data)*
-- **Robot**: Represents the omnidirectional ROS2 robot with Mecanum wheels, sensors, and Nerf-Launcher; has attributes for position, velocity, sensor data, and control modes.
-- **Hardware Layer**: Abstraction layer (mecabridge_hardware) that interfaces with physical hardware components like motors, sensors, and controllers; located in src/mecabridge_hardware.
-- **Robot Configuration**: Contains robot-specific configurations and models; located in src/robot.
-- **Simulation Environment**: Gazebo-based simulation that mirrors the physical robot for testing and development, supporting full ros2-control integration.
+- **Robot**: Represents the omnidirectional ROS2 robot with mecanum wheels, sensors, and Nerf launcher; includes attributes for position, velocity, sensor data, and control modes.
+- **Hardware Layer**: Abstraction layer (`mecabridge_hardware`) interfacing with physical components such as motors, sensors, and controllers; located in `src/mecabridge_hardware`.
+- **Robot Configuration**: Contains robot-specific configurations and models; located in `src/robot`.
+- **Simulation Environment**: Gazebo-based simulation mirroring the physical robot for testing and development, supporting full ros2-control integration.
 
 ---
 
