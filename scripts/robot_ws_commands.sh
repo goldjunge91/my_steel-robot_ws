@@ -20,9 +20,16 @@ ros_setup() {
   if [ -f /opt/ros/humble/setup.bash ]; then
     source /opt/ros/humble/setup.bash
   fi
+  if [ -f /usr/share/gazebo/setup.sh ]; then
+    source /usr/share/gazebo/setup.sh
+  fi
   # Workspace overlay
   if [ -f "$ROOT_DIR/install/setup.bash" ]; then
     source "$ROOT_DIR/install/setup.bash"
+  fi
+
+  if [ -d "$ROOT_DIR/install/robot/share/robot/worlds" ]; then
+    export GAZEBO_RESOURCE_PATH="$ROOT_DIR/install/robot/share/robot/worlds:${GAZEBO_RESOURCE_PATH:-}"
   fi
 
   # Preserve X11/Wayland display variables for GUI launches inside the container.
@@ -74,7 +81,16 @@ cmd_sim_headless() {
   pkill -f gzclient || true
   pkill -f gzserver || true
   sleep 0.2
-  ros2 launch robot launch_sim.launch.py use_sim_time:=true headless:=true
+  # forcefully clear lingering Gazebo processes so the next launch binds cleanly
+  if pgrep -f gzclient >/dev/null; then
+    pkill -9 -f gzclient || true
+    while pgrep -f gzclient >/dev/null; do sleep 0.1; done
+  fi
+  if pgrep -f gzserver >/dev/null; then
+    pkill -9 -f gzserver || true
+    while pgrep -f gzserver >/dev/null; do sleep 0.1; done
+  fi
+  ros2 launch robot launch_sim.launch.py use_sim_time:=true headless:=true use_gazebo_ros_launch:=false with_gazebo_gui:=false with_rviz:=false
 }
 
 cmd_sim_gui() {
@@ -86,7 +102,15 @@ cmd_sim_gui() {
   pkill -f gzclient || true
   pkill -f gzserver || true
   sleep 0.2
-  ros2 launch robot launch_sim.launch.py use_sim_time:=true headless:=false
+  if pgrep -f gzclient >/dev/null; then
+    pkill -9 -f gzclient || true
+    while pgrep -f gzclient >/dev/null; do sleep 0.1; done
+  fi
+  if pgrep -f gzserver >/dev/null; then
+    pkill -9 -f gzserver || true
+    while pgrep -f gzserver >/dev/null; do sleep 0.1; done
+  fi
+  ros2 launch robot launch_sim.launch.py use_sim_time:=true headless:=false use_gazebo_ros_launch:=false with_gazebo_gui:=true with_rviz:=true
 }
 
 cmd_description_only() {
