@@ -3,7 +3,8 @@
 	"dockerFile": "Dockerfile",
 	"build": {
 		"args": {
-			"WORKSPACE": "${containerWorkspaceFolder}"
+			"WORKSPACE": "${containerWorkspaceFolder}",
+			"TARGET": "${localEnv:TARGET:-remote_pc}"
 		}
 	},
 	"remoteUser": "ros",

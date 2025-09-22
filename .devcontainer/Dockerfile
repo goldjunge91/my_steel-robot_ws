@@ -7,25 +7,39 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Allow skipping Doppler install (useful for debugging/build isolation)
 ARG INSTALL_DOPPLER=true
 
+# Target platform argument
+ARG TARGET=remote_pc
+
 # Install essential ROS2 packages and useful tools
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \
-    ros-humble-gazebo-ros-pkgs \
     ros-humble-ros2-control \
     ros-humble-ros2-controllers \
-    ros-humble-gazebo-ros2-control \
     ros-humble-xacro \
-    ros-humble-joint-state-publisher-gui \
     ros-humble-urdf \
     ros-humble-urdf-launch \
     ros-humble-urdf-tutorial \
     ros-humble-twist-mux \
+    python3-colcon-common-extensions \
+    software-properties-common \
+    curl \
+    apt-transport-https \
+    ca-certificates \
+    gnupg
+
+# Install target-specific packages
+RUN if [ "$TARGET" = "remote_pc" ]; then \
+    echo "Installing remote PC packages..." && \
+    apt-get -y install --no-install-recommends \
+    ros-humble-gazebo-ros-pkgs \
+    ros-humble-gazebo-ros2-control \
+    ros-humble-joint-state-publisher-gui \
     ros-humble-rqt-image-view \
     ros-humble-rosbridge-suite \
     ros-humble-rqt \
     ros-humble-moveit \
     ros-humble-moveit-msgs \
-    ros-humble-moveit-ros-planning \ 
+    ros-humble-moveit-ros-planning \
     ros-humble-moveit-ros-planning-interface \
     ros-humble-moveit-servo \
     python3-colcon-common-extensions \
@@ -34,10 +48,23 @@ RUN apt-get update \
     curl \
     apt-transport-https \
     ca-certificates \
-    gnupg
-# && apt-get autoremove -y \
-# && apt-get clean -y \
-# && rm -rf /var/lib/apt/lists/*
+    gnupg \
+    joystick jstest-gtk evtest; \
+    elif [ "$TARGET" = "robot" ]; then \
+    echo "Installing robot (SBC) packages..." && \
+    apt-get -y install --no-install-recommends \
+    python3-venv \
+    python3-pip \
+    build-essential \
+    python3-libgpiod \
+    python3-pyudev \
+    i2c-tools \
+    ros-humble-micro-ros-msgs; \
+    fi
+&& apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
+
 
 # Install Doppler CLI (add key and repo, then install)
 RUN if [ "${INSTALL_DOPPLER}" = "true" ]; then \
