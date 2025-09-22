@@ -97,6 +97,44 @@ Quickstart (Dokumentations-Flow)
      ros2 launch robot_bringup bringup.launch.py robot_model:=my_steel drive_type:=mecanum microros:=false serial_port:=/dev/ttyACM0
    - Hinweis: `drive_type` kann `mecanum` oder `diff` sein. Bei `mecanum` verwenden wir bevorzugt den vorhandenen ros2_controllers mecanum_drive_controller.
 
+Raspberry Pi (SBC) setup checklist
+----------------------------------
+Use this checklist when preparing a Raspberry Pi as the SBC for the robot.
+
+- OS: Raspberry Pi OS (64-bit) based on Debian/Ubuntu 22.04 (or a Ubuntu 22.04 image for Pi 4/5). Make sure kernel is up-to-date.
+- Install ROS 2 Humble (or the ROS_DISTRO you selected). Follow the official ROS 2 installation for Debian/Ubuntu.
+- Install system packages: python3-venv, python3-pip, python3-colcon-common-extensions, git, build-essential, python3-libgpiod, python3-pyudev, rosdep.
+- Enable hardware interfaces if used: I2C (for IMU), SPI (if any), camera (v4l2) via raspi-config or config.txt overlays.
+- Add udev rules: copy `scripts/udev_rules/99-my_steel.rules` to `/etc/udev/rules.d/` and run `sudo udevadm control --reload-rules && sudo udevadm trigger`.
+- Optional: create `.env` in the workspace root (`.env.example` provided) and fill values such as ROS_DISTRO, ROBOT_MODEL_NAME, SERIAL_PORT, SERIAL_BAUDRATE.
+- (If using Pico firmware) Install Pico SDK as documented in `setup_pico_sdk.sh` or run that script on the Pi (requires git and build tools).
+- (If using micro-ROS) install micro-ROS agent (apt or pip) and create a systemd unit to run it or use the included launch file `robot_bringup/launch/microros_agent.launch.py`.
+- (Optional) Add a systemd service: see `scripts/systemd/robot_bringup.service` as a template to run the bringup on boot (update paths & user).
+
+Quick validation on the Pi after wiring and software install
+----------------------------------------------------------
+Run these to sanity-check the hardware and bringup before attempting to control the robot.
+
+1) Check serial devices and permissions
+   ls -l /dev/ttyACM* /dev/ttyUSB* /dev/ttyAMA* /dev/gpiochip*
+   udevadm info -a -n /dev/ttyUSB0
+
+2) Check I2C devices (if IMU on the Pico or connected directly)
+   sudo apt install -y i2c-tools
+   sudo i2cdetect -y 1
+
+3) Check ROS2 environment
+   source /opt/ros/$ROS_DISTRO/setup.bash
+   ros2 pkg list | grep robot_bringup || true
+
+4) Try loading the URDF (xacro) to ensure xacro is available and the manipulator serial arg is set correctly
+   source install/setup.bash
+   ros2 launch robot_description load_urdf.launch.py robot_model:=robot_xl components_config:=$(pwd)/src/robot_description/config/robot_xl/basic.yaml
+
+5) If using micro-ROS over serial, test connecting the agent manually and check port
+   ros2 run micro_ros_agent micro_ros_agent serial --dev $SERIAL_PORT -b $SERIAL_BAUDRATE
+
+
 Key config knobs (In README dokumentieren)
 - ROBOT_MODEL_NAME: my_steel | robot_xl
 - DRIVE_TYPE: mecanum | diff
