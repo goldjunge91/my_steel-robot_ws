@@ -58,7 +58,7 @@ cmd_build_core() {
   echo "[BUILD] Building core packages: robot, robot_description, robot_controller"
   colcon build \
     --packages-select robot robot_description robot_controller \
-    --merge-install --symlink-install \
+    --symlink-install \
     --event-handlers console_direct+
 }
 
