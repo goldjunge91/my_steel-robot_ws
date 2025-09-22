@@ -75,7 +75,7 @@ B. robot (key files)
 
 C. Other items discovered
 - Many `robot/launch/*.py` files have style issues causing `flake8`/`pep257`/copyright tests to fail.
-- The workspace ros2_husarion_controller (husarion/rosbot-related) was previously excluded or missing and caused a "package not found" error. You re-added `ros2_husarion_controller` which should resolve that launch dependency if the package is present/installed.
+- The workspace ros2_husarion_controller (husarion/robot-related) was previously excluded or missing and caused a "package not found" error. You re-added `ros2_husarion_controller` which should resolve that launch dependency if the package is present/installed.
 
 ## Ultrathink: step‑by‑step plan (prioritized)
 I give two tracks: a quick developer path to verify the integration (fast, minimal changes), and a full/CI path (clean, proper fixes for linters). Choose one or let me proceed with a chosen path.
