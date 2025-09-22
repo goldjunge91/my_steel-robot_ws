@@ -1,6 +1,9 @@
 build/*
 install/*
 log/*
+build
+log
+install
 site/*
 .pytest_cache
 /__pycache__/
