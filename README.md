@@ -57,6 +57,35 @@ Designprinzipien
 - `just run-teleop` - startet `teleop_twist_keyboard` mit Remap auf `/mecanum_cont/cmd_vel_unstamped`
 - `just shell` - öffnet eine Shell mit eingeblendeter ROS/Workspace-Umgebung
 - `just clean` - entfernt `build/`, `install/` und `log/`
+## Environment Configuration
+
+Before building or deploying, configure your target platform in the `.env` file:
+
+```bash
+# Copy from .env.example
+cp .env.example .env
+
+# Edit .env to set your target
+# TARGET=robot      # For Raspberry Pi SBC deployment
+# TARGET=remote_pc  # For development PC with simulation (default)
+```
+
+### Target Platforms
+
+- **`TARGET=robot`**: Configures for Raspberry Pi SBC deployment
+  - Installs: ROS2 core, hardware interfaces, micro-ROS agent, Pico SDK, GPIO libraries
+  - Use for: Robot hardware deployment, SBC setup
+
+- **`TARGET=remote_pc`**: Configures for development workstation
+  - Installs: ROS2 core, Gazebo simulation, MoveIt, RQT tools, joystick support
+  - Use for: Development, simulation, remote operation
+
+### Quick Setup
+
+1. Set your target in `.env`
+2. Run setup: `just setup-dev` or `./setup.sh`
+3. Build: `just build`
+4. Check configuration: `just check-target`
 
 
 /mecabridge_hardware -> my_steel-hardware
@@ -89,6 +118,7 @@ Quickstart (Dokumentations-Flow)
 
 4) Firmware (falls benötigt)
    - Firmware liegt idealerweise in einem separaten Repo `robot_firmware` (oder als Submodule).
+   - Folge der detaillierten Anleitung unter `src/robot_firmware/install.md` (SDK-Setup, Build, Flash, micro-ROS Agent).
    - Flash-Skript (in robot_utils) benutzen:
      ./scripts/flash_firmware.sh --device /dev/ttyUSB0 --board robot_pico
 

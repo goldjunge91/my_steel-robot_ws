@@ -9,3 +9,7 @@ site/*
 /__pycache__/
 /__pycache__/*
 .docs/ROS2_Humble_docs/
+.env
+/.env
+/.env.*
+.env

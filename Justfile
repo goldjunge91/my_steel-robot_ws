@@ -42,3 +42,17 @@ run-teleop:
 # Open a shell with ROS and workspace overlays sourced
 shell:
     {{ros_setup}} && exec bash
+
+# Check current target configuration
+check-target:
+    @if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi && \
+    echo "Current TARGET: $TARGET" && \
+    if [ "$TARGET" = "robot" ]; then \
+        echo "Configured for robot (SBC) deployment"; \
+        echo "Packages: ROS2 core, hardware interfaces, micro-ROS, Pico SDK"; \
+    elif [ "$TARGET" = "remote_pc" ]; then \
+        echo "Configured for remote PC development"; \
+        echo "Packages: ROS2 core, Gazebo, MoveIt, RQT, simulation tools"; \
+    else \
+        echo "TARGET not set. Please set TARGET=robot or TARGET=remote_pc in .env"; \
+    fi
