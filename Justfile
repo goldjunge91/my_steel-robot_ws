@@ -12,7 +12,8 @@ setup-dev:
 
 # Build the entire workspace with merge-install layout
 build:
-    {{ros_setup}} && colcon build --merge-install --symlink-install --event-handlers console_direct+
+    {{ros_setup}} && colcon build --symlink-install --event-handlers console_direct+
+    # {{ros_setup}} && colcon build --merge-install --symlink-install --event-handlers console_direct+
 
 # Build only hardware + robot packages and their dependencies
 build-hardware:

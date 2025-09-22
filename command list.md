@@ -60,7 +60,7 @@ B. robot (key files)
 
 - mecabridge_gazebo.launch.py
   - Purpose: Launch Gazebo (classic), robot_state_publisher, spawn robot, include the controllers launch.
-  - Status: Correctly sets `robot_description` by running xacro, starts `robot_state_publisher` and includes `gazebo_ros` launch and `mecabridge_hardware` controllers launch. We tested it and got an error earlier because `rosbot_controller` package was missing — you re-added `ros2_husarion_controller`, which addressed that missing package source.
+  - Status: Correctly sets `robot_description` by running xacro, starts `robot_state_publisher` and includes `gazebo_ros` launch and `mecabridge_hardware` controllers launch. We tested it and got an error earlier because `robot_controller` package was missing — you re-added `ros2_husarion_controller`, which addressed that missing package source.
   - Observed minor style/lint warnings (pep257/flake8) from mecabridge_gazebo.launch.py docstring and trailing whitespace; these triggered test failures in the CI-lint pipeline.
 
 - CMakeLists.txt and package.xml (robot)
@@ -190,7 +190,7 @@ V. Edge cases & failure modes
 ## Current todo & next step I will take (per your previous instruction)
 - Current Todo: "Create Integration Test - Manual Drive in Gazebo" is in-progress (I marked it in-progress earlier).
 - Next step I can take (pick one; tell me which or I will proceed with #1):
-  1. Run the live Gazebo launch and attempt to spawn and move the robot (manual dev iteration). I already tested controller-only launch earlier and it waited for robot_description — the full launch failed earlier due to `rosbot_controller` missing but you re-added `ros2_husarion_controller`. I can re-run that full launch now and report logs.
+  1. Run the live Gazebo launch and attempt to spawn and move the robot (manual dev iteration). I already tested controller-only launch earlier and it waited for robot_description — the full launch failed earlier due to `robot_controller` missing but you re-added `ros2_husarion_controller`. I can re-run that full launch now and report logs.
   2. Modify CMakeLists.txt temporarily to disable lint tests so `colcon test` runs only the integration test and let me iterate on any functional failures of the integration test.
   3. Start fixing the top flake8/pep257/pep issues in `robot/launch` (I can do a small batch: remove trailing whitespace and add required blank lines and docstring fixes to the smallest set of files that now fail).
 
