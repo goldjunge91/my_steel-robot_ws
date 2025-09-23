@@ -60,8 +60,8 @@ RUN if [ "$TARGET" = "remote_pc" ]; then \
     python3-pyudev \
     i2c-tools \
     ros-humble-micro-ros-msgs; \
-    fi
-&& apt-get autoremove -y \
+    fi \
+    && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 

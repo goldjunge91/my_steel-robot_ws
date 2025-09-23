@@ -13,3 +13,5 @@ site/*
 /.env
 /.env.*
 .env
+uros_ws
+*.log

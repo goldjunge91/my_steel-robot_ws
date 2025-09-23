@@ -91,9 +91,6 @@ cp .env.example .env
 /mecabridge_hardware -> my_steel-hardware
 (ros2_control hardware interface)
 
-goldjunge91/my_steel-robot_ws -> my_steel-workspace (oder behalte my_steel-robot_ws)
-(aktuelles Metapaket / root workspace, enthält ros2.repos, launch wrappers → bleibt Root-Workspace repo)
-
 goldjunge91/robot -> wenn darin generischer Code/launch/URDF ist → splitten:
 
 Teile mit URDF/XACRO → my_steel-description
@@ -166,22 +163,21 @@ Run these to sanity-check the hardware and bringup before attempting to control 
 
 
 Key config knobs (In README dokumentieren)
-- ROBOT_MODEL_NAME: my_steel | robot_xl
+- ROBOT_MODEL_NAME: robot_xl
 - DRIVE_TYPE: mecanum | diff
 - MICROROS: true | false
+- TODO: fill
 - SERIAL_PORT / SERIAL_BAUDRATE (oder UDP Port für micro-ROS Agent)
+- TODO: unkown
 - CONTROLLER_CONFIG: path zu robot_controllers/{robot_model}/{mecanum|diff}_drive_controller.yaml
 
 Wichtige Dateien / Orte
 - docs/PINMAP.md — single source of truth für Board‑Pinouts (firmware authoritative)
+- TODO: check if true
 - robot_controllers/config/{mecanum,diff}_drive_controller.yaml
 - robot_bringup/launch/bringup.launch.py
 - robot_hardware/src/... — ros2_control SystemInterface (oder bridge)
 - .github/workflows/firmware-ci.yml — Firmware CI
-
-Was in dieser Doku bewusst weggelassen wurde
-- Keine Code‑Änderungen — nur Dokumentation.
-- Firmware‑Details sind in `robot_firmware/README.md` zu halten (einheitlich mit PINMAP.md).
 
 Tipps / Empfehlungen
 - Halte joint‑Namen in URDF, controller YAMLs und hardware interface identisch.
