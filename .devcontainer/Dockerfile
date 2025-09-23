@@ -20,6 +20,18 @@ RUN apt-get update \
     ros-humble-urdf-launch \
     ros-humble-urdf-tutorial \
     ros-humble-twist-mux \
+    ros-humble-gazebo-ros-pkgs \
+    ros-humble-gazebo-ros2-control \
+    ros-humble-joint-state-publisher-gui \
+    ros-humble-rqt-image-view \
+    ros-humble-rosbridge-suite \
+    ros-humble-rqt \
+    ros-humble-moveit \
+    ros-humble-moveit-msgs \
+    ros-humble-moveit-ros-planning \
+    ros-humble-moveit-ros-planning-interface \
+    ros-humble-moveit-servo \
+    ros-humble-micro-ros-msgs; \
     python3-colcon-common-extensions \
     software-properties-common \
     curl \
@@ -42,6 +54,7 @@ RUN if [ "$TARGET" = "remote_pc" ]; then \
     ros-humble-moveit-ros-planning \
     ros-humble-moveit-ros-planning-interface \
     ros-humble-moveit-servo \
+    ros-humble-micro-ros-msgs; \
     python3-colcon-common-extensions \
     joystick jstest-gtk evtest \
     software-properties-common \
@@ -78,6 +91,10 @@ RUN if [ "${INSTALL_DOPPLER}" = "true" ]; then \
     else \
     echo "Skipping Doppler install (INSTALL_DOPPLER=${INSTALL_DOPPLER})"; \
     fi
+RUN if [ "${INSTALL_DOPPLER}" = "true" ]; then \
+    apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
 
 # Set up auto-source of workspace for ros user
