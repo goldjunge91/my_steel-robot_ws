@@ -1,8 +1,12 @@
 # my_steel-robot_ws
 
+## Projekt
+
+das projekt ist detaliertt in der Datei [projekt.md](projekt.md)
 Workspace für my_steel Roboter Mecanum / Nerf Launcher robot.
 
 Ziel
+
 - Dokumentiere die Workspace-Struktur, Quickstart-Schritte und die wichtigsten Konfigurationsdateien.
 - Fokus: Verwendung von ros2_control + dem vorhandenen mecanum_drive_controller (ros2_controllers).
 - Modularer Aufbau, damit dieselbe Hardware‑Basis auch als Differential‑Antrieb betrieben werden kann.
@@ -15,11 +19,7 @@ my_steel-robot_ws/
 ├── .github/
 │   └── workflows/
 │       └── firmware-ci.yml   # Firmware CI pipeline
-├── robot_firmware/        # Firmware (Raspberry Pi Pico) - separater Repo empfohlen
-│   ├── src/
-│   ├── include/
-│   ├── platformio.ini oder Makefile
-│   └── README.md
+├── 
 ├── docs/
 │   ├── PINMAP.md
 │   ├── wiring_schematic.pdf
@@ -36,17 +36,24 @@ my_steel-robot_ws/
 │   ├── robot_power/         # INA3221 monitor node
 │   ├── robot_utils/         # flash scripts, serial discovery, helper scripts
 │   └── robot_autonomy/      # Nav2 config, docker-compose / foxglove UI, just recipes
+├── robot_firmware/        # Firmware (Raspberry Pi Pico) - separater Repo empfohlen
+│   ├── src/
+│   │   ├── include/
+│   │   ├── platformio.ini oder Makefile
+│   │   └── README.md
 └── .env.example               # für docker/just oder .env Optionen
 ```
 
 
 Designprinzipien
+
 - Firmware ist eigene repo: robot_firmware → eigene CI (PlatformIO)
 - Hardwareinterface (Host) ist C++ SystemInterface (ros2_control)
 - Controller YAMLs referenzieren exakt die joint names aus URDF
 - Bringup lädt den robot_description & ros2_control params aus package_share
 
 ## CLI-Automatisierung (Just)
+
 - `just` - zeigt alle verfügbaren Rezepte
 - `just setup-dev` - führt das Devcontainer-Setup-Skript aus
 - `just build` - baut alle Pakete mit merge-install Layout
@@ -57,6 +64,7 @@ Designprinzipien
 - `just run-teleop` - startet `teleop_twist_keyboard` mit Remap auf `/mecanum_cont/cmd_vel_unstamped`
 - `just shell` - öffnet eine Shell mit eingeblendeter ROS/Workspace-Umgebung
 - `just clean` - entfernt `build/`, `install/` und `log/`
+
 ## Environment Configuration
 
 Before building or deploying, configure your target platform in the `.env` file:
@@ -80,13 +88,6 @@ cp .env.example .env
   - Installs: ROS2 core, Gazebo simulation, MoveIt, RQT tools, joystick support
   - Use for: Development, simulation, remote operation
 
-### Quick Setup
-
-1. Set your target in `.env`
-2. Run setup: `just setup-dev` or `./setup.sh`
-3. Build: `just build`
-4. Check configuration: `just check-target`
-
 
 /mecabridge_hardware -> my_steel-hardware
 (ros2_control hardware interface)
@@ -98,6 +99,7 @@ Teile mit bringup → my_steel-bringup
 sonst: falls generischer „robot“ nur eine alte Struktur ist, archivieren oder migrieren
 
 Quickstart (Dokumentations-Flow)
+
 1) Dependencies
    - Ubuntu 22.04 (oder passende ROS 2 Distro)
    - ROS 2 (Humble / Rolling / Version passend zu deinen Paketen)
@@ -126,6 +128,7 @@ Quickstart (Dokumentations-Flow)
 
 Raspberry Pi (SBC) setup checklist
 ----------------------------------
+
 Use this checklist when preparing a Raspberry Pi as the SBC for the robot.
 
 - OS: Raspberry Pi OS (64-bit) based on Debian/Ubuntu 22.04 (or a Ubuntu 22.04 image for Pi 4/5). Make sure kernel is up-to-date.
@@ -140,6 +143,7 @@ Use this checklist when preparing a Raspberry Pi as the SBC for the robot.
 
 Quick validation on the Pi after wiring and software install
 ----------------------------------------------------------
+
 Run these to sanity-check the hardware and bringup before attempting to control the robot.
 
 1) Check serial devices and permissions
@@ -163,6 +167,7 @@ Run these to sanity-check the hardware and bringup before attempting to control 
 
 
 Key config knobs (In README dokumentieren)
+
 - ROBOT_MODEL_NAME: robot_xl
 - DRIVE_TYPE: mecanum | diff
 - MICROROS: true | false
@@ -172,6 +177,7 @@ Key config knobs (In README dokumentieren)
 - CONTROLLER_CONFIG: path zu robot_controllers/{robot_model}/{mecanum|diff}_drive_controller.yaml
 
 Wichtige Dateien / Orte
+
 - docs/PINMAP.md — single source of truth für Board‑Pinouts (firmware authoritative)
 - TODO: check if true
 - robot_controllers/config/{mecanum,diff}_drive_controller.yaml
@@ -180,10 +186,12 @@ Wichtige Dateien / Orte
 - .github/workflows/firmware-ci.yml — Firmware CI
 
 Tipps / Empfehlungen
+
 - Halte joint‑Namen in URDF, controller YAMLs und hardware interface identisch.
 - Starte in Simulation (robot_gazebo) bevor du echte Hardware anschließt.
 - Nutze den vorhandenen mecanum_drive_controller (ros2_controllers) für mecanum; für diffdrive kannst du diff_drive_controller oder JointGroupVelocityController + cmdvel_to_wheels verwenden.
 
 Kontakt / Maintainer
+
 - Owner: @goldjunge91
 - Repo: goldjunge91/my_steel-robot_ws
