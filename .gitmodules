@@ -1,0 +1,60 @@
+[submodule "src/robot"]
+	path = src/robot
+	url = https://github.com/goldjunge91/robot.git
+	branch = humble
+[submodule "src/mecabridge_hardware"]
+	path = src/mecabridge_hardware
+	url = git@github.com:goldjunge91/mecabridge_hardware.git
+	branch = main
+[submodule "src/serial"]
+	path = src/serial
+	url = https://github.com/joshnewans/serial
+	branch = newans_ros2
+[submodule "src/open_manipulator_x"]
+	path = src/open_manipulator_x
+	url = git@github.com:goldjunge91/open_manipulator_x.git
+	branch = main
+[submodule "src/robot_autonomy"]
+	path = src/robot_autonomy
+	url = git@github.com:goldjunge91/robot_autonomy.git
+	branch = main
+[submodule "src/robot_bringup"]
+	path = src/robot_bringup
+	url = git@github.com:goldjunge91/robot_bringup.git
+	branch = main
+[submodule "src/robot_controller"]
+	path = src/robot_controller
+	url = git@github.com:goldjunge91/robot_controller.git
+	branch = main
+[submodule "src/robot_description"]
+	path = src/robot_description
+	url = git@github.com:goldjunge91/robot_description.git
+	branch = main
+[submodule "src/robot_firmware"]
+	path = src/robot_firmware
+	url = git@github.com:goldjunge91/robot_firmware.git
+	branch = main
+[submodule "src/robot_gazebo"]
+	path = src/robot_gazebo
+	url = git@github.com:goldjunge91/robot_gazebo.git
+	branch = main
+[submodule "src/robot_hardware"]
+	path = src/robot_hardware
+	url = git@github.com:goldjunge91/robot_hardware.git
+	branch = main
+[submodule "src/robot_localization"]
+	path = src/robot_localization
+	url = git@github.com:goldjunge91/robot_localization.git
+	branch = main
+[submodule "src/robot_nerf_launcher"]
+	path = src/robot_nerf_launcher
+	url = git@github.com:goldjunge91/robot_nerf_launcher.git
+	branch = main
+[submodule "src/robot_utils"]
+	path = src/robot_utils
+	url = git@github.com:goldjunge91/robot_utils.git
+	branch = main
+[submodule "src/robot_vision"]
+	path = src/robot_vision
+	url = git@github.com:goldjunge91/robot_vision.git
+	branch = main
