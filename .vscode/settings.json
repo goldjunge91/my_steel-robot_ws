@@ -391,4 +391,5 @@
     "git.repositoryScanMaxDepth": 3,
     "github.copilot.chat.codeGeneration.useInstructionFiles": true,
     "ros.distro": "humble",
+    "C_Cpp.errorSquiggles": "enabled",
 }
