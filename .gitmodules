@@ -61,3 +61,11 @@
 [submodule "lib/FreeRTOS-Kernel"]
 	path = lib/FreeRTOS-Kernel
 	url = https://github.com/FreeRTOS/FreeRTOS-Kernel
+[submodule "lib/micro_ros_raspberrypi_pico_sdk"]
+	path = lib/micro_ros_raspberrypi_pico_sdk
+	url = https://github.com/micro-ROS/micro_ros_raspberrypi_pico_sdk
+	branch = humble
+[submodule "lib/pico-distance-sensor"]
+	path = lib/pico-distance-sensor
+	url = https://github.com/dangarbri/pico-distance-sensor
+	branch = main

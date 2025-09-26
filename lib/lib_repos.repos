@@ -1,0 +1,14 @@
+repositories:
+  micro_ros_raspberrypi_pico_sdk:
+    type: git
+    url: https://github.com/micro-ROS/micro_ros_raspberrypi_pico_sdk
+    version: humble
+  FreeRTOS-Kernel:
+    type: git
+    url: https://github.com/FreeRTOS/FreeRTOS-Kernel
+  eigen:
+    type: git
+    url: https://gitlab.com/libeigen/eigen
+  pico-distance-sensor:
+    type: git
+    url: https://github.com/dangarbri/pico-distance-sensor
