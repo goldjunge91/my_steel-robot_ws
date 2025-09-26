@@ -90,6 +90,7 @@ RUN if [ "$TARGET" = "remote_pc" ]; then \
     apt-transport-https \
     ca-certificates \
     gnupg ; \
+    echo "Warning: TARGET not set or unrecognized. Installing minimal ROS dependencies."
     elif [ "$TARGET" = "robot" ]; then \
     echo "Installing robot (SBC) packages..." && \
     apt-get -y install --no-install-recommends \
