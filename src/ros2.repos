@@ -1,6 +1,6 @@
 # # List of repositories to use within your workspace
 # # See https://github.com/dirk-thomas/vcstool
-# ############ 
+# ############
 # # Example:
 # ############
 # repositories:
@@ -10,19 +10,67 @@
 #     version: humble
 # # List of repositories to use within your workspace
 # # See https://github.com/dirk-thomas/vcstool
-# ############ 
+# ############
 # # Example:
 # ############
 repositories:
   robot:
     type: git
-    url: git@github.com:goldjunge91/robot.git
+    url: https://github.com/goldjunge91/robot.git
     version: humble
-  drive_arduino:
+  mecabridge_hardware:
     type: git
-    url: git@github.com:goldjunge91/drive_arduino.git
+    url: git@github.com:goldjunge91/mecabridge_hardware.git
     version: main
   serial:
     type: git
     url: https://github.com/joshnewans/serial
     version: newans_ros2
+  open_manipulator_x:
+    type: git
+    url: git@github.com:goldjunge91/open_manipulator_x.git
+    version: main
+  robot_autonomy:
+    type: git
+    url: git@github.com:goldjunge91/robot_autonomy.git
+    version: main
+  robot_bringup:
+    type: git
+    url: git@github.com:goldjunge91/robot_bringup.git
+    version: main
+  robot_controller:
+    type: git
+    url: git@github.com:goldjunge91/robot_controller.git
+    version: main
+  robot_description:
+    type: git
+    url: git@github.com:goldjunge91/robot_description.git
+    version: main
+  robot_firmware:
+    type: git
+    url: git@github.com:goldjunge91/robot_firmware.git
+    version: main
+  robot_gazebo:
+    type: git
+    url: git@github.com:goldjunge91/robot_gazebo.git
+    version: main
+  robot_hardware:
+    type: git
+    url: git@github.com:goldjunge91/robot_hardware.git
+    version: main
+  robot_localization:
+    type: git
+    url: git@github.com:goldjunge91/robot_localization.git
+    version: main
+  robot_nerf_launcher:
+    type: git
+    url: git@github.com:goldjunge91/robot_nerf_launcher.git
+    version: main
+  robot_utils:
+    type: git
+    url: git@github.com:goldjunge91/robot_utils.git
+    version: main
+  robot_vision:
+    type: git
+    url: git@github.com:goldjunge91/robot_vision.git
+    version: main

@@ -1,168 +1,197 @@
-# VSCode ROS2 Workspace Template
+# my_steel-robot_ws
 
-This template will get you set up using ROS2 with VSCode as your IDE.
+## Projekt
 
-See [how I develop with vscode and ros2](https://www.allisonthackston.com/articles/vscode_docker_ros2.html) for a more in-depth look on how to use this workspace.
+das projekt ist detaliertt in der Datei [projekt.md](projekt.md)
+Workspace für my_steel Roboter Mecanum / Nerf Launcher robot.
 
-## Features
+Ziel
 
-### Style
+- Dokumentiere die Workspace-Struktur, Quickstart-Schritte und die wichtigsten Konfigurationsdateien.
+- Fokus: Verwendung von ros2_control + dem vorhandenen mecanum_drive_controller (ros2_controllers).
+- Modularer Aufbau, damit dieselbe Hardware‑Basis auch als Differential‑Antrieb betrieben werden kann.
 
-ROS2-approved formatters are included in the IDE.  
-
-* **c++** uncrustify; config from `ament_uncrustify`
-* **python** autopep8; vscode settings consistent with the [style guide](https://docs.ros.org/en/humble/The-ROS2-Project/Contributing/Code-Style-Language-Versions.html)
-
-### Tasks
-
-There are many pre-defined tasks, see [`.vscode/tasks.json`](.vscode/tasks.json) for a complete listing.  Feel free to adjust them to suit your needs.  
-
-Take a look at [how I develop using tasks](https://www.allisonthackston.com/articles/vscode_tasks.html) for an idea on how I use tasks in my development.
-
-### Debugging
-
-This template sets up debugging for python files, gdb for cpp programs and ROS launch files.  See [`.vscode/launch.json`](.vscode/launch.json) for configuration details.
-
-### Continuous Integration
-
-The template also comes with basic continuous integration set up. See [`.github/workflows/ros.yaml`](/.github/workflows/ros.yaml).
-
-To remove a linter just delete it's name from this line:
-
-```yaml
-      matrix:
-          linter: [cppcheck, cpplint, uncrustify, lint_cmake, xmllint, flake8, pep257]
+```markdown
+Workspace-Struktur
+my_steel-robot_ws/
+├── README.md
+├── ros2.repos                # für `vcs import src < ros2.repos`
+├── .github/
+│   └── workflows/
+│       └── firmware-ci.yml   # Firmware CI pipeline
+├── 
+├── docs/
+│   ├── PINMAP.md
+│   ├── wiring_schematic.pdf
+│   └── deployment.md
+├── src/                      # (vcs import wird hierhin klonen)
+│   ├── robot_description/   # URDF/xacro, meshes, components_config
+│   ├── robot_bringup/       # launches: bringup.launch.py, microros.launch.py
+│   ├── robot_gazebo/        # Gazebo / Webots assets
+│   ├── robot_controllers/   # controller YAMLs (mecanum/diff), ggf. plugins
+│   ├── robot_hardware/      # ros2_control SystemInterface (hardware_interface) oder bridge node
+│   ├── robot_localization/  # ekf, sensor fusion config
+│   ├── robot_vision/        # face detection, tracking
+│   ├── robot_nerf_launcher/ # high-level nerf control, safety
+│   ├── robot_power/         # INA3221 monitor node
+│   ├── robot_utils/         # flash scripts, serial discovery, helper scripts
+│   └── robot_autonomy/      # Nav2 config, docker-compose / foxglove UI, just recipes
+├── robot_firmware/        # Firmware (Raspberry Pi Pico) - separater Repo empfohlen
+│   ├── src/
+│   │   ├── include/
+│   │   ├── platformio.ini oder Makefile
+│   │   └── README.md
+└── .env.example               # für docker/just oder .env Optionen
 ```
 
-## How to use this template
 
-### Prerequisites
+Designprinzipien
 
-You should already have Docker and VSCode with the remote containers plugin installed on your system.
+- Firmware ist eigene repo: robot_firmware → eigene CI (PlatformIO)
+- Hardwareinterface (Host) ist C++ SystemInterface (ros2_control)
+- Controller YAMLs referenzieren exakt die joint names aus URDF
+- Bringup lädt den robot_description & ros2_control params aus package_share
 
-* [docker](https://docs.docker.com/engine/install/)
-* [vscode](https://code.visualstudio.com/)
-* [vscode remote containers plugin](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+## CLI-Automatisierung (Just)
 
-### Get the template
+- `just` - zeigt alle verfügbaren Rezepte
+- `just setup-dev` - führt das Devcontainer-Setup-Skript aus
+- `just build` - baut alle Pakete mit merge-install Layout
+- `just build-hardware` - baut nur robot_hardware + robot samt Abhängigkeiten
+- `just run-tests` - startet `colcon test` für Hardware und Robotik-Pakete
+- `just start-gazebo-sim` - startet die Gazebo-Simulation mit mecanum Controllern
+- `just start-sim-tmux` - nutzt `start_sim_tmux.sh` für eine tmux-basierte Sim-Session
+- `just run-teleop` - startet `teleop_twist_keyboard` mit Remap auf `/mecanum_cont/cmd_vel_unstamped`
+- `just shell` - öffnet eine Shell mit eingeblendeter ROS/Workspace-Umgebung
+- `just clean` - entfernt `build/`, `install/` und `log/`
 
-Click on "use this template"
+## Environment Configuration
 
-![template_use](https://user-images.githubusercontent.com/6098197/91331899-43f23b80-e780-11ea-92c8-b4665ce126f1.png)
-
-### Create your repository
-
-On the next dialog, name the repository you would like to start and decide if you want all of the branches, or just the latest LTS: humble.
-
-![template_new](https://user-images.githubusercontent.com/6098197/91332035-713ee980-e780-11ea-81d3-13b170f568b0.png)
-
-Github will then create a new repository with the contents of this one in your account.  It grabs the latest changes as "initial commit".
-
-### Clone your repo
-
-Now you can clone your repo as normal
-
-![template_download](https://user-images.githubusercontent.com/6098197/91332342-e4e0f680-e780-11ea-9525-49b0afa0e4bb.png)
-
-### Open it in vscode
-
-Now that you've cloned your repo onto your computer, you can open it in VSCode (File->Open Folder). 
-
-When you open it for the first time, you should see a little popup that asks you if you would like to open it in a container.  Say yes!
-
-![template_vscode](https://user-images.githubusercontent.com/6098197/91332551-36898100-e781-11ea-9080-729964373719.png)
-
-If you don't see the pop-up, click on the little green square in the bottom left corner, which should bring up the container dialog
-
-![template_vscode_bottom](https://user-images.githubusercontent.com/6098197/91332638-5d47b780-e781-11ea-9fb6-4d134dbfc464.png)
-
-In the dialog, select "Remote Containers: Reopen in container"
-
-VSCode will build the dockerfile inside of `.devcontainer` for you.  If you open a terminal inside VSCode (Terminal->New Terminal), you should see that your username has been changed to `ros`, and the bottom left green corner should say "Dev Container"
-
-![template_container](https://user-images.githubusercontent.com/6098197/91332895-adbf1500-e781-11ea-8afc-7a22a5340d4a.png)
-
-### Update the template with your code
-
-1. Specify the repositories you want to include in your workspace in `src/ros2.repos` or delete `src/ros2.repos` and develop directly within the workspace.
-2. If you are using a `ros2.repos` file, import the contents `Terminal->Run Task..->import from workspace file`
-3. Install dependencies `Terminal->Run Task..->install dependencies`
-4. (optional) Adjust scripts to your liking.  These scripts are used both within tasks and CI.
-   * `setup.sh` The setup commands for your code.  Default to import workspace and install dependencies.
-   * `build.sh` The build commands for your code.  Default to `--merge-install` and `--symlink-install`
-   * `test.sh` The test commands for your code.
-5. Develop!
-
-
-## FAQ
-
-### WSL2
-
-#### The gui doesn't show up
-
-This is likely because the DISPLAY environment variable is not getting set properly.
-
-1. Find out what your DISPLAY variable should be
-
-      In your WSL2 Ubuntu instance
-
-      ```
-      echo $DISPLAY
-      ```
-
-2. Copy that value into the `.devcontainer/devcontainer.json` file
-
-      ```jsonc
-      	"containerEnv": {
-		      "DISPLAY": ":0",
-         }
-      ```
-
-#### I want to use vGPU
-
-If you want to access the vGPU through WSL2, you'll need to add additional components to the `.devcontainer/devcontainer.json` file in accordance to [these directions](https://github.com/microsoft/wslg/blob/main/samples/container/Containers.md)
-
-```jsonc
-	"runArgs": [
-		"--network=host",
-		"--cap-add=SYS_PTRACE",
-		"--security-opt=seccomp:unconfined",
-		"--security-opt=apparmor:unconfined",
-		"--volume=/tmp/.X11-unix:/tmp/.X11-unix",
-		"--volume=/mnt/wslg:/mnt/wslg",
-		"--volume=/usr/lib/wsl:/usr/lib/wsl",
-		"--device=/dev/dxg",
-      		"--gpus=all"
-	],
-	"containerEnv": {
-		"DISPLAY": "${localEnv:DISPLAY}", // Needed for GUI try ":0" for windows
-		"WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
-		"XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}",
-		"PULSE_SERVER": "${localEnv:PULSE_SERVER}",
-		"LD_LIBRARY_PATH": "/usr/lib/wsl/lib",
-		"LIBGL_ALWAYS_SOFTWARE": "1" // Needed for software rendering of opengl
-	},
-```
-
-### Repos are not showing up in VS Code source control
-
-This is likely because vscode doesn't necessarily know about other repositories unless you've added them directly. 
-
-```
-File->Add Folder To Workspace
-```
-
-![Screenshot-26](https://github.com/athackst/vscode_ros2_workspace/assets/6098197/d8711320-2c16-463b-9d67-5bd9314acc7f)
-
-
-Or you've added them as a git submodule.
-
-![Screenshot-27](https://github.com/athackst/vscode_ros2_workspace/assets/6098197/8ebc9aac-9d70-4b53-aa52-9b5b108dc935)
-
-To add all of the repos in your *.repos file, run the script
+Before building or deploying, configure your target platform in the `.env` file:
 
 ```bash
-python3 .devcontainer/repos_to_submodules.py
+# Copy from .env.example
+cp .env.example .env
+
+# Edit .env to set your target
+# TARGET=robot      # For Raspberry Pi SBC deployment
+# TARGET=remote_pc  # For development PC with simulation (default)
 ```
 
-or run the task titled `add submodules from .repos`
+### Target Platforms
+
+- **`TARGET=robot`**: Configures for Raspberry Pi SBC deployment
+  - Installs: ROS2 core, hardware interfaces, micro-ROS agent, Pico SDK, GPIO libraries
+  - Use for: Robot hardware deployment, SBC setup
+
+- **`TARGET=remote_pc`**: Configures for development workstation
+  - Installs: ROS2 core, Gazebo simulation, MoveIt, RQT tools, joystick support
+  - Use for: Development, simulation, remote operation
+
+
+/mecabridge_hardware -> my_steel-hardware
+(ros2_control hardware interface)
+
+goldjunge91/robot -> wenn darin generischer Code/launch/URDF ist → splitten:
+
+Teile mit URDF/XACRO → my_steel-description
+Teile mit bringup → my_steel-bringup
+sonst: falls generischer „robot“ nur eine alte Struktur ist, archivieren oder migrieren
+
+Quickstart (Dokumentations-Flow)
+
+1) Dependencies
+   - Ubuntu 22.04 (oder passende ROS 2 Distro)
+   - ROS 2 (Humble / Rolling / Version passend zu deinen Paketen)
+   - PlatformIO (oder Pico toolchain) für Pico‑Firmware
+   - Python3, colcon, rosdep
+
+2) Workspace importieren
+   - Lege `ros2.repos` im Root an und importiere:
+     vcs import src < ros2.repos
+
+3) Build
+   source /opt/ros/$ROS_DISTRO/setup.bash
+   colcon build --symlink-install
+   source install/setup.bash
+
+4) Firmware (falls benötigt)
+   - Firmware liegt idealerweise in einem separaten Repo `robot_firmware` (oder als Submodule).
+   - Folge der detaillierten Anleitung unter `src/robot_firmware/install.md` (SDK-Setup, Build, Flash, micro-ROS Agent).
+   - Flash-Skript (in robot_utils) benutzen:
+     ./scripts/flash_firmware.sh --device /dev/ttyUSB0 --board robot_pico
+
+5) Bringup (SBC)
+   - Beispiel:
+     ros2 launch robot_bringup bringup.launch.py robot_model:=my_steel drive_type:=mecanum microros:=false serial_port:=/dev/ttyACM0
+   - Hinweis: `drive_type` kann `mecanum` oder `diff` sein. Bei `mecanum` verwenden wir bevorzugt den vorhandenen ros2_controllers mecanum_drive_controller.
+
+Raspberry Pi (SBC) setup checklist
+----------------------------------
+
+Use this checklist when preparing a Raspberry Pi as the SBC for the robot.
+
+- OS: Raspberry Pi OS (64-bit) based on Debian/Ubuntu 22.04 (or a Ubuntu 22.04 image for Pi 4/5). Make sure kernel is up-to-date.
+- Install ROS 2 Humble (or the ROS_DISTRO you selected). Follow the official ROS 2 installation for Debian/Ubuntu.
+- Install system packages: python3-venv, python3-pip, python3-colcon-common-extensions, git, build-essential, python3-libgpiod, python3-pyudev, rosdep.
+- Enable hardware interfaces if used: I2C (for IMU), SPI (if any), camera (v4l2) via raspi-config or config.txt overlays.
+- Add udev rules: copy `scripts/udev_rules/99-my_steel.rules` to `/etc/udev/rules.d/` and run `sudo udevadm control --reload-rules && sudo udevadm trigger`.
+- Optional: create `.env` in the workspace root (`.env.example` provided) and fill values such as ROS_DISTRO, ROBOT_MODEL_NAME, SERIAL_PORT, SERIAL_BAUDRATE.
+- (If using Pico firmware) Install Pico SDK as documented in `setup_pico_sdk.sh` or run that script on the Pi (requires git and build tools).
+- (If using micro-ROS) install micro-ROS agent (apt or pip) and create a systemd unit to run it or use the included launch file `robot_bringup/launch/microros_agent.launch.py`.
+- (Optional) Add a systemd service: see `scripts/systemd/robot_bringup.service` as a template to run the bringup on boot (update paths & user).
+
+Quick validation on the Pi after wiring and software install
+----------------------------------------------------------
+
+Run these to sanity-check the hardware and bringup before attempting to control the robot.
+
+1) Check serial devices and permissions
+   ls -l /dev/ttyACM* /dev/ttyUSB* /dev/ttyAMA* /dev/gpiochip*
+   udevadm info -a -n /dev/ttyUSB0
+
+2) Check I2C devices (if IMU on the Pico or connected directly)
+   sudo apt install -y i2c-tools
+   sudo i2cdetect -y 1
+
+3) Check ROS2 environment
+   source /opt/ros/$ROS_DISTRO/setup.bash
+   ros2 pkg list | grep robot_bringup || true
+
+4) Try loading the URDF (xacro) to ensure xacro is available and the manipulator serial arg is set correctly
+   source install/setup.bash
+   ros2 launch robot_description load_urdf.launch.py robot_model:=robot_xl components_config:=$(pwd)/src/robot_description/config/robot_xl/basic.yaml
+
+5) If using micro-ROS over serial, test connecting the agent manually and check port
+   ros2 run micro_ros_agent micro_ros_agent serial --dev $SERIAL_PORT -b $SERIAL_BAUDRATE
+
+
+Key config knobs (In README dokumentieren)
+
+- ROBOT_MODEL_NAME: robot_xl
+- DRIVE_TYPE: mecanum | diff
+- MICROROS: true | false
+- TODO: fill
+- SERIAL_PORT / SERIAL_BAUDRATE (oder UDP Port für micro-ROS Agent)
+- TODO: unkown
+- CONTROLLER_CONFIG: path zu robot_controllers/{robot_model}/{mecanum|diff}_drive_controller.yaml
+
+Wichtige Dateien / Orte
+
+- docs/PINMAP.md — single source of truth für Board‑Pinouts (firmware authoritative)
+- TODO: check if true
+- robot_controllers/config/{mecanum,diff}_drive_controller.yaml
+- robot_bringup/launch/bringup.launch.py
+- robot_hardware/src/... — ros2_control SystemInterface (oder bridge)
+- .github/workflows/firmware-ci.yml — Firmware CI
+
+Tipps / Empfehlungen
+
+- Halte joint‑Namen in URDF, controller YAMLs und hardware interface identisch.
+- Starte in Simulation (robot_gazebo) bevor du echte Hardware anschließt.
+- Nutze den vorhandenen mecanum_drive_controller (ros2_controllers) für mecanum; für diffdrive kannst du diff_drive_controller oder JointGroupVelocityController + cmdvel_to_wheels verwenden.
+
+Kontakt / Maintainer
+
+- Owner: @goldjunge91
+- Repo: goldjunge91/my_steel-robot_ws

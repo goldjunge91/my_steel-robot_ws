@@ -1,4 +1,17 @@
 build/*
 install/*
 log/*
+build
+log
+install
 site/*
+.pytest_cache
+/__pycache__/
+/__pycache__/*
+.docs/ROS2_Humble_docs/
+.env
+/.env
+/.env.*
+.env
+uros_ws
+*.log
