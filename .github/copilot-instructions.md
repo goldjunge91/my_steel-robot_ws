@@ -63,8 +63,6 @@ cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLO
 ## Code Style
 C++17 for ROS2 nodes, Python 3.8+ for tooling and scripts: Follow standard conventions
 
-## Recent Changes
-- 001-feature-hal-mit: Added C++17 for ROS2 nodes, Python 3.8+ for tooling and scripts + ROS2 Humble, ros2-control, gz_ros2_control, mecanum_drive_controller, gazebo
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

@@ -26,7 +26,7 @@
     "C_Cpp.formatting": "disabled",
     "uncrustify.configPath.linux": "/opt/ros/humble/lib/python3.10/site-packages/ament_uncrustify/configuration/ament_code_style.cfg",
     "[cpp]": {
-        "editor.defaultFormatter": "zachflower.uncrustify"
+        "editor.defaultFormatter": "Ranch-Hand-Robotics.rde-ros-2"
     },
     "search.exclude": {
         "**/node_modules": true,
@@ -385,11 +385,12 @@
         ".devcontainer/devcontainer.json"
     ],
     "ament-task-provider.envSetup": "source /opt/ros/humble/setup.bash",
-    "cmake.sourceDirectory": "C:/GIT/my_steel-robot_ws/src/robot",
+    "cmake.sourceDirectory": "/home/marco/ros2_steel_ws/my_steel-robot_ws/firmware",
     "doppler.autocomplete.enable": true,
     "doppler.hover.enable": true,
     "git.repositoryScanMaxDepth": 3,
     "github.copilot.chat.codeGeneration.useInstructionFiles": true,
     "ros.distro": "humble",
     "C_Cpp.errorSquiggles": "enabled",
+    "kiroAgent.configureMCP": "Enabled",
 }

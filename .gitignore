@@ -15,3 +15,13 @@ site/*
 .env
 uros_ws
 *.log
+build_release
+*.db
+*.sqlite3
+build
+build_release
+build_debug
+debug
+release
+debug/*
+release/*
