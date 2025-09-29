@@ -8,7 +8,7 @@ import argparse
 from datetime import datetime
 from typing import List, Optional
 
-prefix="src"
+prefix="lib"
 
 
 def setup_logging(verbose: bool = False, log_file: Optional[str] = None):
