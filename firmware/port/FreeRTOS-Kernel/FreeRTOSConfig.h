@@ -47,6 +47,9 @@
 #define configUSE_TICKLESS_IDLE                 0
 #define configUSE_IDLE_HOOK                     0
 #define configUSE_TICK_HOOK                     0
+#ifndef configUSE_PASSIVE_IDLE_HOOK
+#define configUSE_PASSIVE_IDLE_HOOK             0
+#endif
 #define configTICK_RATE_HZ                      ( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES                    32
 #define configMINIMAL_STACK_SIZE                ( configSTACK_DEPTH_TYPE ) 256
@@ -115,8 +118,14 @@
 /* RP2040 specific */
 #define configSUPPORT_PICO_SYNC_INTEROP         1
 #define configSUPPORT_PICO_TIME_INTEROP         1
-#ifndef FREE_RTOS_KERNEL_SMP
-#define configUSE_CORE_AFFINITY                 0
+#if defined(FREE_RTOS_KERNEL_SMP) || !defined(configUSE_CORE_AFFINITY)
+/*
+ * Ensure configUSE_CORE_AFFINITY is defined. For RP2040 SMP-related test
+ * builds we require core affinity support, so set to 1. If the SMP port
+ * defines FREE_RTOS_KERNEL_SMP it will keep 1; otherwise default to 1 for
+ * test/board builds that enable SMP features (matching Pico SDK expectations).
+ */
+#define configUSE_CORE_AFFINITY 1
 #endif
 
 #include <assert.h>
