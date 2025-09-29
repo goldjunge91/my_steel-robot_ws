@@ -58,14 +58,20 @@
 	path = src/robot_vision
 	url = git@github.com:goldjunge91/robot_vision.git
 	branch = main
-[submodule "lib/FreeRTOS-Kernel"]
-	path = lib/FreeRTOS-Kernel
-	url = https://github.com/FreeRTOS/FreeRTOS-Kernel
 [submodule "lib/micro_ros_raspberrypi_pico_sdk"]
-	path = lib/micro_ros_raspberrypi_pico_sdk
-	url = https://github.com/micro-ROS/micro_ros_raspberrypi_pico_sdk
-	branch = humble
+        path = lib/micro_ros_raspberrypi_pico_sdk
+        url = https://github.com/micro-ROS/micro_ros_raspberrypi_pico_sdk
+        branch = humble
+[submodule "lib/FreeRTOS-Kernel"]
+        path = lib/FreeRTOS-Kernel
+        url = https://github.com/FreeRTOS/FreeRTOS-Kernel
+[submodule "lib/eigen"]
+        path = lib/eigen
+        url = https://gitlab.com/libeigen/eigen
 [submodule "lib/pico-distance-sensor"]
-	path = lib/pico-distance-sensor
-	url = https://github.com/dangarbri/pico-distance-sensor
+        path = lib/pico-distance-sensor
+        url = https://github.com/dangarbri/pico-distance-sensor
+[submodule "lib/FreeRTOS"]
+	path = lib/FreeRTOS
+	url = https://github.com/FreeRTOS/FreeRTOS
 	branch = main
