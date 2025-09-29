@@ -239,7 +239,7 @@ void DDD::setupOdomMsg(){
 	xOdomMsg.pose.pose.orientation.x = 0.0;
 	xOdomMsg.pose.pose.orientation.y = 0.0;
 	xOdomMsg.pose.pose.orientation.z = 0.0;
-	xOdomMsg.pose.pose.orientation.w = 0.0;
+	xOdomMsg.pose.pose.orientation.w = 1.0;  // Fixed: should be 1.0 for identity quaternion
 
 	//TWIST
 	xOdomMsg.twist.twist.linear.x = 0.0;
@@ -248,6 +248,20 @@ void DDD::setupOdomMsg(){
 	xOdomMsg.twist.twist.angular.x = 0.0;
 	xOdomMsg.twist.twist.angular.y = 0.0;
 	xOdomMsg.twist.twist.angular.z = 0.0;
+
+	// Initialize covariance matrices to zero
+	for (int i = 0; i < 36; i++) {
+		xOdomMsg.pose.covariance[i] = 0.0;
+		xOdomMsg.twist.covariance[i] = 0.0;
+	}
+	
+	// Set diagonal elements to indicate uncertainty (optional)
+	xOdomMsg.pose.covariance[0] = 0.1;   // x position variance
+	xOdomMsg.pose.covariance[7] = 0.1;   // y position variance
+	xOdomMsg.pose.covariance[35] = 0.1;  // yaw variance
+	xOdomMsg.twist.covariance[0] = 0.1;  // x velocity variance
+	xOdomMsg.twist.covariance[7] = 0.1;  // y velocity variance
+	xOdomMsg.twist.covariance[35] = 0.1; // yaw velocity variance
 
 }
 

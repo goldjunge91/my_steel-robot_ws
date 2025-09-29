@@ -12,3 +12,11 @@ add_library(eigen INTERFACE)
 target_include_directories(eigen INTERFACE 
     ${EIGEN_PATH}
 )
+
+# Provide compatibility for projects expecting the imported target Eigen3::Eigen
+if(NOT TARGET Eigen3::Eigen)
+	add_library(Eigen3::Eigen INTERFACE IMPORTED)
+	set_target_properties(Eigen3::Eigen PROPERTIES
+		INTERFACE_INCLUDE_DIRECTORIES "${EIGEN_PATH}"
+	)
+endif()

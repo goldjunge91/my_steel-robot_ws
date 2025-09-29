@@ -10,7 +10,6 @@
 #ifndef FREERTOSTEST_SRC_UROSBRIDGE_H_
 #define FREERTOSTEST_SRC_UROSBRIDGE_H_
 
-
 #include "pico/stdlib.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -19,7 +18,8 @@
 #include "Agent.h"
 #include "uRosEntities.h"
 
-extern"C"{
+extern "C"
+{
 #include <rcl/rcl.h>
 #include <rcl/error_handling.h>
 #include <rclc/rclc.h>
@@ -37,18 +37,19 @@ extern"C"{
 #include "freertos_allocators.h"
 }
 
+#define PUB_Q_LEN 10
+#define UROS_MAX_PUB_MSGS 5
+#define UROS_MAX_PING_FAILURES 10
+#define UROS_MAX_PUB_FAILURES 3
 
-#define PUB_Q_LEN 			10
-#define UROS_MAX_PUB_MSGS	5
-
-class uRosBridge : public Agent {
+class uRosBridge : public Agent
+{
 public:
-
 	/***
 	 * Get the uRos Bridge object
 	 * @return
 	 */
-	static uRosBridge * getInstance();
+	static uRosBridge *getInstance();
 
 	/***
 	 * Set the Pad to use as a status LED
@@ -72,11 +73,9 @@ public:
 	 * @return True if publish is queued ok
 	 */
 	bool publish(rcl_publisher_t *publisher,
-			 void * msg,
-			 uRosEntities *entities,
-			 void *arg
-			 );
-
+				 void *msg,
+				 uRosEntities *entities,
+				 void *arg);
 
 	/***
 	 * Returns the ROS2 support pointer
@@ -85,9 +84,6 @@ public:
 	rclc_support_t *getSupport();
 
 private:
-
-
-
 	uRosBridge();
 	virtual ~uRosBridge();
 
@@ -104,8 +100,9 @@ private:
 
 	/***
 	 * Create the Entities (Publishers)
+	 * @return true if creation succeeded, false otherwise
 	 */
-	void createEntities();
+	bool createEntities();
 
 	/***
 	 * Destroy the entities
@@ -119,8 +116,7 @@ private:
 	 */
 	static void timerCallback(rcl_timer_t *timer, int64_t last_call_time);
 
-
-	static uRosBridge * pSingleton;
+	static uRosBridge *pSingleton;
 	rcl_publisher_t xPublisher;
 	std_msgs__msg__Int32 xMsg;
 	rcl_timer_t xTimer;
@@ -131,10 +127,13 @@ private:
 
 	uint8_t xLedPad = 0;
 
-	uRosEntities * pURosEntities = NULL;
+	uRosEntities *pURosEntities = NULL;
 
 	QueueHandle_t xPubQ = NULL;
 
+	uint8_t xPingFailures = 0;
+	uint8_t xPubFailures = 0;
+	volatile bool xSessionReady = false;
 
 protected:
 	/***
@@ -146,7 +145,6 @@ protected:
 	 * Run loop for the agent.
 	 */
 	virtual void run();
-
 
 	/***
 	 * Get the static depth required in words

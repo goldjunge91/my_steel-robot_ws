@@ -115,6 +115,9 @@
 /* RP2040 specific */
 #define configSUPPORT_PICO_SYNC_INTEROP         1
 #define configSUPPORT_PICO_TIME_INTEROP         1
+#ifndef FREE_RTOS_KERNEL_SMP
+#define configUSE_CORE_AFFINITY                 0
+#endif
 
 #include <assert.h>
 /* Define to trap errors during development. */

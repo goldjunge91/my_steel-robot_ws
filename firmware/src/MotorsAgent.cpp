@@ -205,17 +205,21 @@ void MotorsAgent::initJointState(){
 	sensor_msgs__msg__JointState__init(&xJointStateMsg);
 	char name[32];
 
-	//Possition
+	//Position
 	rosidl_runtime_c__double__Sequence__init(
 			&xJointStateMsg.position, NUM_MOTORS);
-	xJointStateMsg.position.data[0] = 0.0;
+	for (uint i = 0; i < NUM_MOTORS; i++) {
+		xJointStateMsg.position.data[i] = 0.0;
+	}
 	xJointStateMsg.position.size = NUM_MOTORS;
 	xJointStateMsg.position.capacity = NUM_MOTORS;
 
 	//Velocity
 	rosidl_runtime_c__double__Sequence__init(
 			&xJointStateMsg.velocity, NUM_MOTORS);
-	xJointStateMsg.velocity.data[0] = 0.0;
+	for (uint i = 0; i < NUM_MOTORS; i++) {
+		xJointStateMsg.velocity.data[i] = 0.0;
+	}
 	xJointStateMsg.velocity.size = NUM_MOTORS;
 	xJointStateMsg.velocity.capacity = NUM_MOTORS;
 

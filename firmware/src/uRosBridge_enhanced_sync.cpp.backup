@@ -1,0 +1,49 @@
+// Enhanced time sync with retry logic - alternative implementation
+// Replace the time sync section in createEntities() with this:
+
+// Sync Time with retry logic
+bool time_sync_success = false;
+const int max_sync_attempts = 3;
+const int sync_timeout_ms = 8000; // Increased timeout
+
+for (int attempt = 1; attempt <= max_sync_attempts && !time_sync_success; attempt++)
+{
+    uart_log("TIME SYNC attempt %d/%d (timeout=%dms)\r\n", attempt, max_sync_attempts, sync_timeout_ms);
+    
+    rmw_ret_t sync_ret = rmw_uros_sync_session(sync_timeout_ms);
+    
+    if (RMW_RET_OK == sync_ret)
+    {
+        uart_log("TIME SYNC successful on attempt %d\r\n", attempt);
+        time_sync_success = true;
+    }
+    else if (sync_ret == RMW_RET_TIMEOUT)
+    {
+        uart_log("TIME SYNC timeout on attempt %d (agent busy)\r\n", attempt);
+        if (attempt < max_sync_attempts)
+        {
+            vTaskDelay(pdMS_TO_TICKS(1000)); // Wait 1 second before retry
+        }
+    }
+    else if (sync_ret == RMW_RET_ERROR)
+    {
+        uart_log("TIME SYNC error on attempt %d (agent not ready)\r\n", attempt);
+        if (attempt < max_sync_attempts)
+        {
+            vTaskDelay(pdMS_TO_TICKS(2000)); // Wait 2 seconds before retry
+        }
+    }
+    else
+    {
+        uart_log("TIME SYNC failed on attempt %d (ret=%d)\r\n", attempt, sync_ret);
+        if (attempt < max_sync_attempts)
+        {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
+}
+
+if (!time_sync_success)
+{
+    uart_log("TIME SYNC failed after %d attempts – continuing without sync\r\n", max_sync_attempts);
+}
