@@ -1,21 +1,28 @@
 add_executable(${NAME}
-        main_step2.cpp
+        main.cpp
         
-        Agent.cpp
-        BlinkAgent.cpp
         GPIOInputMgr.cpp
         GPIOObserver.cpp
-
+        
         MotorMgr.cpp
         MotorPID.cpp
-
+        
         PubEntities.cpp
         MotorsAgent.cpp
         DDD.cpp
         HCSR04Agent.cpp
+        
+        # Application Layer
+        Agent.cpp
+        BlinkAgent.cpp
         application/ImuAgent.cpp
-        hal/hardware/Icm20948Simple.cpp
+        application/vl6180xAgent.cpp
 
+        # Hardware Abstraction Layer
+        hal/hardware/Icm20948Simple.cpp
+        hal/hardware/vl6180x/vl6180x_driver.cpp
+
+        # Micro-ROS
         uRosBridge.cpp
         uRosEntities.cpp
         pico_usb_transport.c
@@ -31,6 +38,7 @@ target_link_libraries(${NAME} PRIVATE
     pico_stdlib
     hardware_pwm
     hardware_i2c
+    hardware_spi
     FreeRTOS-Kernel-Heap4
     freertos_config
     micro_ros

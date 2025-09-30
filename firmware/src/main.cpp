@@ -1,3 +1,214 @@
+// /***
+//  * Control Turntable and Led Lights
+//  *
+//  * Uses FreeRTOS Task
+//  * Jon Durrant
+//  * 15-Aug-2022
+//  */
+
+// #include "BlinkAgent.h"
+// #include "DDD.h"
+// #include "FreeRTOS.h"
+// #include "HCSR04Agent.h"
+// #include "MotorsAgent.h"
+// #include "PubEntities.h"
+// #include "application/ImuAgent.h"
+// #include "application/vl6180xAgent.hpp"
+// #include "hardware/i2c.h"
+// #include "hardware/uart.h"
+// #include "pico/stdlib.h"
+// #include "task.h"
+// #include "uRosBridge.h"
+
+// #include <stdio.h>
+
+// extern "C" {
+// #include "pico/stdio.h"
+// #include "pico/stdio/driver.h"
+// #include "pico/stdio_uart.h"
+// }
+
+// #ifndef ENABLE_DEBUG_HEARTBEAT
+// #define ENABLE_DEBUG_HEARTBEAT 1
+// #endif
+
+// #ifndef DEBUG_HEARTBEAT_INTERVAL_MS
+// #define DEBUG_HEARTBEAT_INTERVAL_MS 5000
+// #endif
+
+// // Standard Task priority
+// #define TASK_PRIORITY (tskIDLE_PRIORITY + 1UL)
+
+// // LED PAD to use
+// #define BLINK_LED_PAD 2
+// #define CONN_LED_PAD 3
+
+// // Left Motor
+// #define LEFT_PWR_CW 9
+// #define LEFT_PWR_CCW 8
+// #define LEFT_ROTENC_A 14
+// #define LEFT_ROTENV_B 15
+
+// // Right Motor
+// #define RIGHT_PWR_CW 6
+// #define RIGHT_PWR_CCW 7
+// #define RIGHT_ROTENC_A 12
+// #define RIGHT_ROTENV_B 13
+
+// // PID
+// #define KP 0.55
+// #define KI 0.019
+// #define KD 0.24
+
+// // IMU (SPI) Pins
+// #define IMU_SPI_PORT spi0
+// #define IMU_CS_PIN 17
+// #define IMU_SCK_PIN 18
+// #define IMU_MOSI_PIN 19
+// #define IMU_MISO_PIN 16
+
+// // VL6180X (I2C) Pins
+// #define VL6180X_I2C_PORT i2c1
+// #define VL6180X_SDA_PIN 2
+// #define VL6180X_SCL_PIN 3
+
+// char ROBOT_NAME[] = "ddd";
+
+// static void init_stdio_ports() {
+//     // Initialise all configured stdio drivers (USB + UART if enabled in CMake).
+//     stdio_init_all();
+//     // Force stdio UART onto GP0/GP1 so legacy serial monitors keep working.
+//     stdio_uart_init_full(uart0, 115200, 0, 1);
+// }
+
+// #if ENABLE_DEBUG_HEARTBEAT
+// static void debugHeartbeatTask(void *params) {
+//     (void)params;
+//     const TickType_t delay_ticks = pdMS_TO_TICKS(DEBUG_HEARTBEAT_INTERVAL_MS);
+//     for (;;) {
+//         uint32_t uptime_ms = to_ms_since_boot(get_absolute_time());
+//         printf("[HEARTBEAT] Uptime: %lu ms\n", (unsigned long)uptime_ms);
+//         vTaskDelay(delay_ticks);
+//     }
+// }
+// #endif
+
+// /***
+//  * Main task to boot the other Agents
+//  * @param params - unused
+//  */
+// void mainTask(void *params) {
+//     printf("mainTask started. Initializing agents...\n");
+//     // KORREKTUR: Alle Agenten als 'static' deklarieren, um Stack Overflow zu vermeiden
+//     static BlinkAgent blink(BLINK_LED_PAD);
+
+//     static MotorsAgent motors;
+//     motors.addMotor(0, LEFT_PWR_CW, LEFT_PWR_CCW, LEFT_ROTENC_A, LEFT_ROTENV_B);
+//     motors.addMotor(1, RIGHT_PWR_CW, RIGHT_PWR_CCW, RIGHT_ROTENC_A, RIGHT_ROTENV_B);
+//     motors.configAllPID(KP, KI, KD);
+
+//     static HCSR04Agent range;
+//     range.addSensor(0, "range_front");
+//     range.addSensor(18, "range_back");
+
+//     // Konfiguration für den VL6180X Time-of-Flight Sensor (I2C)
+//     hal::hardware::Vl6180x::Config tof_cfg{};
+//     tof_cfg.bus = VL6180X_I2C_PORT;
+//     tof_cfg.sda_pin = VL6180X_SDA_PIN;
+//     tof_cfg.scl_pin = VL6180X_SCL_PIN;
+//     static application::Vl6180xAgent tof(tof_cfg);
+
+//     // Konfiguration für die IMU (SPI)
+//     hal::hardware::Icm20948Simple::Config imu_cfg{};
+//     imu_cfg.bus = IMU_SPI_PORT;
+//     imu_cfg.cs_pin = IMU_CS_PIN;
+//     imu_cfg.sck_pin = IMU_SCK_PIN;
+//     imu_cfg.mosi_pin = IMU_MOSI_PIN;
+//     imu_cfg.miso_pin = IMU_MISO_PIN;
+//     static application::ImuAgent imu(imu_cfg);
+//     imu.setFrameId("imu_link");
+
+//     static DDD ddd;
+//     ddd.setMotorsAgent(&motors);
+//     ddd.setHCSR04Agent(&range);
+//     ddd.setImuAgent(&imu);
+//     ddd.setVl6180xAgent(&tof);
+
+//     // Starten der Agenten-Tasks
+//     printf("Starting BlinkAgent...\n");
+//     blink.start("Blink", TASK_PRIORITY);
+
+//     printf("Starting MotorsAgent...\n");
+//     motors.start("Motors", TASK_PRIORITY);
+
+//     printf("Starting HCSR04Agent...\n");
+//     range.start("Range", TASK_PRIORITY);
+
+//     printf("Starting Vl6180xAgent...\n");
+//     tof.start("VL6180X", TASK_PRIORITY);
+
+//     printf("Starting DDD Agent...\n");
+//     ddd.start("DDD", TASK_PRIORITY);
+
+//     // Starten der uROS Bridge
+//     printf("Starting uRosBridge...\n");
+//     static uRosBridge *bridge = uRosBridge::getInstance();
+//     bridge->setuRosEntities(&ddd);
+//     bridge->setLed(CONN_LED_PAD);
+//     bridge->start("Bridge", TASK_PRIORITY + 2);
+//     printf("micro-ROS bridge task started.\n");
+
+//     // Warten, bis die micro-ROS-Sitzung bereit ist, bevor der IMU-Task gestartet wird
+//     printf("Waiting for micro-ROS session...\n");
+//     while (!uRosBridge::getInstance()->isSessionReady()) {
+//         vTaskDelay(pdMS_TO_TICKS(100));
+//     }
+//     printf("micro-ROS session is ready.\n");
+
+//     printf("Starting ImuAgent...\n");
+//     imu.start("IMU", TASK_PRIORITY);
+//     printf("All agents started.\n");
+
+//     // Dieser Task hat seine Aufgabe erledigt und kann sich nun schlafen legen.
+//     for (;;) {
+//         vTaskDelay(portMAX_DELAY);
+//     }
+// }
+
+// /***
+//  * Launch the tasks and scheduler
+//  */
+// void vLaunch(void) {
+//     // Erhöhe den Stack für den mainTask, um die Erstellung aller Objekte sicherzustellen
+//     TaskHandle_t task;
+//     xTaskCreate(mainTask, "MainThread", 2048, NULL, TASK_PRIORITY, &task);
+
+// #if ENABLE_DEBUG_HEARTBEAT
+//     xTaskCreate(
+//         debugHeartbeatTask, "DbgBeat", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);
+// #endif
+
+//     /* Start the tasks and timer running. */
+//     vTaskStartScheduler();
+// }
+
+// /***
+//  * Main
+//  * @return
+//  */
+// int main(void) {
+//     init_stdio_ports();
+//     sleep_ms(2000);
+//     printf("\n\n-- Booting %s firmware --\n", ROBOT_NAME);
+
+//     // Start tasks and scheduler
+//     const char *rtos_name = "FreeRTOS";
+//     printf("Starting %s on core 0...\n", rtos_name);
+//     vLaunch();
+
+//     return 0;  // Should not be reached
+// }
+
 /***
  * Control Turntable and Led Lights
  *
@@ -6,28 +217,27 @@
  * 15-Aug-2022
  */
 
-#include "pico/stdlib.h"
-
-#include "FreeRTOS.h"
-#include "task.h"
-#include <stdio.h>
-#include "hardware/uart.h"
-
 #include "BlinkAgent.h"
-
-#include "uRosBridge.h"
-#include "PubEntities.h"
-
-#include "MotorsAgent.h"
 #include "DDD.h"
+#include "FreeRTOS.h"
 #include "HCSR04Agent.h"
+#include "MotorsAgent.h"
+#include "PubEntities.h"
 #include "application/ImuAgent.h"
+#include "application/vl6180xAgent.hpp"
+#include "hardware/i2c.h"
+#include "hardware/uart.h"
+#include "pico/stdlib.h"
+#include "task.h"
+#include "uRosBridge.h"
 
-extern "C"
-{
-#include "pico/stdio/driver.h"
+#include <stdio.h>
+
+extern "C" {
 #include "pico/stdio.h"
+#include "pico/stdio/driver.h"
 #include "pico/stdio_uart.h"
+#include "pico/stdio_usb.h"  // Nötig für die manuelle Initialisierung
 }
 
 #ifndef ENABLE_DEBUG_HEARTBEAT
@@ -35,7 +245,7 @@ extern "C"
 #endif
 
 #ifndef DEBUG_HEARTBEAT_INTERVAL_MS
-#define DEBUG_HEARTBEAT_INTERVAL_MS 1000
+#define DEBUG_HEARTBEAT_INTERVAL_MS 5000
 #endif
 
 // Standard Task priority
@@ -62,193 +272,145 @@ extern "C"
 #define KI 0.019
 #define KD 0.24
 
+// IMU (SPI) Pins
+#define IMU_SPI_PORT spi0
+#define IMU_CS_PIN 17
+#define IMU_SCK_PIN 18
+#define IMU_MOSI_PIN 19
+#define IMU_MISO_PIN 16
+
+// VL6180X (I2C) Pins
+#define VL6180X_I2C_PORT i2c1
+#define VL6180X_SDA_PIN 2
+#define VL6180X_SCL_PIN 3
+
 char ROBOT_NAME[] = "ddd";
 
 #if ENABLE_DEBUG_HEARTBEAT
-static void debugHeartbeatTask(void *params)
-{
-	(void)params;
-	const TickType_t delay_ticks = pdMS_TO_TICKS(DEBUG_HEARTBEAT_INTERVAL_MS);
-	for (;;)
-	{
-		uint32_t uptime_ms = to_ms_since_boot(get_absolute_time());
-		char buf[64];
-		int n = snprintf(buf, sizeof(buf), "ALIVE uptime=%lu ms\r\n", (unsigned long)uptime_ms);
-		if (n > 0)
-		{
-			uart_write_blocking(uart0, (const uint8_t *)buf, (size_t)n);
-		}
-		vTaskDelay(delay_ticks);
-	}
+static void debugHeartbeatTask(void *params) {
+    (void)params;
+    const TickType_t delay_ticks = pdMS_TO_TICKS(DEBUG_HEARTBEAT_INTERVAL_MS);
+    for (;;) {
+        uint32_t uptime_ms = to_ms_since_boot(get_absolute_time());
+        printf("[HEARTBEAT] Uptime: %lu ms\n", (unsigned long)uptime_ms);
+        vTaskDelay(delay_ticks);
+    }
 }
 #endif
-
-/***
- * Debug function to look at Task Stats
- */
-void runTimeStats()
-{
-	TaskStatus_t *pxTaskStatusArray;
-	volatile UBaseType_t uxArraySize, x;
-	unsigned long ulTotalRunTime;
-
-	// Get number of takss
-	uxArraySize = uxTaskGetNumberOfTasks();
-	printf("Number of tasks %d\n", uxArraySize);
-
-	// Allocate a TaskStatus_t structure for each task.
-	pxTaskStatusArray = (TaskStatus_t *)pvPortMalloc(uxArraySize * sizeof(TaskStatus_t));
-
-	if (pxTaskStatusArray != NULL)
-	{
-		// Generate raw status information about each task.
-		uxArraySize = uxTaskGetSystemState(pxTaskStatusArray,
-										   uxArraySize,
-										   &ulTotalRunTime);
-
-		// Print stats
-		for (x = 0; x < uxArraySize; x++)
-		{
-			printf("Task: %d \t cPri:%d \t bPri:%d \t hw:%d \t%s\n",
-				   pxTaskStatusArray[x].xTaskNumber,
-				   pxTaskStatusArray[x].uxCurrentPriority,
-				   pxTaskStatusArray[x].uxBasePriority,
-				   pxTaskStatusArray[x].usStackHighWaterMark,
-				   pxTaskStatusArray[x].pcTaskName);
-		}
-
-		// Free array
-		vPortFree(pxTaskStatusArray);
-	}
-	else
-	{
-		printf("Failed to allocate space for stats\n");
-	}
-
-	// Get heap allocation information
-	HeapStats_t heapStats;
-	vPortGetHeapStats(&heapStats);
-	printf("HEAP avl: %d, blocks %d, alloc: %d, free: %d\n",
-		   heapStats.xAvailableHeapSpaceInBytes,
-		   heapStats.xNumberOfFreeBlocks,
-		   heapStats.xNumberOfSuccessfulAllocations,
-		   heapStats.xNumberOfSuccessfulFrees);
-}
 
 /***
  * Main task to boot the other Agents
  * @param params - unused
  */
-void mainTask(void *params)
-{
-	BlinkAgent blink(BLINK_LED_PAD);
+void mainTask(void *params) {
+    printf("mainTask started. Initializing agents...\n");
+    // KORREKTUR: Alle Agenten als 'static' deklarieren, um Stack Overflow zu vermeiden
+    static BlinkAgent blink(BLINK_LED_PAD);
 
-	printf("Boot task started for %s\n", ROBOT_NAME);
+    static MotorsAgent motors;
+    motors.addMotor(0, LEFT_PWR_CW, LEFT_PWR_CCW, LEFT_ROTENC_A, LEFT_ROTENV_B);
+    motors.addMotor(1, RIGHT_PWR_CW, RIGHT_PWR_CCW, RIGHT_ROTENC_A, RIGHT_ROTENV_B);
+    motors.configAllPID(KP, KI, KD);
 
-	blink.start("Blink", TASK_PRIORITY);
+    static HCSR04Agent range;
+    range.addSensor(0, "range_front");
+    range.addSensor(18, "range_back");
 
-	MotorsAgent motors;
-	motors.addMotor(0, LEFT_PWR_CW, LEFT_PWR_CCW,
-					LEFT_ROTENC_A, LEFT_ROTENV_B);
-	motors.addMotor(1, RIGHT_PWR_CW, RIGHT_PWR_CCW,
-					RIGHT_ROTENC_A, RIGHT_ROTENV_B);
-	motors.configAllPID(KP, KI, KD);
-	motors.start("Motors", TASK_PRIORITY);
+    // Konfiguration für den VL6180X Time-of-Flight Sensor (I2C)
+    hal::hardware::Vl6180x::Config tof_cfg{};
+    tof_cfg.bus = VL6180X_I2C_PORT;
+    tof_cfg.sda_pin = VL6180X_SDA_PIN;
+    tof_cfg.scl_pin = VL6180X_SCL_PIN;
+    static application::Vl6180xAgent tof(tof_cfg);
 
-	HCSR04Agent range;
-	range.addSensor(0, "range_front");
-	range.addSensor(18, "range_back");
-	range.start("Range", TASK_PRIORITY);
+    // Konfiguration für die IMU (SPI)
+    hal::hardware::Icm20948Simple::Config imu_cfg{};
+    imu_cfg.bus = IMU_SPI_PORT;
+    imu_cfg.baudrate_hz = 1000 * 1000;  // 1MHz
+    imu_cfg.cs_pin = IMU_CS_PIN;
+    imu_cfg.sck_pin = IMU_SCK_PIN;
+    imu_cfg.mosi_pin = IMU_MOSI_PIN;
+    imu_cfg.miso_pin = IMU_MISO_PIN;
+    static application::ImuAgent imu(imu_cfg);
+    imu.setFrameId("imu_link");
 
-	application::ImuAgent imu;
-	imu.setFrameId("imu_link");
-	imu.start("IMU", TASK_PRIORITY);
+    static DDD ddd;
+    ddd.setMotorsAgent(&motors);
+    ddd.setHCSR04Agent(&range);
+    ddd.setImuAgent(&imu);
+    ddd.setVl6180xAgent(&tof);
 
-	DDD ddd;
-	ddd.setMotorsAgent(&motors);
-	ddd.setHCSR04Agent(&range);
-	ddd.setImuAgent(&imu);
-	ddd.start("DDD", TASK_PRIORITY);
+    // Starten der Agenten-Tasks
+    printf("Starting BlinkAgent...\n");
+    blink.start("Blink", TASK_PRIORITY);
 
-	// Start up a uROS Bridge
-	uRosBridge *bridge = uRosBridge::getInstance();
+    printf("Starting MotorsAgent...\n");
+    motors.start("Motors", TASK_PRIORITY);
 
-	// PubEntities entities;
+    printf("Starting HCSR04Agent...\n");
+    range.start("Range", TASK_PRIORITY);
 
-	// bridge->setuRosEntities(&entities);
-	// bridge->setuRosEntities(&motors);
-	bridge->setuRosEntities(&ddd);
-	bridge->setLed(CONN_LED_PAD);
-	bridge->start("Bridge", TASK_PRIORITY + 2);
-	// entities.start("PubSub", TASK_PRIORITY);
+    printf("Starting Vl6180xAgent...\n");
+    tof.start("VL6180X", TASK_PRIORITY);
 
-	bool cw = false;
-	float rpm = 20.0;
-	float rps = 1.0;
-	for (;;)
-	{
-		vTaskDelay(10000);
-	}
+    printf("Starting ImuAgent...\n");
+    imu.start("IMU", TASK_PRIORITY);
 
-	for (;;)
-	{
-		printf("Set Speed %f dir %d\n", rpm, cw);
-		/*
-		motors.setSpeedRPM(0, rpm, cw);
-		motors.setSpeedRPM(1, rpm, !cw);
-		rpm += 20.0;
-		if (rpm > 200.0){
-			rpm = 100.0;
-		}
-		*/
+    printf("Starting DDD Agent...\n");
+    ddd.start("DDD", TASK_PRIORITY);
 
-		motors.setSpeedRadPS(0, rps, cw);
-		motors.setSpeedRadPS(1, rps, !cw);
-		rps += 1.0;
-		if (rps > 6)
-		{
-			rps = 1.0;
-		}
+    // Starten der uROS Bridge
+    printf("Starting uRosBridge...\n");
+    static uRosBridge *bridge = uRosBridge::getInstance();
+    bridge->setuRosEntities(&ddd);
+    bridge->setLed(CONN_LED_PAD);
+    bridge->start("Bridge", TASK_PRIORITY + 2);
+    printf("micro-ROS bridge task started.\n");
 
-		cw = !cw;
-		vTaskDelay(10000);
-	}
+    printf("All agents started. MainTask will now suspend.\n");
+
+    // Dieser Task hat seine Aufgabe erledigt und kann sich nun schlafen legen.
+    for (;;) {
+        vTaskDelay(portMAX_DELAY);
+    }
 }
 
 /***
  * Launch the tasks and scheduler
  */
-void vLaunch(void)
-{
-
-	// Start blink task
-	TaskHandle_t task;
-	xTaskCreate(mainTask, "MainThread", 500, NULL, TASK_PRIORITY, &task);
+void vLaunch(void) {
+    // Erhöhe den Stack für den mainTask, um die Erstellung aller Objekte sicherzustellen
+    TaskHandle_t task;
+    xTaskCreate(mainTask, "MainThread", 2048, NULL, TASK_PRIORITY, &task);
 
 #if ENABLE_DEBUG_HEARTBEAT
-	xTaskCreate(debugHeartbeatTask, "DbgBeat", configMINIMAL_STACK_SIZE, NULL, TASK_PRIORITY, NULL);
+    xTaskCreate(
+        debugHeartbeatTask, "DbgBeat", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);
 #endif
 
-	/* Start the tasks and timer running. */
-	vTaskStartScheduler();
+    /* Start the tasks and timer running. */
+    vTaskStartScheduler();
 }
 
 /***
  * Main
  * @return
  */
-int main(void)
-{
-	// Setup serial over UART and give a few seconds to settle before we start
-	stdio_init_all();
-	sleep_ms(2000);
-	printf("GO\n");
-	fflush(stdout);
+int main(void) {
+    // Stellt sicher, dass die grundlegende Hardware initialisiert ist
+    stdio_init_all();
 
-	// Start tasks and scheduler
-	const char *rtos_name = "FreeRTOS";
-	printf("Starting %s on core 0:\n", rtos_name);
-	vLaunch();
+    // *** KORRIGIERT: USB manuell für micro-ROS initialisieren, UART für printf ***
+    stdio_usb_init();                           // Macht USB für den Transport verfügbar
+    stdio_uart_init_full(uart0, 115200, 0, 1);  // Leitet printf auf UART um
 
-	return 0;
+    sleep_ms(2000);
+    printf("\n\n-- Booting %s firmware (Debug on UART0) --\n", ROBOT_NAME);
+
+    // Start tasks and scheduler
+    const char *rtos_name = "FreeRTOS";
+    printf("Starting %s on core 0...\n", rtos_name);
+    vLaunch();
+
+    return 0;  // Should not be reached
 }

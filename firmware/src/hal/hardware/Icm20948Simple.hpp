@@ -1,21 +1,21 @@
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
-#include "hardware/i2c.h"
+#include "hardware/spi.h"
 #include "shared/Vector3f.hpp"
+
+#include <cstdint>
 
 namespace hal::hardware {
 
 class Icm20948Simple {
 public:
     struct Config {
-        i2c_inst_t* bus;
+        spi_inst_t* bus;
         uint32_t baudrate_hz;
-        uint8_t address;
-        uint8_t sda_pin;
-        uint8_t scl_pin;
-        bool enable_pullups;
+        uint8_t cs_pin;
+        uint8_t sck_pin;
+        uint8_t mosi_pin;
+        uint8_t miso_pin;
     };
 
     explicit Icm20948Simple(const Config& config);
@@ -26,8 +26,13 @@ public:
     bool readTemperature(float& temperature_c);
 
 private:
+    bool readRegisters(uint8_t reg, uint8_t* buffer, size_t length);
+    bool writeRegister(uint8_t reg, uint8_t value);
+    bool selectRegisterBank(uint8_t bank);
+
     Config config_;
-    bool initialized_;
+    bool initialized_ = false;
+    uint8_t current_bank_ = 0xFF;  // Ungültiger Startwert, um Umschaltung zu erzwingen
 };
 
 }  // namespace hal::hardware

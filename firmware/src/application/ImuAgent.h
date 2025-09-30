@@ -1,10 +1,8 @@
 #pragma once
 
 #include "Agent.h"
-#include "FreeRTOS.h"
 #include "hal/hardware/Icm20948Simple.hpp"
 #include "shared/Vector3f.hpp"
-#include "task.h"
 #include "uRosEntities.h"
 
 extern "C" {
@@ -12,7 +10,6 @@ extern "C" {
 
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
-#include <rmw_microros/time_sync.h>
 #include <sensor_msgs/msg/imu.h>
 }
 
@@ -38,9 +35,7 @@ protected:
 
 private:
     bool ensureInitialized();
-    void populateMessage(const shared::Vector3f &accel_g,
-                         const shared::Vector3f &gyro_dps,
-                         float temperature_c);
+    void populateMessage(const shared::Vector3f &accel_g, const shared::Vector3f &gyro_dps);
 
     hal::hardware::Icm20948Simple::Config config_;
     hal::hardware::Icm20948Simple sensor_;
@@ -49,9 +44,8 @@ private:
     rcl_publisher_t imu_publisher_;
 
     bool initialized_ = false;
-    uint32_t publish_period_ms_ = 200;  // reduced to 200ms (5Hz) for testing
+    uint32_t publish_period_ms_ = 100;  // 10Hz
     uint entities_active_ = 0;
-    bool frame_id_set_ = false;
 };
 
 }  // namespace application

@@ -415,4 +415,5 @@
     "C_Cpp.errorSquiggles": "disabled",
     "kiroAgent.configureMCP": "Disabled",
     "ROS2.distro": "humble",
+    "python.analysis.autoImportCompletions": true,
 }
