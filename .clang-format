@@ -1,0 +1,39 @@
+BasedOnStyle: Google  # Baseline profile
+IndentWidth: 4  # Spaces per indent level
+TabWidth: 4  # Visual width for tabs
+UseTab: Never  # Options: Never, ForIndentation, Always
+ColumnLimit: 100  # Maximum line length before wrapping
+AccessModifierOffset: -4  # Offset for public/private/protected labels
+PointerAlignment: Right  # Options: Left, Right, Middle
+BreakBeforeBraces: Attach  # Options: Attach, Linux, Allman, Stroustrup, etc.
+AllowShortFunctionsOnASingleLine: Empty  # Options: None, Empty, Inline, All
+NamespaceIndentation: 'None'  # Options: None, Inner, All
+SortIncludes: true  # Toggle include sorting
+IncludeBlocks: Regroup  # Regroup, Preserve, Merge
+IncludeCategories:
+  - Regex: '^"'  # Project headers first
+    Priority: 1
+  - Regex: '^<'  # System headers next
+    Priority: 2
+AlignAfterOpenBracket: Align  # Options: Align, DontAlign, AlignAfterOperator
+AlignOperands: Align  # Align multi-line expressions
+SpaceBeforeParens: ControlStatements  # Options: Never, ControlStatements, Always
+BreakConstructorInitializers: AfterColon  # Options: BeforeColon, BeforeComma, AfterColon
+ConstructorInitializerIndentWidth: 4  # Indent for constructor initializer lists
+BinPackParameters: false  # One parameter per line when wrapping
+BinPackArguments: false  # One argument per line when wrapping
+AlwaysBreakAfterReturnType: 'None'  # Options: None, All, TopLevel, TopLevelDefinitions
+AlwaysBreakTemplateDeclarations: Yes  # Force new line before template declarations
+PenaltyReturnTypeOnItsOwnLine: 200  # Higher cost keeps return type with function name
+ReflowComments: true  # Reflow block comments to ColumnLimit
+KeepEmptyLinesAtTheStartOfBlocks: false  # Trim blank lines at block start
+MaxEmptyLinesToKeep: 1  # Collapse multiple blank lines
+PenaltyBreakComment: 300  # Cost of breaking comments
+PenaltyBreakString: 1000  # Cost of breaking strings
+IndentExternBlock: Indent  # Options: Indent, NoIndent
+CompactNamespaces: false  # Keep namespace blocks expanded
+FixNamespaceComments: true  # Append trailing namespace comments
+SpacesInSquareBrackets: false  # Control spaces inside []
+SpaceBeforeAssignmentOperators: true  # Insert space before =, += etc.
+SpaceAroundPointerQualifiers: Both  # Options: Default, Before, After, Both
+SpaceBeforeCpp11BracedList: false  # No space before initializer braces

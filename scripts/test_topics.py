@@ -13,6 +13,30 @@ from typing import Dict, List, Callable, Any
 import json
 
 # Import message types
+#!/usr/bin/env python3
+"""
+Enhanced Topic Testing Script for my_steel Robot
+
+This script discovers topics on the ROS2 network, subscribes to a configurable
+set of important topics, collects simple statistics (message count, sample
+payload snippets, message rate) and prints a summary report at the end.
+
+Usage: python3 scripts/test_topics.py [duration_seconds]
+
+The script is conservative: subscribers use a QoS profile suitable for
+interacting with micro-ROS bridges (RELIABLE by default) but this can be
+adjusted in the configuration below.
+"""
+import sys
+import time
+import threading
+from typing import Dict, List, Any
+
+import rclpy
+from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
+
+# Import message types
 from std_msgs.msg import Int32
 from sensor_msgs.msg import Imu, JointState
 from geometry_msgs.msg import Twist
@@ -20,203 +44,228 @@ from rcl_interfaces.msg import ParameterEvent, Log
 
 
 class TopicTester(Node):
-    """Extensible topic testing node"""
-    
+    """Extensible topic testing node that collects basic stats for topics."""
+
     def __init__(self):
         super().__init__('topic_tester')
-        
-        # QoS profile for reliable communication
+
+        # Default QoS profile (reliable, keep last, depth=10)
         self.qos_profile = QoSProfile(
             reliability=ReliabilityPolicy.RELIABLE,
             history=HistoryPolicy.KEEP_LAST,
-            depth=10
+            depth=10,
         )
-        
-        # Topic configurations - easily extensible
-        self.topic_configs = {
+
+        # Topic configurations: add or update entries here to watch more topics
+        # Each entry describes the expected message type, a short description,
+        # an expected publish rate (Hz) used for health checks, and which fields
+        # to sample for the report.
+        self.topic_configs: Dict[str, Dict] = {
             '/ddd/imu': {
                 'msg_type': Imu,
                 'description': 'IMU sensor data (acceleration, gyroscope)',
-                'expected_rate': 50.0,  # Hz
-                'timeout': 5.0,  # seconds
-                'test_fields': ['linear_acceleration', 'angular_velocity', 'header']
+                'expected_rate': 50.0,
+                'timeout': 5.0,
+                'test_fields': ['linear_acceleration', 'angular_velocity', 'header'],
             },
             '/ddd_step2/cmd_vel': {
                 'msg_type': Twist,
                 'description': 'Motor velocity commands',
                 'expected_rate': 10.0,
                 'timeout': 3.0,
-                'test_fields': ['linear', 'angular']
+                'test_fields': ['linear', 'angular'],
             },
             '/joint_states': {
                 'msg_type': JointState,
                 'description': 'Joint state information',
                 'expected_rate': 20.0,
                 'timeout': 3.0,
-                'test_fields': ['name', 'position', 'velocity']
+                'test_fields': ['name', 'position', 'velocity'],
             },
             '/pico_count': {
                 'msg_type': Int32,
                 'description': 'Pico heartbeat counter',
                 'expected_rate': 1.0,
                 'timeout': 3.0,
-                'test_fields': ['data']
+                'test_fields': ['data'],
             },
             '/parameter_events': {
                 'msg_type': ParameterEvent,
                 'description': 'Parameter change events',
-                'expected_rate': 0.1,  # Low frequency
+                'expected_rate': 0.1,
                 'timeout': 10.0,
-                'test_fields': ['node']
+                'test_fields': ['node'],
             },
             '/rosout': {
                 'msg_type': Log,
                 'description': 'ROS logging messages',
                 'expected_rate': 1.0,
                 'timeout': 5.0,
-                'test_fields': ['level', 'name', 'msg']
-            }
+                'test_fields': ['level', 'name', 'msg'],
+            },
         }
-        
-        # Test results storage
-        self.test_results = {}
-        self.message_counts = {}
-        self.last_message_time = {}
-        self.subscribers = {}
-        
-        # Test statistics
-        self.start_time = time.time()
-        self.last_log_time = {}  # Track last log time per topic
-        
+
+        # Runtime tracking structures
+        self.subscribers: Dict[str, Any] = {}
+        self.message_counts: Dict[str, int] = {}
+        self.last_message_time: Dict[str, float] = {}
+        self.first_message_time: Dict[str, float] = {}
+        self.sample_messages: Dict[str, Any] = {}
+        self.lock = threading.Lock()
+
     def create_subscriber_for_topic(self, topic_name: str, config: Dict):
-        """Create a subscriber for a specific topic"""
-        def callback(msg):
-            current_time = time.time()
-            
-            # Update statistics
-            if topic_name not in self.message_counts:
-                self.message_counts[topic_name] = 0
-                self.last_log_time = {}
-            
-            self.message_counts[topic_name] += 1
-            self.last_message_time[topic_name] = current_time
-            
-            # Store latest message for analysis
-            if topic_name not in self.test_results:
-                self.test_results[topic_name] = {
-                    'status': 'receiving',
-                    'messages': [],
-                    'first_message_time': current_time,
-                    'config': config
-                }
-                self.last_log_time[topic_name] = 0
-            
-            # Keep only last few messages to avoid memory issues
-            if len(self.test_results[topic_name]['messages']) >= 5:
-                self.test_results[topic_name]['messages'].pop(0)
-            
-            self.test_results[topic_name]['messages'].append({
-                'timestamp': current_time,
-                'data': self.extract_message_data(msg, config['test_fields'])
-            })
-            
-            # Limit logging output - only log every 5 seconds or first 15 messages
-            should_log = False
-            count = self.message_counts[topic_name]
-            
-            if count <= 15:  # First 15 messages
-                should_log = True
-            elif current_time - self.last_log_time.get(topic_name, 0) >= 5.0:  # Every 5 seconds after that
-                should_log = True
-                self.last_log_time[topic_name] = current_time
-            
-            if should_log:
-                self.get_logger().info(f"📨 {topic_name}: Message #{count}")
-        
-        # Create subscriber
-        subscriber = self.create_subscription(
-            config['msg_type'],
-            topic_name,
-            callback,
-            self.qos_profile
-        )
-        
-        self.subscribers[topic_name] = subscriber
-        self.get_logger().info(f"🔗 Subscribed to {topic_name}")
-        
-    def extract_message_data(self, msg: Any, test_fields: List[str]) -> Dict:
-        """Extract relevant data from message for testing"""
-        data = {}
-        for field in test_fields:
-            try:
-                if hasattr(msg, field):
-                    value = getattr(msg, field)
-                    # Convert complex types to string representation
-                    if hasattr(value, '__dict__'):
-                        data[field] = str(value)
-                    else:
-                        data[field] = value
-                else:
-                    data[field] = f"Field '{field}' not found"
-            except Exception as e:
-                data[field] = f"Error: {str(e)}"
-        return data
-    
+        """Create a subscription for topic_name using the configured msg_type.
+
+        The callback captures the topic name and pushes message metadata into
+        the local statistics structures.
+        """
+
+        msg_type = config.get('msg_type')
+        if msg_type is None:
+            self.get_logger().warning(f'No msg_type for {topic_name}, skipping')
+            return
+
+        def _cb(msg, topic=topic_name):
+            now = time.time()
+            with self.lock:
+                self.message_counts[topic] = self.message_counts.get(topic, 0) + 1
+                self.last_message_time[topic] = now
+                if topic not in self.first_message_time:
+                    self.first_message_time[topic] = now
+                # store up to 3 sample messages (as repr) to include in report
+                if topic not in self.sample_messages:
+                    self.sample_messages[topic] = []
+                if len(self.sample_messages[topic]) < 3:
+                    try:
+                        self.sample_messages[topic].append(str(msg))
+                    except Exception:
+                        self.sample_messages[topic].append('<unserializable message>')
+
+        qos = config.get('qos', self.qos_profile)
+        sub = self.create_subscription(msg_type, topic_name, _cb, qos)
+        self.subscribers[topic_name] = sub
+        self.get_logger().info(f'🔗 Subscribed to {topic_name}')
+
     def discover_and_test_topics(self):
-        """Discover available topics and start testing"""
-        self.get_logger().info("🔍 Discovering available topics...")
-        
-        # Get list of available topics
-        topic_names_and_types = self.get_topic_names_and_types()
-        available_topics = [name for name, _ in topic_names_and_types]
-        
-        self.get_logger().info(f"📋 Found {len(available_topics)} topics:")
-        for topic in available_topics:
-            self.get_logger().info(f"  - {topic}")
-        
-        # Subscribe to configured topics that are available
-        subscribed_count = 0
-        for topic_name, config in self.topic_configs.items():
-            if topic_name in available_topics:
-                self.create_subscriber_for_topic(topic_name, config)
-                subscribed_count += 1
+        """Discover topics and subscribe to those in the configuration.
+
+        If configured topics are not available, a warning is logged but the
+        script continues; this fits micro-ROS environments where topics can
+        appear later during startup.
+        """
+
+        # Discover currently available topics
+        topic_list = self.get_topic_names_and_types()
+        available = {name for (name, _) in topic_list}
+        self.get_logger().info(f'🔍 Found {len(available)} topics:')
+        for t in sorted(available):
+            self.get_logger().info(f'  - {t}')
+
+        # Subscribe to configured topics — even if not present yet we still
+        # attempt to create a subscription; ROS2 allows that.
+        for topic_name, cfg in self.topic_configs.items():
+            if topic_name in available:
+                self.create_subscriber_for_topic(topic_name, cfg)
             else:
-                self.get_logger().warn(f"⚠️  Topic {topic_name} not available")
-                self.test_results[topic_name] = {
-                    'status': 'not_available',
-                    'config': config
-                }
-        
-        self.get_logger().info(f"✅ Subscribed to {subscribed_count} topics")
-        
-    def check_topic_health(self):
-        """Check health of all subscribed topics"""
-        current_time = time.time()
-        
-        for topic_name, config in self.topic_configs.items():
-            if topic_name not in self.test_results:
-                continue
-                
-            result = self.test_results[topic_name]
-            
-            if result['status'] == 'not_available':
-                continue
-                
-            # Check if we're receiving messages within timeout
-            if topic_name in self.last_message_time:
-                time_since_last = current_time - self.last_message_time[topic_name]
-                if time_since_last > config['timeout']:
-                    result['status'] = 'timeout'
-                    self.get_logger().warn(f"⏰ {topic_name}: No messages for {time_since_last:.1f}s")
-                else:
-                    result['status'] = 'healthy'
+                # still create the subscription — ROS2 will connect when the
+                # publisher appears; log a warning for visibility
+                self.get_logger().warning(f'⚠️  Topic {topic_name} not available — subscribing anyway')
+                self.create_subscriber_for_topic(topic_name, cfg)
+
+    def compute_rate(self, topic: str) -> float:
+        with self.lock:
+            count = self.message_counts.get(topic, 0)
+            start = self.first_message_time.get(topic)
+            last = self.last_message_time.get(topic)
+        if count == 0 or start is None:
+            return 0.0
+        # Use observed window (last - first) to compute approximate rate
+        elapsed = (last - start) if last and start else 0.0
+        if elapsed <= 0.0:
+            # very small interval — treat as instantaneous
+            return float(count)
+        return float(count) / elapsed
+
+    def print_status_report(self):
+        """Print a summary report for all configured topics."""
+        now = time.time()
+        print('\n' + '=' * 80)
+        print('📊 TOPIC TEST REPORT')
+        print('=' * 80)
+
+        for topic_name, cfg in self.topic_configs.items():
+            desc = cfg.get('description', '')
+            expected = cfg.get('expected_rate', None)
+            timeout = cfg.get('timeout', 5.0)
+            with self.lock:
+                count = self.message_counts.get(topic_name, 0)
+                last = self.last_message_time.get(topic_name, 0)
+                samples = self.sample_messages.get(topic_name, [])
+            rate = self.compute_rate(topic_name)
+            status = '❓ Not tested'
+            if count == 0:
+                status = '🚫 NOT_AVAILABLE' if last == 0 else '⏰ TIMEOUT'
             else:
-                # Never received a message
-                time_since_start = current_time - self.start_time
-                if time_since_start > config['timeout']:
-                    result['status'] = 'no_messages'
-                    self.get_logger().warn(f"❌ {topic_name}: No messages received")
-    
+                # If we have messages, mark checked — but evaluate expected rate
+                status = '✅ OK'
+                if expected is not None and rate < expected * 0.5:
+                    status = '⚠️ LOW_RATE'
+
+            print(f"\n🔸 {topic_name}\n   Description: {desc}\n   Status: {status}")
+            print(f"   Messages: {count} (Observed Rate: {rate:.2f} Hz, Expected: {expected} Hz)")
+            if samples:
+                print('   Sample messages:')
+                for s in samples:
+                    # Print only first 200 chars per sample
+                    print('    ', s[:200])
+
+        print('\nTest complete.\n')
+
+    def run_test(self, duration: float = 30.0):
+        """Run the test for duration seconds and periodically print progress."""
+        # Discover and subscribe
+        self.discover_and_test_topics()
+
+        start_time = time.time()
+        next_report = start_time + 5.0
+        self.get_logger().info(f'🚀 Starting topic test for {duration}s...')
+
+        while True:
+            now = time.time()
+            elapsed = now - start_time
+            if now >= next_report:
+                # Print an interim small status
+                self.get_logger().info(f'⏱ Runtime: {elapsed:.1f}s')
+                next_report = now + 5.0
+            if elapsed >= duration:
+                break
+            rclpy.spin_once(self, timeout_sec=0.1)
+
+        # Final report
+        self.print_status_report()
+
+
+def main():
+    rclpy.init()
+    duration = 30.0
+    if len(sys.argv) > 1:
+        try:
+            duration = float(sys.argv[1])
+        except Exception:
+            print('Invalid duration argument, using default 30s')
+
+    tester = TopicTester()
+    try:
+        tester.run_test(duration)
+    except KeyboardInterrupt:
+        print('Interrupted by user')
+    finally:
+        tester.destroy_node()
+        rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
     def print_status_report(self):
         """Print comprehensive status report"""
         current_time = time.time()

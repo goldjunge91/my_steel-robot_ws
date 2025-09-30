@@ -1,19 +1,19 @@
 #pragma once
 
 #include "Agent.h"
-#include "uRosEntities.h"
+#include "FreeRTOS.h"
 #include "hal/hardware/Icm20948Simple.hpp"
 #include "shared/Vector3f.hpp"
-
-#include "FreeRTOS.h"
 #include "task.h"
+#include "uRosEntities.h"
 
 extern "C" {
+#include "rosidl_runtime_c/string_functions.h"
+
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
-#include <sensor_msgs/msg/imu.h>
 #include <rmw_microros/time_sync.h>
-#include "rosidl_runtime_c/string_functions.h"
+#include <sensor_msgs/msg/imu.h>
 }
 
 namespace application {
@@ -49,7 +49,7 @@ private:
     rcl_publisher_t imu_publisher_;
 
     bool initialized_ = false;
-    uint32_t publish_period_ms_ = 20;
+    uint32_t publish_period_ms_ = 200;  // reduced to 200ms (5Hz) for testing
     uint entities_active_ = 0;
     bool frame_id_set_ = false;
 };

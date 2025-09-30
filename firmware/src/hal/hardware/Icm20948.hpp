@@ -1,11 +1,10 @@
 #pragma once
 
+#include "hardware/i2c.h"
+#include "shared/Vector3f.hpp"
+
 #include <cstddef>
 #include <cstdint>
-
-#include "hardware/i2c.h"
-
-#include "shared/Vector3f.hpp"
 
 namespace hal::hardware {
 
@@ -21,6 +20,21 @@ public:
     };
 
     explicit Icm20948(const Config& config);
+
+    // Helper to create a Config for the right sensor (SDA=GP16, SCL=GP17)
+    static Config rightSensorConfig(i2c_inst_t* bus,
+                                    uint32_t baudrate_hz,
+                                    uint8_t address,
+                                    bool enable_pullups = true) {
+        Config c{};
+        c.bus = bus;
+        c.baudrate_hz = baudrate_hz;
+        c.address = address;
+        c.sda_pin = 16;  // GP16
+        c.scl_pin = 17;  // GP17
+        c.enable_pullups = enable_pullups;
+        return c;
+    }
 
     bool initialize();
     bool readAcceleration(shared::Vector3f& accel_g);

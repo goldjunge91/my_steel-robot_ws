@@ -1,17 +1,18 @@
 #include "application/ImuAgent.h"
 
-#include <cstdio>
-
 #include "hardware/i2c.h"
 #include "pico/stdlib.h"
 #include "uRosBridge.h"
+
+#include <cstdio>
 // FreeRTOS Includes
 #include "FreeRTOS.h"
 #include "task.h"
 
 namespace {
-// KORREKTUR: 'constexpr' ist hier der beste Typ, da es sich um eine Compile-Time-Konstante handelt.
-// Der ursprüngliche Fehler war ein Phantomfehler des IntelliSense-Parsers.
+// KORREKTUR: 'constexpr' ist hier der beste Typ, da es sich um eine
+// Compile-Time-Konstante handelt. Der ursprüngliche Fehler war ein
+// Phantomfehler des IntelliSense-Parsers.
 constexpr uint8_t kDefaultAddress = 0x68;
 constexpr uint32_t kDefaultBaudrateHz = 400000;
 constexpr float kGtoMetersPerSecond2 = 9.80665f;
@@ -38,7 +39,7 @@ struct DefaultPins {
 
 hal::hardware::Icm20948Simple::Config makeDefaultConfigInternal() {
     hal::hardware::Icm20948Simple::Config cfg{};
-    
+
     // KORREKTUR für "identifier 'i2cPICO_DEFAULT_I2C' is undefined":
     // Diese Logik ist bereits korrekt und robust, da sie Standard-Makros prüft
     // und auf ein bekanntes Default (i2c0) zurückfällt.
@@ -65,30 +66,34 @@ namespace application {
 using hal::hardware::Icm20948Simple;
 using shared::Vector3f;
 
-ImuAgent::ImuAgent()
-    : ImuAgent(makeDefaultConfigInternal()) {}
+ImuAgent::ImuAgent() : ImuAgent(makeDefaultConfigInternal()) {}
 
-ImuAgent::ImuAgent(const hal::hardware::Icm20948Simple::Config &config)
-     // KORREKTUR für "function returning function is not allowed" (Phantomfehler):
-     // Verwendung von {} Initialisierung ist moderner C++ und vermeidet Parser-Fehldeutungen.
-    : config_(config), sensor_{config_} {
+ImuAgent::ImuAgent(const hal::hardware::Icm20948Simple::Config &config) :
+    config_(config), sensor_{config_} {
     sensor_msgs__msg__Imu__init(&imu_msg_);
 
-    for (double &v : imu_msg_.orientation_covariance) { v = 0.0; }
+    for (double &v : imu_msg_.orientation_covariance) {
+        v = 0.0;
+    }
     imu_msg_.orientation_covariance[0] = -1.0;
 
-    for (double &v : imu_msg_.angular_velocity_covariance) { v = 0.0; }
+    for (double &v : imu_msg_.angular_velocity_covariance) {
+        v = 0.0;
+    }
     imu_msg_.angular_velocity_covariance[0] = 0.02;
     imu_msg_.angular_velocity_covariance[4] = 0.02;
     imu_msg_.angular_velocity_covariance[8] = 0.02;
 
-    for (double &v : imu_msg_.linear_acceleration_covariance) { v = 0.0; }
+    for (double &v : imu_msg_.linear_acceleration_covariance) {
+        v = 0.0;
+    }
     imu_msg_.linear_acceleration_covariance[0] = 0.05;
     imu_msg_.linear_acceleration_covariance[4] = 0.05;
     imu_msg_.linear_acceleration_covariance[8] = 0.05;
 
     // KORREKTUR für "identifier '__null' is undefined":
-    // In C++ sollte immer 'nullptr' anstelle von 'NULL' oder internen Makros verwendet werden.
+    // In C++ sollte immer 'nullptr' anstelle von 'NULL' oder internen Makros
+    // verwendet werden.
     imu_msg_.header.frame_id.data = nullptr;
     imu_msg_.header.frame_id.size = 0;
     imu_msg_.header.frame_id.capacity = 0;
@@ -100,10 +105,10 @@ ImuAgent::~ImuAgent() {
     sensor_msgs__msg__Imu__fini(&imu_msg_);
 }
 
-// ... (Restlicher Code bleibt unverändert) ...
-
 void ImuAgent::setFrameId(const char *frame_id) {
-    if (frame_id == nullptr) { return; }
+    if (frame_id == nullptr) {
+        return;
+    }
     if (!rosidl_runtime_c__String__assign(&imu_msg_.header.frame_id, frame_id)) {
         printf("[ImuAgent] Failed to set frame_id to %s\n", frame_id);
     }
@@ -113,12 +118,14 @@ void ImuAgent::setFrameId(const char *frame_id) {
 void ImuAgent::createEntities(rcl_node_t *node, rclc_support_t *support) {
     (void)support;
     printf("[ImuAgent] Creating entities...\n");
-    if (!frame_id_set_) { setFrameId("imu_link"); }
+    if (!frame_id_set_) {
+        setFrameId("imu_link");
+    }
     rcl_ret_t ret = rclc_publisher_init_default(
         &imu_publisher_, node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), "/ddd/imu");
-    if (ret != RCL_RET_OK) { 
-        printf("[ImuAgent] Failed to create publisher: %d\n", ret); 
-        return; 
+    if (ret != RCL_RET_OK) {
+        printf("[ImuAgent] Failed to create publisher: %d\n", ret);
+        return;
     }
     entities_active_ = 1;
     printf("[ImuAgent] Publisher created successfully for /ddd/imu\n");
@@ -128,37 +135,85 @@ void ImuAgent::destroyEntities(rcl_node_t *node, rclc_support_t *support) {
     (void)support;
     if (entities_active_ != 0) {
         rcl_ret_t ret = rcl_publisher_fini(&imu_publisher_, node);
-        if (ret != RCL_RET_OK) { printf("[ImuAgent] Failed to destroy publisher: %d\n", ret); }
+        if (ret != RCL_RET_OK) {
+            printf("[ImuAgent] Failed to destroy publisher: %d\n", ret);
+        }
     }
     imu_publisher_ = rcl_get_zero_initialized_publisher();
     entities_active_ = 0;
 }
 
-uint ImuAgent::getCount() { return entities_active_; }
+uint ImuAgent::getCount() {
+    return entities_active_;
+}
 
-uint ImuAgent::getHandles() { return 0; }  // No subscription handles needed
+uint ImuAgent::getHandles() {
+    return 0;
+}  // No subscription handles needed
 
-void ImuAgent::addToExecutor(rclc_executor_t *executor) { 
+void ImuAgent::addToExecutor(rclc_executor_t *executor) {
     (void)executor;  // No subscriptions to add
 }
 
 void ImuAgent::run() {
+    // Backoff state: start with no extra delay
+    uint32_t backoff_ms = 0;
+    const uint32_t backoff_max_ms = 1000;
     for (;;) {
-        if (!ensureInitialized()) { vTaskDelay(pdMS_TO_TICKS(500)); continue; }
+        if (!ensureInitialized()) {
+            vTaskDelay(pdMS_TO_TICKS(500));
+            continue;
+        }
         Vector3f accel{}, gyro{};
         float temperature = 0.0f;
         bool accel_ok = sensor_.readAcceleration(accel);
         bool gyro_ok = sensor_.readGyroscope(gyro);
         bool temp_ok = sensor_.readTemperature(temperature);
+        static uint32_t debug_counter = 0;
         if (accel_ok && gyro_ok) {
-            if (!temp_ok) { temperature = 0.0f; }
+            if (!temp_ok) {
+                temperature = 0.0f;
+            }
             populateMessage(accel, gyro, temperature);
+            // Print debug values every 5 samples to UART so we can inspect
+            // sensor readings independently from ROS transport.
+            debug_counter++;
+            if ((debug_counter % 5) == 0) {
+                printf("[IMU DEBUG] Accel m/s2: x=%.3f y=%.3f z=%.3f | ",
+                       accel.x * kGtoMetersPerSecond2,
+                       accel.y * kGtoMetersPerSecond2,
+                       accel.z * kGtoMetersPerSecond2);
+                printf("Gyro rad/s: x=%.3f y=%.3f z=%.3f | Temp C=%.2f\r\n",
+                       gyro.x * kDegToRad,
+                       gyro.y * kDegToRad,
+                       gyro.z * kDegToRad,
+                       temperature);
+            }
             if (entities_active_ != 0) {
+                // Wait until the uROS session is ready before publishing. If
+                // the session is not ready, wait briefly and try later.
+                if (!uRosBridge::getInstance()->isSessionReady()) {
+                    vTaskDelay(pdMS_TO_TICKS(100));
+                    continue;
+                }
                 int64_t timestamp = rmw_uros_epoch_nanos();
                 imu_msg_.header.stamp.sec = timestamp / 1000000000;
                 imu_msg_.header.stamp.nanosec = timestamp % 1000000000;
-                if (!uRosBridge::getInstance()->publish(&imu_publisher_, &imu_msg_, this, nullptr)) {
-                    printf("[ImuAgent] Failed to queue IMU publish\n");
+                if (!uRosBridge::getInstance()->publish(
+                        &imu_publisher_, &imu_msg_, this, nullptr)) {
+                    printf("[ImuAgent] Failed to queue IMU publish, backing off %u ms\n",
+                           backoff_ms);
+                    // Increase backoff (exponential) up to cap
+                    if (backoff_ms == 0) {
+                        backoff_ms = 50;
+                    } else {
+                        backoff_ms =
+                            (backoff_ms * 2) > backoff_max_ms ? backoff_max_ms : (backoff_ms * 2);
+                    }
+                    vTaskDelay(pdMS_TO_TICKS(backoff_ms));
+                } else {
+                    // success, reset backoff
+                    backoff_ms = 0;
                 }
             }
         } else {
@@ -169,17 +224,26 @@ void ImuAgent::run() {
     }
 }
 
-configSTACK_DEPTH_TYPE ImuAgent::getMaxStackSize() { return 512; }
+configSTACK_DEPTH_TYPE ImuAgent::getMaxStackSize() {
+    return 512;
+}
 
 bool ImuAgent::ensureInitialized() {
-    if (initialized_) { return true; }
+    if (initialized_) {
+        return true;
+    }
     initialized_ = sensor_.initialize();
-    if (!initialized_) { printf("[ImuAgent] Initialization failed\n"); } 
-    else { printf("[ImuAgent] Sensor initialised\n"); }
+    if (!initialized_) {
+        printf("[ImuAgent] Initialization failed\n");
+    } else {
+        printf("[ImuAgent] Sensor initialised\n");
+    }
     return initialized_;
 }
 
-void ImuAgent::populateMessage(const Vector3f &accel_g, const Vector3f &gyro_dps, float temperature_c) {
+void ImuAgent::populateMessage(const Vector3f &accel_g,
+                               const Vector3f &gyro_dps,
+                               float temperature_c) {
     (void)temperature_c;
     imu_msg_.linear_acceleration.x = accel_g.x * kGtoMetersPerSecond2;
     imu_msg_.linear_acceleration.y = accel_g.y * kGtoMetersPerSecond2;
@@ -193,9 +257,10 @@ void ImuAgent::populateMessage(const Vector3f &accel_g, const Vector3f &gyro_dps
     imu_msg_.orientation.w = 1.0;
 }
 
-// KORREKTUR für "a pointer to a bound function may only be used to call the function":
-// Dieser Fehler tritt auf, wenn man eine Member-Funktion wie 'run()' direkt an FreeRTOS' xTaskCreate übergibt.
-// Die Lösung ist eine statische "Wrapper"-Funktion. Der Code, der den Task erstellt, sollte so aussehen:
+// KORREKTUR für "a pointer to a bound function may only be used to call the
+// function": Dieser Fehler tritt auf, wenn man eine Member-Funktion wie 'run()'
+// direkt an FreeRTOS' xTaskCreate übergibt. Die Lösung ist eine statische
+// "Wrapper"-Funktion. Der Code, der den Task erstellt, sollte so aussehen:
 /*
 void ImuAgent::startTask() {
     xTaskCreate(
