@@ -29,6 +29,8 @@ public:
     void createEntities(rcl_node_t *node, rclc_support_t *support) override;
     void destroyEntities(rcl_node_t *node, rclc_support_t *support) override;
     uint getCount() override;
+    uint getHandles() override;
+    void addToExecutor(rclc_executor_t *executor) override;
 
 protected:
     void run() override;

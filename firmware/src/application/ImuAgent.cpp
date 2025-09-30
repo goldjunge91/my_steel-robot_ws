@@ -112,11 +112,16 @@ void ImuAgent::setFrameId(const char *frame_id) {
 
 void ImuAgent::createEntities(rcl_node_t *node, rclc_support_t *support) {
     (void)support;
+    printf("[ImuAgent] Creating entities...\n");
     if (!frame_id_set_) { setFrameId("imu_link"); }
     rcl_ret_t ret = rclc_publisher_init_default(
         &imu_publisher_, node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), "/ddd/imu");
-    if (ret != RCL_RET_OK) { printf("[ImuAgent] Failed to create publisher: %d\n", ret); return; }
+    if (ret != RCL_RET_OK) { 
+        printf("[ImuAgent] Failed to create publisher: %d\n", ret); 
+        return; 
+    }
     entities_active_ = 1;
+    printf("[ImuAgent] Publisher created successfully for /ddd/imu\n");
 }
 
 void ImuAgent::destroyEntities(rcl_node_t *node, rclc_support_t *support) {
@@ -130,6 +135,12 @@ void ImuAgent::destroyEntities(rcl_node_t *node, rclc_support_t *support) {
 }
 
 uint ImuAgent::getCount() { return entities_active_; }
+
+uint ImuAgent::getHandles() { return 0; }  // No subscription handles needed
+
+void ImuAgent::addToExecutor(rclc_executor_t *executor) { 
+    (void)executor;  // No subscriptions to add
+}
 
 void ImuAgent::run() {
     for (;;) {

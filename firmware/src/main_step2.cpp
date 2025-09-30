@@ -103,10 +103,10 @@ void mainTask(void *params)
 	imu.start("IMU", TASK_PRIORITY);
 	printf("Simple IMU started\n");
 
-	// Start up a uROS Bridge (only IMU for testing)
+	// Start up a uROS Bridge (IMU only for debugging)
 	printf("Starting micro-ROS Bridge...\n");
 	uRosBridge *bridge = uRosBridge::getInstance();
-	bridge->setuRosEntities(&imu);  // Only IMU to test it
+	bridge->setuRosEntities(&imu);  // Only IMU to debug publisher issue
 	bridge->setLed(CONN_LED_PAD);
 	bridge->start("Bridge", TASK_PRIORITY + 2);
 	printf("micro-ROS Bridge started\n");

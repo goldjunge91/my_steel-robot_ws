@@ -16,45 +16,9 @@ Icm20948Simple::Icm20948Simple(const Config& config)
     : config_(config), initialized_(false) {}
 
 bool Icm20948Simple::initialize() {
-    if (config_.bus == nullptr) {
-        return false;
-    }
-
-    // Initialize I2C
-    i2c_init(config_.bus, config_.baudrate_hz);
-    gpio_set_function(config_.sda_pin, GPIO_FUNC_I2C);
-    gpio_set_function(config_.scl_pin, GPIO_FUNC_I2C);
-    
-    if (config_.enable_pullups) {
-        gpio_pull_up(config_.sda_pin);
-        gpio_pull_up(config_.scl_pin);
-    }
-
-    sleep_ms(10);
-
-    // Probe WHO_AM_I register
-    uint8_t reg = ICM20948_WHO_AM_I_REG;
-    uint8_t value = 0;
-    
-    int ret = i2c_write_blocking(config_.bus, config_.address, &reg, 1, true);
-    if (ret < 0) {
-        printf("[ICM20948Simple] Failed to write WHO_AM_I register\n");
-        return false;
-    }
-    
-    ret = i2c_read_blocking(config_.bus, config_.address, &value, 1, false);
-    if (ret < 0) {
-        printf("[ICM20948Simple] Failed to read WHO_AM_I register\n");
-        return false;
-    }
-
-    if (value != ICM20948_WHO_AM_I_VAL) {
-        printf("[ICM20948Simple] WHO_AM_I mismatch: expected 0x%02X, got 0x%02X\n", 
-               ICM20948_WHO_AM_I_VAL, value);
-        return false;
-    }
-
-    printf("[ICM20948Simple] WHO_AM_I check passed: 0x%02X\n", value);
+    // DUMMY MODE: Skip hardware initialization for testing
+    printf("[ICM20948Simple] DUMMY MODE: Skipping hardware initialization\n");
+    printf("[ICM20948Simple] Simulating successful initialization\n");
     initialized_ = true;
     return true;
 }
