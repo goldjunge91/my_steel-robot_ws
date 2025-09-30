@@ -36,6 +36,10 @@ extern"C"{
 
 #define MAX_TWIST_TIME_MS 1500
 
+namespace application {
+class ImuAgent;
+}
+
 struct DDDOdom {
 	double x;
 	double y;
@@ -52,6 +56,8 @@ public:
 	void setMotorsAgent(MotorsAgent *p);
 
 	void setHCSR04Agent(HCSR04Agent *p);
+
+	void setImuAgent(application::ImuAgent *p);
 
 
 	/***
@@ -122,6 +128,7 @@ private:
 
 	MotorsAgent *pMotorsAgent = NULL;
 	HCSR04Agent *pHCSR04Agent = NULL;
+	application::ImuAgent *pImuAgent = NULL;
 
 	DDDOdom_t xMotorsOdom;
 	DDDOdom_t xDDDOdom;

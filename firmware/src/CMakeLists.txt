@@ -1,29 +1,36 @@
 add_executable(${NAME}
-        main.cpp
+        main_step2.cpp
         
         Agent.cpp
         BlinkAgent.cpp
         GPIOInputMgr.cpp
         GPIOObserver.cpp
-        
+
         MotorMgr.cpp
         MotorPID.cpp
-        
+
         PubEntities.cpp
         MotorsAgent.cpp
         DDD.cpp
         HCSR04Agent.cpp
-        
+        application/ImuAgent.cpp
+        hal/hardware/Icm20948Simple.cpp
+
         uRosBridge.cpp
         uRosEntities.cpp
         pico_usb_transport.c
         freertos_allocators.c
-        )
+)
+
+target_include_directories(${NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 # Pull in our pico_stdlib which pulls in commonly used features
 target_link_libraries(${NAME} PRIVATE
     pico_stdlib
     hardware_pwm
+    hardware_i2c
     FreeRTOS-Kernel-Heap4
     freertos_config
     micro_ros

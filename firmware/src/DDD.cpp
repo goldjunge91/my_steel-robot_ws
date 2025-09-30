@@ -8,6 +8,7 @@
 #include "DDD.h"
 #include <cstdio>
 #include <cmath>
+#include "application/ImuAgent.h"
 #include "uRosBridge.h"
 
 using namespace Eigen;
@@ -282,6 +283,9 @@ void DDD::createEntities(rcl_node_t *node, rclc_support_t *support){
 	if (pHCSR04Agent != NULL){
 		pHCSR04Agent->createEntities(node, support);
 	}
+	if (pImuAgent != NULL){
+		pImuAgent->createEntities(node, support);
+	}
 	rclc_publisher_init_default(
 			&xPubOdom,
 			node,
@@ -307,8 +311,17 @@ void DDD::destroyEntities(rcl_node_t *node, rclc_support_t *support){
 	if (pHCSR04Agent != NULL){
 		pHCSR04Agent->destroyEntities(node, support);
 	}
-	rcl_publisher_fini(&xPubOdom, node);
-	rcl_subscription_fini(&xSubTwist, 	node);
+	if (pImuAgent != NULL){
+		pImuAgent->destroyEntities(node, support);
+	}
+	rcl_ret_t fini_pub = rcl_publisher_fini(&xPubOdom, node);
+	if (fini_pub != RCL_RET_OK){
+		printf("[DDD] Failed to fini odom publisher: %d\n", fini_pub);
+	}
+	rcl_ret_t fini_sub = rcl_subscription_fini(&xSubTwist, node);
+	if (fini_sub != RCL_RET_OK){
+		printf("[DDD] Failed to fini twist subscription: %d\n", fini_sub);
+	}
 }
 
 /***
@@ -322,6 +335,9 @@ uint DDD::getCount(){
 	}
 	if (pHCSR04Agent != NULL){
 		res += pHCSR04Agent->getCount();
+	}
+	if (pImuAgent != NULL){
+		res += pImuAgent->getCount();
 	}
 	return res;
 }
@@ -338,6 +354,9 @@ uint DDD::getHandles(){
 	if (pHCSR04Agent != NULL){
 		res += pHCSR04Agent->getHandles();
 	}
+	if (pImuAgent != NULL){
+		res += pImuAgent->getHandles();
+	}
 	return res;
 }
 
@@ -349,6 +368,10 @@ uint DDD::getHandles(){
 void DDD::addToExecutor(rclc_executor_t *executor){
 	if (pMotorsAgent != NULL){
 		pMotorsAgent->addToExecutor(executor);
+	}
+
+	if (pImuAgent != NULL){
+		pImuAgent->addToExecutor(executor);
 	}
 
 	buildContext(&xSubTwistContext, NULL);
@@ -480,3 +503,6 @@ void DDD::setHCSR04Agent(HCSR04Agent *p){
 	pHCSR04Agent = p;
 }
 
+void DDD::setImuAgent(application::ImuAgent *p){
+	pImuAgent = p;
+}

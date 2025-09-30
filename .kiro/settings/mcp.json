@@ -1,0 +1,47 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": []
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "sequentialthinking",
+        "sequentialthinking"
+      ],
+      "disabledTools": [
+        "sequentialthinking"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "disabled": false
+    },
+    "fast-filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "fast-filesystem-mcp"
+      ],
+      "env": {
+        "CREATE_BACKUP_FILES": "true"
+      },
+      "disabled": false
+    }
+  }
+}

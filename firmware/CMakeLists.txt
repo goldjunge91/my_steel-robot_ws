@@ -1,8 +1,7 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.13)
 
 # Change your executable name to something creative!
 set(NAME my_firmware) # <-- Name your project/executable here!
-
 set(PICO_SDK_PATH "/home/marco/pico-sdk" CACHE PATH "Path to the PICO SDK" FORCE)
 include(pico_sdk_import.cmake)
 

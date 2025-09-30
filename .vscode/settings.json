@@ -393,4 +393,5 @@
     "ros.distro": "humble",
     "C_Cpp.errorSquiggles": "enabled",
     "kiroAgent.configureMCP": "Enabled",
+    "ROS2.distro": "humble",
 }

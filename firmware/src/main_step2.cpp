@@ -1,9 +1,5 @@
 /***
- * Control Turntable and Led Lights
- *
- * Uses FreeRTOS Task
- * Jon Durrant
- * 15-Aug-2022
+ * Step 2: Motors + Simple IMU (no sensors)
  */
 
 #include "pico/stdlib.h"
@@ -14,13 +10,8 @@
 #include "hardware/uart.h"
 
 #include "BlinkAgent.h"
-
 #include "uRosBridge.h"
-#include "PubEntities.h"
-
 #include "MotorsAgent.h"
-#include "DDD.h"
-#include "HCSR04Agent.h"
 #include "application/ImuAgent.h"
 
 extern "C"
@@ -41,9 +32,9 @@ extern "C"
 // Standard Task priority
 #define TASK_PRIORITY (tskIDLE_PRIORITY + 1UL)
 
-// LED PAD to use
-#define BLINK_LED_PAD 2
-#define CONN_LED_PAD 3
+// LED PAD to use - Built-in LED on Pico
+#define BLINK_LED_PAD 25  // Built-in LED
+#define CONN_LED_PAD 25   // Built-in LED (same for both)
 
 // Left Motor
 #define LEFT_PWR_CW 9
@@ -62,7 +53,7 @@ extern "C"
 #define KI 0.019
 #define KD 0.24
 
-char ROBOT_NAME[] = "ddd";
+char ROBOT_NAME[] = "ddd_step2";
 
 #if ENABLE_DEBUG_HEARTBEAT
 static void debugHeartbeatTask(void *params)
@@ -84,58 +75,6 @@ static void debugHeartbeatTask(void *params)
 #endif
 
 /***
- * Debug function to look at Task Stats
- */
-void runTimeStats()
-{
-	TaskStatus_t *pxTaskStatusArray;
-	volatile UBaseType_t uxArraySize, x;
-	unsigned long ulTotalRunTime;
-
-	// Get number of takss
-	uxArraySize = uxTaskGetNumberOfTasks();
-	printf("Number of tasks %d\n", uxArraySize);
-
-	// Allocate a TaskStatus_t structure for each task.
-	pxTaskStatusArray = (TaskStatus_t *)pvPortMalloc(uxArraySize * sizeof(TaskStatus_t));
-
-	if (pxTaskStatusArray != NULL)
-	{
-		// Generate raw status information about each task.
-		uxArraySize = uxTaskGetSystemState(pxTaskStatusArray,
-										   uxArraySize,
-										   &ulTotalRunTime);
-
-		// Print stats
-		for (x = 0; x < uxArraySize; x++)
-		{
-			printf("Task: %d \t cPri:%d \t bPri:%d \t hw:%d \t%s\n",
-				   pxTaskStatusArray[x].xTaskNumber,
-				   pxTaskStatusArray[x].uxCurrentPriority,
-				   pxTaskStatusArray[x].uxBasePriority,
-				   pxTaskStatusArray[x].usStackHighWaterMark,
-				   pxTaskStatusArray[x].pcTaskName);
-		}
-
-		// Free array
-		vPortFree(pxTaskStatusArray);
-	}
-	else
-	{
-		printf("Failed to allocate space for stats\n");
-	}
-
-	// Get heap allocation information
-	HeapStats_t heapStats;
-	vPortGetHeapStats(&heapStats);
-	printf("HEAP avl: %d, blocks %d, alloc: %d, free: %d\n",
-		   heapStats.xAvailableHeapSpaceInBytes,
-		   heapStats.xNumberOfFreeBlocks,
-		   heapStats.xNumberOfSuccessfulAllocations,
-		   heapStats.xNumberOfSuccessfulFrees);
-}
-
-/***
  * Main task to boot the other Agents
  * @param params - unused
  */
@@ -146,7 +85,9 @@ void mainTask(void *params)
 	printf("Boot task started for %s\n", ROBOT_NAME);
 
 	blink.start("Blink", TASK_PRIORITY);
+	printf("Blink started\n");
 
+	printf("Starting Motors...\n");
 	MotorsAgent motors;
 	motors.addMotor(0, LEFT_PWR_CW, LEFT_PWR_CCW,
 					LEFT_ROTENC_A, LEFT_ROTENV_B);
@@ -154,63 +95,25 @@ void mainTask(void *params)
 					RIGHT_ROTENC_A, RIGHT_ROTENV_B);
 	motors.configAllPID(KP, KI, KD);
 	motors.start("Motors", TASK_PRIORITY);
+	printf("Motors started\n");
 
-	HCSR04Agent range;
-	range.addSensor(0, "range_front");
-	range.addSensor(18, "range_back");
-	range.start("Range", TASK_PRIORITY);
-
+	printf("Starting Simple IMU...\n");
 	application::ImuAgent imu;
 	imu.setFrameId("imu_link");
 	imu.start("IMU", TASK_PRIORITY);
+	printf("Simple IMU started\n");
 
-	DDD ddd;
-	ddd.setMotorsAgent(&motors);
-	ddd.setHCSR04Agent(&range);
-	ddd.setImuAgent(&imu);
-	ddd.start("DDD", TASK_PRIORITY);
-
-	// Start up a uROS Bridge
+	// Start up a uROS Bridge (only motors for now)
+	printf("Starting micro-ROS Bridge...\n");
 	uRosBridge *bridge = uRosBridge::getInstance();
-
-	// PubEntities entities;
-
-	// bridge->setuRosEntities(&entities);
-	// bridge->setuRosEntities(&motors);
-	bridge->setuRosEntities(&ddd);
+	bridge->setuRosEntities(&motors);
 	bridge->setLed(CONN_LED_PAD);
 	bridge->start("Bridge", TASK_PRIORITY + 2);
-	// entities.start("PubSub", TASK_PRIORITY);
-
-	bool cw = false;
-	float rpm = 20.0;
-	float rps = 1.0;
-	for (;;)
-	{
-		vTaskDelay(10000);
-	}
+	printf("micro-ROS Bridge started\n");
 
 	for (;;)
 	{
-		printf("Set Speed %f dir %d\n", rpm, cw);
-		/*
-		motors.setSpeedRPM(0, rpm, cw);
-		motors.setSpeedRPM(1, rpm, !cw);
-		rpm += 20.0;
-		if (rpm > 200.0){
-			rpm = 100.0;
-		}
-		*/
-
-		motors.setSpeedRadPS(0, rps, cw);
-		motors.setSpeedRadPS(1, rps, !cw);
-		rps += 1.0;
-		if (rps > 6)
-		{
-			rps = 1.0;
-		}
-
-		cw = !cw;
+		printf("Main task running...\n");
 		vTaskDelay(10000);
 	}
 }
@@ -220,7 +123,6 @@ void mainTask(void *params)
  */
 void vLaunch(void)
 {
-
 	// Start blink task
 	TaskHandle_t task;
 	xTaskCreate(mainTask, "MainThread", 500, NULL, TASK_PRIORITY, &task);
@@ -242,12 +144,12 @@ int main(void)
 	// Setup serial over UART and give a few seconds to settle before we start
 	stdio_init_all();
 	sleep_ms(2000);
-	printf("GO\n");
+	printf("GO STEP2\n");
 	fflush(stdout);
 
 	// Start tasks and scheduler
 	const char *rtos_name = "FreeRTOS";
-	printf("Starting %s on core 0:\n", rtos_name);
+	printf("Starting %s on core 0 (STEP2):\n", rtos_name);
 	vLaunch();
 
 	return 0;

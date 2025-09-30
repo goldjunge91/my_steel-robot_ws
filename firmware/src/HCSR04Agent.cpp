@@ -112,10 +112,13 @@ void HCSR04Agent::run(){
  * @param node
  * @param support
  */
- void HCSR04Agent::destroyEntities(rcl_node_t *node, rclc_support_t *support){
-	 rcl_publisher_fini(&xPubRange, node);
+void HCSR04Agent::destroyEntities(rcl_node_t *node, rclc_support_t *support){
+	 rcl_ret_t ret = rcl_publisher_fini(&xPubRange, node);
+	 if (ret != RCL_RET_OK){
+		 printf("[HCSR04Agent] Failed to fini publisher: %d\n", ret);
+	 }
 	 xCount = 0;
- }
+}
 
 /***
  * Provide a count of the number of entities
@@ -132,4 +135,3 @@ void HCSR04Agent::run(){
  uint HCSR04Agent::getHandles(){
 	 return 0;
  }
-
