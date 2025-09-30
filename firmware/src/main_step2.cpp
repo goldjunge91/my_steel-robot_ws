@@ -98,15 +98,15 @@ void mainTask(void *params)
 	printf("Motors started\n");
 
 	printf("Starting Simple IMU...\n");
-	application::ImuAgent imu;
+	static application::ImuAgent imu;  // Static to ensure it stays alive
 	imu.setFrameId("imu_link");
 	imu.start("IMU", TASK_PRIORITY);
 	printf("Simple IMU started\n");
 
-	// Start up a uROS Bridge (only motors for now)
+	// Start up a uROS Bridge (only IMU for testing)
 	printf("Starting micro-ROS Bridge...\n");
 	uRosBridge *bridge = uRosBridge::getInstance();
-	bridge->setuRosEntities(&motors);
+	bridge->setuRosEntities(&imu);  // Only IMU to test it
 	bridge->setLed(CONN_LED_PAD);
 	bridge->start("Bridge", TASK_PRIORITY + 2);
 	printf("micro-ROS Bridge started\n");
