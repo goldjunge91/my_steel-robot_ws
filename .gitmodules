@@ -75,3 +75,7 @@
 	path = lib/FreeRTOS
 	url = https://github.com/FreeRTOS/FreeRTOS
 	branch = main
+[submodule "src/robot-micro-ROS-Agent"]
+	path = src/robot-micro-ROS-Agent
+	url = https://github.com/goldjunge91/robot-micro-ROS-Agent.git
+	branch = humble
