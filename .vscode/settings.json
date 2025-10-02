@@ -35,7 +35,7 @@
         "editor.insertSpaces": true
     },
     "[cpp]": {
-        "editor.defaultFormatter": "xaver.clang-format",
+        "editor.defaultFormatter": "Ranch-Hand-Robotics.rde-ros-2",
         "editor.tabSize": 4,
         "editor.insertSpaces": true
     },

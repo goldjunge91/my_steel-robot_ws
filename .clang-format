@@ -1,22 +1,22 @@
-BasedOnStyle: Google  # Baseline profile
-IndentWidth: 4  # Spaces per indent level
-TabWidth: 4  # Visual width for tabs
-UseTab: Never  # Options: Never, ForIndentation, Always
-ColumnLimit: 100  # Maximum line length before wrapping
-AccessModifierOffset: -4  # Offset for public/private/protected labels
-PointerAlignment: Right  # Options: Left, Right, Middle
-BreakBeforeBraces: Attach  # Options: Attach, Linux, Allman, Stroustrup, etc.
-AllowShortFunctionsOnASingleLine: Empty  # Options: None, Empty, Inline, All
-NamespaceIndentation: 'None'  # Options: None, Inner, All
-SortIncludes: true  # Toggle include sorting
-IncludeBlocks: Regroup  # Regroup, Preserve, Merge
-IncludeCategories:
-  - Regex: '^"'  # Project headers first
-    Priority: 1
-  - Regex: '^<'  # System headers next
-    Priority: 2
-AlignAfterOpenBracket: Align  # Options: Align, DontAlign, AlignAfterOperator
-AlignOperands: Align  # Align multi-line expressions
+# BasedOnStyle: Google  # Baseline profile
+# IndentWidth: 4  # Spaces per indent level
+# TabWidth: 4  # Visual width for tabs
+# UseTab: Never  # Options: Never, ForIndentation, Always
+# ColumnLimit: 100  # Maximum line length before wrapping
+# AccessModifierOffset: -4  # Offset for public/private/protected labels
+# PointerAlignment: Right  # Options: Left, Right, Middle
+# BreakBeforeBraces: Attach  # Options: Attach, Linux, Allman, Stroustrup, etc.
+# AllowShortFunctionsOnASingleLine: Empty  # Options: None, Empty, Inline, All
+# NamespaceIndentation: 'None'  # Options: None, Inner, All
+# SortIncludes: true  # Toggle include sorting
+# IncludeBlocks: Regroup  # Regroup, Preserve, Merge
+# IncludeCategories:
+#   - Regex: '^"'  # Project headers first
+#     Priority: 1
+#   - Regex: '^<'  # System headers next
+#     Priority: 2
+# AlignAfterOpenBracket: Align  # Options: Align, DontAlign, AlignAfterOperator
+# AlignOperands: Align  # Align multi-line expressions
 # SpaceBeforeParens: ControlStatements  # Options: Never, ControlStatements, Always
 # BreakConstructorInitializers: AfterColon  # Options: BeforeColon, BeforeComma, AfterColon
 # ConstructorInitializerIndentWidth: 4  # Indent for constructor initializer lists

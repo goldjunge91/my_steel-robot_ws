@@ -56,3 +56,35 @@ check-target:
     else \
         echo "TARGET not set. Please set TARGET=robot or TARGET=remote_pc in .env"; \
     fi
+
+# Build firmware for Raspberry Pi Pico
+build-firmware:
+    cd firmware && make build
+
+# Build firmware in release mode
+build-firmware-release:
+    cd firmware && make build_release
+
+# Flash firmware to Pico (requires BOOTSEL mode or picotool)
+flash-firmware:
+    cd firmware && make flash
+
+# Flash release firmware to Pico
+flash-firmware-release:
+    cd firmware && make flash-release
+
+# Monitor firmware debug output and micro-ROS connection
+monitor-firmware:
+    ./firmware/monitor_firmware.sh
+
+# Test firmware and micro-ROS connection
+test-firmware:
+    ./scripts/test_firmware_connection.sh
+
+# Start micro-ROS agent with auto-detection
+start-microros:
+    {{ros_setup}} && python3 scripts/launch_microros_agent.py
+
+# Start micro-ROS agent with specific device
+start-microros-dev device="/dev/ttyACM0":
+    {{ros_setup}} && ros2 run micro_ros_agent micro_ros_agent serial --dev {{device}} -b 115200 -v

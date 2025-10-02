@@ -18,9 +18,32 @@ build_release: clean
 # Compile: Alias für build (kompiliert alles)
 compile: clean build
 
-# # Flash: UF2-Datei auf Raspberry Pi Pico laden und rebooten
-# flash:	
-# 	cd /home/marco/ros2_steel_ws/my_steel-robot_ws/firmware
-# 	cp build/src/my_firmware.uf2 /media/marco/RPI-RP2/
-# # 	picotool load -f build/src/my_firmware.uf2
-# # 	picotool reboot
+# Flash: UF2-Datei auf Raspberry Pi Pico laden
+flash: build
+	@echo "Flashing firmware to Pico..."
+	@if [ -d "/media/marco/RPI-RP2/" ]; then \
+		cp build/src/my_firmware.uf2 /media/marco/RPI-RP2/ && \
+		echo "Firmware flashed via USB mass storage"; \
+	elif command -v picotool >/dev/null 2>&1; then \
+		picotool load -f build/src/my_firmware.uf2 && \
+		picotool reboot && \
+		echo "Firmware flashed via picotool"; \
+	else \
+		echo "Error: No flash method available. Either mount Pico in BOOTSEL mode or install picotool"; \
+		exit 1; \
+	fi
+
+# Flash release version
+flash-release: build_release
+	@echo "Flashing release firmware to Pico..."
+	@if [ -d "/media/marco/RPI-RP2/" ]; then \
+		cp build_release/src/my_firmware.uf2 /media/marco/RPI-RP2/ && \
+		echo "Release firmware flashed via USB mass storage"; \
+	elif command -v picotool >/dev/null 2>&1; then \
+		picotool load -f build_release/src/my_firmware.uf2 && \
+		picotool reboot && \
+		echo "Release firmware flashed via picotool"; \
+	else \
+		echo "Error: No flash method available. Either mount Pico in BOOTSEL mode or install picotool"; \
+		exit 1; \
+	fi
