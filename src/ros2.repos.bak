@@ -1,22 +1,13 @@
-# # List of repositories to use within your workspace
-# # See https://github.com/dirk-thomas/vcstool
-# ############
-# # Example:
-# ############
-# repositories:
-#   examples:
-#     type: git
-#     url: https://github.com/ros2/examples.git
-#     version: humble
-# # List of repositories to use within your workspace
-# # See https://github.com/dirk-thomas/vcstool
-# ############
-# # Example:
-# ############
+# Backup of src/ros2.repos created before adding missing repository entries
+# Timestamp: 2025-10-02
+# This file preserves the previous contents of src/ros2.repos so we don't lose
+# the recorded state before converting folders to vcs entries/submodules.
+
+```yaml
 repositories:
   robot:
     type: git
-    url: git@github.com:goldjunge91/robot.git
+    url: https://github.com/goldjunge91/robot.git
     version: humble
   mecabridge_hardware:
     type: git
@@ -74,15 +65,4 @@ repositories:
     type: git
     url: git@github.com:goldjunge91/robot_vision.git
     version: main
-  robot_controllers:
-    type: git
-    url: git@github.com:goldjunge91/robot_controllers.git
-    version: main
-  robot_hardware_interfaces:
-    type: git
-    url: git@github.com:goldjunge91/robot_hardware_interfaces.git
-    version: main
-  robot-micro-ROS-Agent:
-    type: git
-    url: https://github.com/goldjunge91/robot-micro-ROS-Agent.git
-    version: humble
+```
