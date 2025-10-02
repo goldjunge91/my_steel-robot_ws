@@ -74,3 +74,4 @@ build
 .project
 .pydevproject
 .settings
+scripts/__pycache__/
