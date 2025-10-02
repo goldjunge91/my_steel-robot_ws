@@ -79,3 +79,11 @@
 	path = src/robot-micro-ROS-Agent
 	url = https://github.com/goldjunge91/robot-micro-ROS-Agent.git
 	branch = humble
+[submodule "src/robot_controllers"]
+	path = src/robot_controllers
+	url = git@github.com:goldjunge91/robot_controllers.git
+	branch = main
+[submodule "src/robot_hardware_interfaces"]
+	path = src/robot_hardware_interfaces
+	url = git@github.com:goldjunge91/robot_hardware_interfaces.git
+	branch = main
