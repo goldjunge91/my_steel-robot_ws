@@ -1,91 +1,142 @@
 # Technology Stack
 
-## Core Framework
-- **ROS2 Humble**: Primary robotics framework
-- **ros2_control**: Hardware abstraction and controller management
-- **colcon**: Build system for ROS2 packages
-- **Just**: Command runner for development workflows
+> **TODO: This steering document needs approval before being considered final**
 
-## Programming Languages
-- **C++17**: Firmware and hardware interfaces
-- **C11**: Low-level firmware components
-- **Python3**: High-level nodes and utilities
-- **CMake**: Build configuration
+## Core Technologies
+- **ROS2 Humble** - Primary robotics framework
+- **C++17/C11** - System-level programming for hardware interfaces and firmware
+- **Python 3** - High-level nodes, scripts, and utilities
+- **CMake** - Build system for C++ components and firmware
+- **Colcon** - ROS2 workspace build tool
 
-## Hardware Platform
-- **SBC**: Raspberry Pi 4B/5 (Ubuntu 22.04/Raspberry Pi OS)
-- **MCU**: Raspberry Pi Pico (RP2040)
-- **Communication**: USB Serial, micro-ROS protocol
+## Hardware Platforms
+- **Raspberry Pi 4B (8GB)** - Main compute running Ubuntu 22.04/ROS2
+- **Raspberry Pi Pico** - Real-time microcontroller for motor control, Nerf launcher, IMU, and ToF sensor
+- **micro-ROS** - Bridge between Pico firmware and ROS2 ecosystem
 
-## Key Libraries & Dependencies
+## Key ROS2 Packages & Dependencies
+- **ros2_control** - Hardware abstraction and controller framework
+- **ros2_controllers** - Standard controllers (mecanum_drive_controller, diff_drive_controller)
+- **robot_localization** - Sensor fusion and EKF for odometry
+- **Nav2** - Navigation stack for autonomous movement
+- **Gazebo** - Physics simulation for development and testing
+- **MoveIt** - Motion planning for manipulator control
 
-### Firmware (Pico)
-- **Pico SDK**: Hardware abstraction for RP2040
-- **FreeRTOS**: Real-time operating system
-- **micro-ROS**: ROS2 communication over serial/USB
-- **Eigen**: Linear algebra library
-
-### ROS2 Packages
-- **ros2_controllers**: Standard controllers (mecanum_drive_controller)
-- **robot_state_publisher**: URDF/TF management
-- **controller_manager**: Controller lifecycle management
-- **gazebo_ros2_control**: Simulation support
+## Build System & Automation
+- **Colcon** - Primary ROS2 workspace build tool
+- **vcs** - Version control system tool for multi-repo management  
+- **rosdep** - ROS dependency management
+- **Just** - Task runner for common development workflows (currently being updated)
+- **CMake** - Build system for firmware and C++ components
 
 ## Common Commands
 
-### Build & Development
+### Workspace Setup
 ```bash
-# Build entire workspace
-just build
+# Setup environment and install dependencies
+./setup.sh
 
-# Build only hardware packages
-just build-hardware
+# Import all repositories
+vcs import src < src/ros2.repos
 
-# Clean build artifacts
-just clean
+# Install ROS dependencies
+rosdep install --from-paths src --ignore-src -y --rosdistro=humble
+
+# Build workspace
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+```
+
+### Development Workflow
+```bash
+# Source ROS and workspace
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+# Clean build
+rm -rf build install log
+colcon build --symlink-install
+
+# Build specific packages
+colcon build --packages-select robot_hardware robot_bringup
 
 # Run tests
-just run-tests
+colcon test --packages-select robot_hardware
 
-# Open development shell
-just shell
+# Launch robot system
+ros2 launch robot_bringup bringup.launch.py robot_model:=robot_xl
 ```
 
-### Simulation & Testing
+### Firmware Development
 ```bash
-# Start Gazebo simulation
-just start-gazebo-sim
+# Build Pico firmware (from firmware directory)
+cd firmware
+make build
 
-# Launch tmux simulation session
-just start-sim-tmux
+# Flash to Pico (requires BOOTSEL mode)
+make flash
 
-# Run keyboard teleoperation
-just run-teleop
+# Monitor firmware output
+./monitor_firmware.sh
+
+# Test micro-ROS connection
+cd ../scripts
+./test_firmware_connection.sh
 ```
 
-### Configuration
-```bash
-# Check current target configuration
-just check-target
 
-# Copy environment template
+### Target Configuration
+Configure your deployment target in `.env` file:
+```bash
+# Copy example configuration
 cp .env.example .env
-```
 
-### Firmware (from firmware/ directory)
+# Edit configuration
+TARGET=robot              # For SBC deployment
+# TARGET=remote_pc         # For development/simulation
+
+# Robot model configuration
+ROBOT_MODEL_NAME=robot_xl  # Primary robot model
+DRIVE_TYPE=mecanum         # Drive system type
+ROS_DISTRO=humble         # ROS2 distribution
+``` 
+
+
 ```bash
-# Build firmware
-make
+# Copy example configuration
+cp .env.example .env
 
-# Build release version
-make -C build_release
+# Edit configuration
+# TARGET=robot              # For SBC deployment
+TARGET=remote_pc         # For development/simulation
 
-# Flash to Pico (requires picotool)
-# Follow firmware/README.md for detailed instructions
-```
+# Robot model configuration
+ROBOT_MODEL_NAME=robot_xl  # Primary robot model
+DRIVE_TYPE=mecanum         # Drive system type
+ROS_DISTRO=humble         # ROS2 distribution
+``` 
 
-## Build System Details
-- **colcon**: Uses `--symlink-install` for faster development
-- **merge-install**: Optional layout for deployment
-- **Event handlers**: `console_direct+` for immediate output
-- **Dependencies**: Managed via `package.xml` and `rosdep`
+## Development Environment
+- **Docker/DevContainer** support available for consistent development
+- **VS Code** configuration included with ROS2 extensions
+- **Environment variables** via `.env` file for target-specific configuration
+- **Cross-platform support** for Windows (WSL2), Linux, and macOS development
+- **Remote development** capabilities for working with SBC over SSH
+
+## Firmware Stack
+- **Pico SDK** - Raspberry Pi Pico development framework
+- **FreeRTOS** - Real-time operating system for Pico
+- **micro-ROS** - ROS2 client library for microcontrollers
+- **Eigen** - Linear algebra library for sensor processing
+- **Custom libraries** - VL53L0X ToF sensor, motor control, servo control
+
+## Computer Vision Stack
+- **OpenCV** - Computer vision library for image processing
+- **YOLOv5** - Real-time object detection for face recognition
+- **USB Video Class (UVC)** - Camera interface for 1080p video capture
+
+## Communication Protocols
+- **Serial/UART** - Primary communication between Pi 4B and Pico
+- **I2C** - IMU and sensor communication on Pico
+- **PWM** - Motor control signals and servo control
+- **USB** - Camera interface and development/debugging

@@ -1,13 +1,32 @@
 cmake_minimum_required(VERSION 3.15)
+project(freertos_port C CXX)
 
-add_library(freertos_config STATIC)
+# TODO: After successfull build can be removed
+# add_library(freertos_config STATIC)
+# # Sources for the freertos_config static library (implementation)
+# target_sources(freertos_config PUBLIC
+#     ${CMAKE_CURRENT_LIST_DIR}/IdleMemory.c
+# )
 
-# Sources for the freertos_config static library (implementation)
-target_sources(freertos_config PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}/IdleMemory.c
-    
+# 1) Von FreeRTOS-Kernel erwartetes Target
+add_library(freertos_config INTERFACE)
+target_include_directories(freertos_config SYSTEM INTERFACE
+    ${CMAKE_CURRENT_LIST_DIR}            # enthält FreeRTOSConfig.h
+)
+target_compile_definitions(freertos_config INTERFACE
+    projCOVERAGE_TEST=0
+    # configNUMBER_OF_CORES=2
+    configNUM_CORES=2
 )
 
+# 2) Eigene Port-Objekte separat bauen
+add_library(freertos_port_objs STATIC
+    ${CMAKE_CURRENT_LIST_DIR}/IdleMemory.c
+    ${CMAKE_CURRENT_LIST_DIR}/cppMemory.cpp
+)
+target_link_libraries(freertos_port_objs
+    PUBLIC freertos_config FreeRTOS-Kernel pico_stdlib
+)
 # Create an INTERFACE target to export include directories and compile definitions
 # to any target that links against the freertos configuration. This ensures
 # header paths and defines propagate to Pico SDK and other build units.
