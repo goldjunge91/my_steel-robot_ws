@@ -24,7 +24,9 @@
   - Update analysis tools with accurate package information
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [-] 1.4 Write unit tests for analysis tools
+- [x] 1.4 Write unit tests for analysis tools
+
+
 
 
 
