@@ -1,3 +1,120 @@
+# Robot ROS2 OS
+
+
+Ziel
+
+- Dokumentiere die Workspace-Struktur, Quickstart-Schritte und die wichtigsten Konfigurationsdateien.
+- Fokus: Verwendung von ros2_control + dem vorhandenen mecanum_drive_controller (ros2_controllers).
+- Modularer Aufbau, damit dieselbe Hardware‑Basis auch als Differential‑Antrieb betrieben werden kann.
+
+```markdown
+Workspace-Struktur
+my_steel-robot_ws/
+├── README.md
+├── ros2.repos                # für `vcs import src < ros2.repos`
+├── .github/
+│   └── workflows/
+│       └── firmware-ci.yml   # Firmware CI pipeline
+├── 
+├── docs/
+│   ├── PINMAP.md
+│   ├── wiring_schematic.pdf
+│   └── weitere dokumente....
+├── src/                               # (vcs import wird hierhin klonen)
+│   ├── robot_description/             # URDF/xacro, meshes, components_config
+│   ├── robot_bringup/                 # launches: bringup.launch.py, microros.launch.py
+│   ├── robot_gazebo/                  # Gazebo / Webots assets
+│   ├── robot_controllers/             # controller YAMLs (mecanum/diff), ggf. plugins
+│   ├── robot_hardware/                # ros2_control SystemInterface (hardware_interface) oder bridge node
+│   ├── robot_localization/            # ekf, sensor fusion config
+│   ├── robot_vision/                  # face detection, tracking
+│   ├── robot_nerf_launcher/           # high-level nerf control, safety
+│   ├── robot_utils/                   # flash scripts, serial discovery, helper scripts
+│   ├── robot-micro-ROS-Agent/         # flash scripts, serial discovery, helper scripts
+│   └── robot_autonomy/                # Nav2 config, docker-compose / foxglove UI, just recipes
+├── firmware/                    # Firmware (Raspberry Pi Pico) - separater Repo empfohlen
+│   ├── src/
+│   │   ├── port/FreeRTOS-Kernel
+│   │   ├── application/
+│   │   ├── hal/
+│   │   │   ├── hardware/
+│   │   │   ├── hal/
+│   │   ├── shared/
+│   │   ├── Makefile
+│   │   └── README.md
+│   │   └── weitere files...
+├── lib/
+│   ├── eigen
+│   ├── FreeRTOS
+│   ├── FreeRTOS-Kernel
+│   ├── micro_ros_raspberrypi_pico_sdk
+│   ├── pico-distance-sensor
+│   └── lib_repos.repos
+└── .env.example               # für docker/just oder .env Optionen
+```
+
+### Configure environment
+
+The repository is used to run the code both on the real robot and in the simulation. Specify `ROBOT_ROS_BUILD_TYPE` the variable according to your needs.
+
+Real robot:
+
+```bash
+export ROBOT_ROS_BUILD_TYPE=hardware
+```
+
+Simulation:
+
+```bash
+export ROBOT_ROS_BUILD_TYPE=simulation
+```
+
+### Build
+
+```bash
+source /opt/ros/$ROS_DISTRO/setup.bash
+
+vcs import src < src/robot_ros/robot/robot_${ROBOT_ROS_BUILD_TYPE}.repos
+vcs import src < src/robot_ros/robot/manipulator.repos # For RObot XL manipulation package
+
+export PIP_BREAK_SYSTEM_PACKAGES=1
+sudo rosdep init
+rosdep update --rosdistro $ROS_DISTRO
+rosdep install -i --from-path src --rosdistro $ROS_DISTRO -y
+
+colcon build --symlink-install --packages-up-to robot --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
+
+#### Run the Robot
+
+For Robot XL, you can specify a particular configuration using the launch `configuration` argument. If you are using the `manipulation` configuration, please refer to [MANIPULATOR.md](MANIPULATOR.md) for detailed instructions.
+
+**Real robot:**
+
+```bash
+source install/setup.bash
+ros2 launch robot_bringup bringup.launch.py robot_model:=<robot/robot_xl>
+```
+
+> [!NOTE]
+> To run the software on real RObots, communication with the CORE2 is required. Ensure the firmware is updated before running the micro-ROS agent. For detailed instructions, refer to the robot_ros2_firmware repository.
+>
+> ```bash
+> sudo su
+> source install/setup.bash
+> ros2 run robot_utils flash_firmware --robot-model <robot/robot_xl>
+> exit
+> ```
+
+**Simulation:**
+
+```bash
+source install/setup.bash
+ros2 launch robot_gazebo simulation.launch.py robot_model:=<robot/robot_xl>
+```
+
+
+
 <!-- TODO: Needs an check -->
 <!-- # my_steel-robot_ws
 
