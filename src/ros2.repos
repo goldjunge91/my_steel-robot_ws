@@ -18,21 +18,25 @@ repositories:
     type: git
     url: git@github.com:goldjunge91/robot.git
     version: humble
-  mecabridge_hardware:
-    type: git
-    url: https://github.com/goldjunge91/mecabridge_hardware.git
-    version: main
+  # mecabridge_hardware:
+  #   type: git
+  #   url: https://github.com/goldjunge91/mecabridge_hardware.git
+  #   version: main
   # serial:
   #   type: git
   #   url: https://github.com/joshnewans/serial
   #   version: newans_ros2
+  # robot_autonomy:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_autonomy.git
+  #   version: main
+  # robot_firmware:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_firmware.git
+  #   version: main
   open_manipulator_x:
     type: git
     url: https://github.com/goldjunge91/open_manipulator_x.git
-    version: main
-  robot_autonomy:
-    type: git
-    url: https://github.com/goldjunge91/robot_autonomy.git
     version: main
   robot_bringup:
     type: git
@@ -45,10 +49,6 @@ repositories:
   robot_description:
     type: git
     url: https://github.com/goldjunge91/robot_description.git
-    version: main
-  robot_firmware:
-    type: git
-    url: https://github.com/goldjunge91/robot_firmware.git
     version: main
   robot_gazebo:
     type: git
