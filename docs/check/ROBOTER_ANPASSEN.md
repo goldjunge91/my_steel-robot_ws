@@ -73,15 +73,15 @@ Dieses Dokument bietet eine detaillierte Anleitung, wie Sie die Geometrie und da
 
 Die folgende Tabelle gibt einen Überblick über die wichtigsten Dateien und Verzeichnisse, die für die Anpassung des Roboters relevant sind.
 
-| Pfad                                                                                       | Typ         | Beschreibung                                                                                                                  |
-| ------------------------------------------------------------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Pfad                                                                                           | Typ         | Beschreibung                                                                                                                  |
+| ---------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | [`src/robot_ros/robot_description/`](src/robot_ros/robot_description/)                     | Verzeichnis | Das Hauptpaket, das alle Beschreibungsdateien für die Roboter enthält.                                                        |
-| [`.../urdf/`](src/robot_ros/robot_description/urdf/)                                       | Verzeichnis | Enthält die URDF-Dateien (`.xacro`), die die Struktur, Gelenke und die allgemeine Geometrie der Roboter definieren.           |
-| [`.../meshes/`](src/robot_ros/robot_description/meshes/)                                   | Verzeichnis | Enthält die 3D-Modelle (Mesh-Dateien) für die einzelnen Teile der Roboter, die für die visuelle Darstellung verwendet werden. |
-| [`.../urdf/robot.urdf.xacro`](src/robot_ros/robot_description/urdf/robot.urdf.xacro)       | Datei       | Die Haupt-Beschreibungsdatei für den **robot**. Hier werden die einzelnen Komponenten zusammengefügt.                         |
-| [`.../urdf/robot_xl.urdf.xacro`](src/robot_ros/robot_description/urdf/robot_xl.urdf.xacro) | Datei       | Die Haupt-Beschreibungsdatei für den **robot XL**.                                                                            |
-| [`.../meshes/robot/`](src/robot_ros/robot_description/meshes/robot/)                       | Verzeichnis | 3D-Modelle für den **robot** (z.B. `body.stl`, `cover.stl`).                                                                  |
-| [`.../meshes/robot_xl/`](src/robot_ros/robot_description/meshes/robot_xl/)                 | Verzeichnis | 3D-Modelle für den **robot XL**.                                                                                              |
+| [`.../urdf/`](src/robot_ros/robot_description/urdf/)                                         | Verzeichnis | Enthält die URDF-Dateien (`.xacro`), die die Struktur, Gelenke und die allgemeine Geometrie der Roboter definieren.           |
+| [`.../meshes/`](src/robot_ros/robot_description/meshes/)                                     | Verzeichnis | Enthält die 3D-Modelle (Mesh-Dateien) für die einzelnen Teile der Roboter, die für die visuelle Darstellung verwendet werden. |
+| [`.../urdf/robot.urdf.xacro`](src/robot_ros/robot_description/urdf/robot.urdf.xacro)       | Datei       | Die Haupt-Beschreibungsdatei für den **robot**. Hier werden die einzelnen Komponenten zusammengefügt.                        |
+| [`.../urdf/robot_xl.urdf.xacro`](src/robot_ros/robot_description/urdf/robot_xl.urdf.xacro) | Datei       | Die Haupt-Beschreibungsdatei für den **robot XL**.                                                                           |
+| [`.../meshes/robot/`](src/robot_ros/robot_description/meshes/robot/)                       | Verzeichnis | 3D-Modelle für den **robot** (z.B. `body.stl`, `cover.stl`).                                                                 |
+| [`.../meshes/robot_xl/`](src/robot_ros/robot_description/meshes/robot_xl/)                 | Verzeichnis | 3D-Modelle für den **robot XL**.                                                                                             |
 
 ## Schritte zur Änderung
 
