@@ -26,8 +26,8 @@ RUN --mount=type=cache,target=/var/cache/apt \
     libusb-1.0-0-dev \
     libudev-dev \
     ninja-build \
-    ccache \
-    && rm -rf /var/lib/apt/lists/*
+    ccache
+# && rm -rf /var/lib/apt/lists/*
 
 # Copy and optionally run picotool / pico-sdk installer (run as root during image build)
 # Install Pico SDK only when requested at build time. COPY must be separate from RUN.
