@@ -66,7 +66,8 @@
   - Design package merge strategy preserving best implementations
   - _Requirements: 2.1, 2.2, 3.1, 3.2, 6.1_
 
-- [-] 3.1 Design robot package restructuring
+- [x] 3.1 Design robot package restructuring
+
 
   - Plan restructuring of robot package into repo collection format
   - Design structure with manipulator.repos, robot_hardware.repos, robot_simulation.repos
@@ -74,12 +75,16 @@
   - Plan integration with existing robot_description package
   - _Requirements: 3.1, 3.2, 6.3_
 
-- [ ] 3.2 Design hardware interface strategy
+
+- [x] 3.2 Design hardware interface strategy
+
   - Plan archiving of mecabridge_hardware (experimental attempt) for reference
   - Design expansion of robot_hardware_interfaces for active development
   - Plan integration of DC motors, servos, ESCs functionality
   - Design ros2_control integration strategy for robot_hardware_interfaces
   - _Requirements: 3.1, 3.2, 6.3_
+
+
 
 - [ ] 3.3 Plan controller package consolidation
   - Evaluate robot_controller vs robot_controllers and determine merge strategy
