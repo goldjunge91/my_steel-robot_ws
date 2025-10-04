@@ -35,7 +35,7 @@ my_steel-robot_ws/
 - **`husarion_controllers/`**: Mecanum drive controller
 - **`micro-ROS-Agent/`**: Communication bridge for micro-ROS
 - **`open_manipulator_x/`**: Manipulator arm support
-- **`rosbot_hardware_interfaces/`**: Additional hardware interfaces
+- **`robot_hardware_interfaces/`**: Additional hardware interfaces
 
 ## Firmware Structure (firmware/)
 ```
