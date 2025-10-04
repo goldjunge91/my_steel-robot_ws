@@ -19,7 +19,7 @@ repositories:
     url: git@github.com:goldjunge91/robot.git
     version: humble
   mecabridge_hardware:
-    type: 
+    type: git
     url: https://github.com/goldjunge91/mecabridge_hardware.git
     version: main
   # serial:
