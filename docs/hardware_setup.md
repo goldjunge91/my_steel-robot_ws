@@ -225,7 +225,7 @@ The workspace mixes ROS 2 packages and support repositories under `src/`. Use th
 | `robot_nerf_launcher` | Support repo | (Placeholder) Code and documentation for the Nerf launcher attachment | Expand with nodes controlling actuators or sensors for the accessory |
 | `robot_utils` | ROS 2 package | Helper scripts/binaries for flashing, serial discovery, deployment | `robot_utils/flash_firmware.py`, `scripts/` utilities; depends on `ament_index_python`; install provides CLI tools |
 | `robot_vision` | Support repo | Reserved for camera/vision processing nodes | Document pipeline once implemented (e.g., face detection, AprilTags) |
-| `rosbot_hardware_interfaces` | ROS 2 package (upstream) | Husarion’s ros2_control integration for ROSbot platforms—used as reference or dependency | Provides example diff-drive controller, URDF includes, and topics (`README.md`) |
+| `robot_hardware_interfaces` | ROS 2 package (upstream) | Husarion’s ros2_control integration for robot platforms—used as reference or dependency | Provides example diff-drive controller, URDF includes, and topics (`README.md`) |
 | `serial` | External library | Vendored serial port utility (likely `wjwwood/serial`) for low-level communication | Treat as third-party dependency; do not modify unless updating vendor drop |
 
 ### Cross-Package Dependencies
@@ -347,8 +347,8 @@ Use this deep dive when you need to locate specific launch files, headers, or im
 ### robot_vision
 - Placeholder repository; `README.md` outlines planned vision stack (face detection, AprilTags, etc.).
 
-### rosbot_hardware_interfaces
-- Upstream ros2_control implementation for ROSbot platforms.
+### robot_hardware_interfaces
+- Upstream ros2_control implementation for robot platforms.
 - `README.md`: topic interface summary, launch instructions (`example_diff_drive.launch.py`).
 - Useful reference when comparing mecabridge configuration to existing Husarion robots.
 

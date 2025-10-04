@@ -54,7 +54,7 @@ Vorbereitung (auf deinem Entwicklungsrechner oder direkt auf dem Pi):
 
 - Build (angenommen `src/pico_firmware` enthält ein CMake/micro-ROS-Client-Projekt):
 
-  cd /home/marco/workspace/rosbot_ws2/src/pico_firmware
+  cd /home/marco/workspace/robot_ws2/src/pico_firmware
   export PICO_SDK_PATH=$(pwd)/pico-sdk   # falls pico-sdk im repo liegt
   mkdir -p build && cd build
   cmake ..

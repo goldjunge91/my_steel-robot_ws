@@ -1,6 +1,6 @@
-# ROSbot Series - Software
+# robot Series - Software
 
-Detailed information about content of rosbot package for ROS2.
+Detailed information about content of robot package for ROS2.
 
 ## ROS API
 
@@ -15,24 +15,24 @@ Detailed information about content of rosbot package for ROS2.
 [micro_ros_agent/micro_ros_agent]: https://github.com/micro-ROS/micro-ROS-Agent
 [robot_localization/ekf_node]: https://github.com/cra-ros-pkg/robot_localization
 [robot_state_publisher/robot_state_publisher]: https://github.com/ros/robot_state_publisher
-[rosbot_hardware_interfaces/rosbot_imu_sensor]: https://github.com/husarion/rosbot_hardware_interfaces/blob/main/src/rosbot_imu_sensor.cpp
-[rosbot_hardware_interfaces/rosbot_system]: https://github.com/husarion/rosbot_hardware_interfaces/blob/main/src/rosbot_system.cpp
+[robot_hardware_interfaces/robot_imu_sensor]: https://github.com/husarion/robot_hardware_interfaces/blob/main/src/robot_imu_sensor.cpp
+[robot_hardware_interfaces/robot_system]: https://github.com/husarion/robot_hardware_interfaces/blob/main/src/robot_system.cpp
 [ros_gz_bridge/parameter_bridge]: https://github.com/gazebosim/ros_gz/tree/ros2/ros_gz_bridge
 
 | 🤖  | 🖥️  | NODE                          | DESCRIPTION                                                                                                                                                                                                                                                                                                                                         |
 | --- | --- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ✅  | ✅  | **`controller_manager`**      | Controller Manager performs two main functions. First, it manages controllers and their required interfaces, handling tasks like loading, activating, deactivating, and unloading. Second, it interacts with hardware components, ensuring access to their interfaces. <br /> _[controller_manager/controller_manager]_                             |
 | ✅  | ✅  | **`drive_controller`**  | The controller managing a mobile robot with a differential or omni drive (mecanum wheels). Converts speed commands for the robot body to wheel commands for the base. It also calculates odometry based on hardware feedback and shares it.`DiffDriveController` or `MecanumDriveController` <br /> _[diff_drive_controller/diff_drive_controller]_ |
-| ✅  | ✅  | **`ekf_node`**                | Used to fuse wheel odometry and IMU data. Parameters are defined in `rosbot_bringup/config/ekf.yaml` <br /> _[robot_localization/ekf_node]_                                                                                                                                                                                                         |
+| ✅  | ✅  | **`ekf_node`**                | Used to fuse wheel odometry and IMU data. Parameters are defined in `robot_bringup/config/ekf.yaml` <br /> _[robot_localization/ekf_node]_                                                                                                                                                                                                         |
 | ❌  | ✅  | **`/gz_bridge`**              | Transmits Gazebo simulation data to the ROS layer <br /> _[ros_gz_bridge/parameter_bridge]_                                                                                                                                                                                                                                         |
 | ❌  | ✅  | **`gz_ros_control`**         | Responsible for integrating the ros2_control controller architecture with the Gazebo simulator. <br /> _[gz_ros2_control/gz_ros2_control]_                                                                                                                                                                                                                                         |
 | ✅  | ✅  | **`imu_broadcaster`**         | The broadcaster to publish readings of IMU sensors <br /> _[imu_sensor_broadcaster/imu_sensor_broadcaster]_                                                                                                                                                                                                                                         |
-| ✅  | ❌  | **`imu_sensor_node`**         | The node responsible for subscriptions to IMU data from the hardware <br /> _[rosbot_hardware_interfaces/rosbot_imu_sensor]_                                                                                                                                                                                                                        |
+| ✅  | ❌  | **`imu_sensor_node`**         | The node responsible for subscriptions to IMU data from the hardware <br /> _[robot_hardware_interfaces/robot_imu_sensor]_                                                                                                                                                                                                                        |
 | ✅  | ✅  | **`joint_state_broadcaster`** | The broadcaster reads all state interfaces and reports them on specific topics <br /> _[joint_state_broadcaster/joint_state_broadcaster]_                                                                                                                                                                                                           |
 | ✅  | ✅  | **`laser_filter`**            | This is a filter that removes points in a laser scan inside of a cartesian box <br /> _[laser_filters/scan_to_scan_filter_chain]_                                                                                                                                                                                                                   |
 | ✅  | ✅  | **`robot_state_publisher`**   | Uses the URDF specified by the parameter robot\*description and the joint positions from the topic joint\*states to calculate the forward kinematics of the robot and publish the results using tf <br /> _[robot_state_publisher/robot_state_publisher]_                                                                                             |
-| ✅  | ❌  | **`rosbot_system_node`**      | The node communicating with the hardware responsible for receiving and sending data related to engine control <br /> _[rosbot_hardware_interfaces/rosbot_system]_                                                                                                                                                                                   |
-| ❌  | ✅  | **`rosbot_gz_bridge`**        | Transmits data about the robot between the Gazebo simulator and ROS. <br /> _[ros_gz_bridge/parameter_bridge]_ |
+| ✅  | ❌  | **`robot_system_node`**      | The node communicating with the hardware responsible for receiving and sending data related to engine control <br /> _[robot_hardware_interfaces/robot_system]_                                                                                                                                                                                   |
+| ❌  | ✅  | **`robot_gz_bridge`**        | Transmits data about the robot between the Gazebo simulator and ROS. <br /> _[ros_gz_bridge/parameter_bridge]_ |
 | ✅  | ❌  | **`/stm32_node`**             | Node responsible for communication with hardware. <br /> _[micro_ros_agent/micro_ros_agent]_                                                                                                                                                                                                                      |
 
 ### Available Topics
@@ -59,7 +59,7 @@ Detailed information about content of rosbot package for ROS2.
 | ✅  | ✅  | **`imu_broadcaster/imu`**                      | Broadcasts IMU (Inertial Measurement Unit) data. <br /> _[sensor_msgs/Imu]_                                                   |
 | ✅  | ✅  | **`joint_states`**                             | Publishes information about the state of robot joints. <br /> _[sensor_msgs/JointState]_                                      |
 | ✅  | ✅  | **`odometry/filtered`**                        | Publishes filtered odometry data. <br /> _[nav_msgs/Odometry]_                                                                |
-| ✅  | ✅  | **`odometry/wheels`**              | Provides odometry data from the base controller of the ROSbot XL. <br /> _[nav_msgs/Odometry]_                                |
+| ✅  | ✅  | **`odometry/wheels`**              | Provides odometry data from the base controller of the robot XL. <br /> _[nav_msgs/Odometry]_                                |
 | ✅  | ✅  | **`robot_description`**                        | Publishes the robot's description. <br /> _[std_msgs/String]_                                                                 |
 | ✅  | ✅  | **`scan`**                                     | Publishes raw laser scan data. <br /> _[sensor_msgs/LaserScan]_                                                               |
 | ✅  | ✅  | **`scan_filtered`**                            | Publishes filtered laser scan data. <br /> _[sensor_msgs/LaserScan]_                                                          |
@@ -77,11 +77,11 @@ Detailed information about content of rosbot package for ROS2.
 
 ## Package Description
 
-### `rosbot`
+### `robot`
 
 Metapackage that contains dependencies to other repositories. It is also used to define whether simulation dependencies should be used.
 
-### `rosbot_bringup`
+### `robot_bringup`
 
 The main package responsible for running the physical robot.
 
@@ -90,15 +90,15 @@ The main package responsible for running the physical robot.
 - `bringup.launch.py` - is responsible for communicating with firmware and activating all logic related to the robot's movement and processing of sensory data.
 - `microros.launch.py` - establishes connection with the hardware using microROS agent.
 
-### `rosbot_controller`
+### `robot_controller`
 
-ROS2 hardware controller for ROSbot. It manages inputs and outputs data from ROS2 control, forwarding it via ROS topics to be read by microROS. The controller.launch.py file loads the robot model defined in rosbot_description along with ROS2 control dependencies from [rosbot_hardware_interfaces](https://github.com/husarion/rosbot_hardware_interfaces).
+ROS2 hardware controller for robot. It manages inputs and outputs data from ROS2 control, forwarding it via ROS topics to be read by microROS. The controller.launch.py file loads the robot model defined in robot_description along with ROS2 control dependencies from [robot_hardware_interfaces](https://github.com/husarion/robot_hardware_interfaces).
 
 **Available Launch Files:**
 
 - `controller.launch.py` - starts controllers related to ros2_control responsible for driving, communication with imu and joint_states publications
 
-### `rosbot_description`
+### `robot_description`
 
 URDF model used for both simulation and as a source of transforms on physical robot. It was written to be compatible with ROS Industrial and preconfigured for ROS2 control.
 
@@ -109,10 +109,10 @@ URDF model used for both simulation and as a source of transforms on physical ro
 
 **Main Description Files:**
 
-- `rosbot.urdf.xacro` - Final configuration of ROSbot.
-- `rosbot_xl.urdf.xacro` - Final configuration of ROSbot XL.
+- `robot.urdf.xacro` - Final configuration of robot.
+- `robot_xl.urdf.xacro` - Final configuration of robot XL.
 
-### `rosbot_gazebo`
+### `robot_gazebo`
 
 Launch files for Gazebo working with ROS2 control.
 
@@ -121,7 +121,7 @@ Launch files for Gazebo working with ROS2 control.
 - `simulations.launch.py` - Runs simulations with a defined robot and all sensors on it.
 - `spawn_robot.launch.py` - Allow to spawn new robot in already running simulation.
 
-### `rosbot_localization`
+### `robot_localization`
 
 A package related to the logic responsible for performing sensor fusion.
 
@@ -129,7 +129,7 @@ A package related to the logic responsible for performing sensor fusion.
 
 - `ekf.launch.py` - Runs ekf filter which fuse wheel odometry with imu data.
 
-### `rosbot_utils`
+### `robot_utils`
 
 A package containing auxiliary filters that integrate simple external packages.
 
