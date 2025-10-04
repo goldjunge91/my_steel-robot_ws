@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
-# Change your executable name to something creative!
 set(NAME my_firmware) # <-- Name your project/executable here!
-set(PICO_SDK_PATH "/home/marco/pico-sdk" CACHE PATH "Path to the PICO SDK" FORCE)
+set(PICO_SDK_PATH "/home/$ENV{USER}/pico-sdk" CACHE PATH "Path to the PICO SDK" FORCE)
 include(pico_sdk_import.cmake)
 
 # Gooey boilerplate
@@ -14,15 +13,8 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
 set (FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_LIST_DIR}/../lib/FreeRTOS-Kernel" CACHE STRING "Common Lib" FORCE)
-set (FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_LIST_DIR}/../lib/FreeRTOS-Kernel" CACHE STRING "Common Lib" FORCE)
 
-# SET(FREERTOS_CONFIG_FILE_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/port/FreeRTOS-Kernel" CACHE STRING "Local Config")
-
-# include_directories("${FREERTOS_CONFIG_FILE_DIRECTORY}") 
-# include(port/FreeRTOS-Kernel/freertos_config.cmake)
-
-
-# 1. Erstelle ein "INTERFACE"-Target nur für die Konfiguration.
+# Erstelle "INTERFACE"-Target nur für die Konfiguration.
 add_library(freertos_config INTERFACE)
 
 # 2. Füge das Verzeichnis mit der FreeRTOSConfig.h NUR zu diesem Target hinzu.
