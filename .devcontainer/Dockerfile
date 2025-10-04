@@ -90,7 +90,6 @@ RUN if [ "$TARGET" = "remote_pc" ]; then \
     apt-transport-https \
     ca-certificates \
     gnupg ; \
-    echo "Warning: TARGET not set or unrecognized. Installing minimal ROS dependencies."
     elif [ "$TARGET" = "robot" ]; then \
     echo "Installing robot (SBC) packages..." && \
     apt-get -y install --no-install-recommends \
@@ -101,6 +100,8 @@ RUN if [ "$TARGET" = "remote_pc" ]; then \
     python3-pyudev \
     i2c-tools \
     ros-humble-micro-ros-msgs; \
+    else \
+    echo "Warning: TARGET not set or unrecognized. Installing minimal ROS dependencies."; \
     fi \
     && apt-get autoremove -y \
     && apt-get clean -y \
