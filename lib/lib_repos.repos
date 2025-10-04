@@ -6,6 +6,11 @@ repositories:
   FreeRTOS-Kernel:
     type: git
     url: https://github.com/FreeRTOS/FreeRTOS-Kernel
+    version: V10.6.2
+  FreeRTOS:
+    type: git
+    url: https://github.com/FreeRTOS/FreeRTOS.git
+    version: "202411.00"
   eigen:
     type: git
     url: https://gitlab.com/libeigen/eigen

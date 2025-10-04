@@ -416,4 +416,5 @@
     "kiroAgent.configureMCP": "Enabled",
     "ROS2.distro": "humble",
     "python.analysis.autoImportCompletions": true,
+    "git.ignoreLimitWarning": true,
 }
