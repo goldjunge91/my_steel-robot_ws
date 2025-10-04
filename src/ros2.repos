@@ -30,6 +30,10 @@ repositories:
   #   type: git
   #   url: https://github.com/goldjunge91/robot_firmware.git
   #   version: main
+  # robot_hardware:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_hardware.git
+  #   version: main
   robot:
     type: git
     url: git@github.com:goldjunge91/robot.git
@@ -54,10 +58,6 @@ repositories:
     type: git
     url: https://github.com/goldjunge91/robot_gazebo.git
     version: humble
-  robot_hardware:
-    type: git
-    url: https://github.com/goldjunge91/robot_hardware.git
-    version: main
   robot_localization:
     type: git
     url: https://github.com/goldjunge91/robot_localization.git
