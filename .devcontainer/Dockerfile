@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Copy and run picotool / pico-sdk installer (run as root during image build)
-COPY .devcontainer/install_picotool_and_sdk.sh /tmp/install_picotool_and_sdk.sh
+COPY install_picotool_and_sdk.sh /tmp/install_picotool_and_sdk.sh
 RUN chmod +x /tmp/install_picotool_and_sdk.sh \
     && (set -x; /tmp/install_picotool_and_sdk.sh /opt/pico-sdk) \
     && rm -f /tmp/install_picotool_and_sdk.sh

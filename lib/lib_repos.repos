@@ -1,7 +1,7 @@
 repositories:
   micro_ros_raspberrypi_pico_sdk:
     type: git
-    url: https://github.com/micro-ROS/micro_ros_raspberrypi_pico_sdk
+    url: https://github.com/goldjunge91/micro_ros_raspberrypi_pico_sdk.git
     version: humble
   FreeRTOS-Kernel:
     type: git
