@@ -2,5 +2,5 @@ name: 'Test'
 description: 'Test using devcontainer'
 runs:
   using: 'docker'
-  image: '../../../.devcontainer/Dockerfile.ci'
+  image: '../../../.devcontainer/Dockerfile'
   entrypoint: ".github/actions/test/run.sh"
