@@ -42,15 +42,15 @@ This feature focuses on systematically analyzing and cleaning up the ROS2 robot 
 
 ### Requirement 3
 
-**User Story:** As a developer, I want to consolidate duplicate implementations into single, well-tested versions, so that maintenance is simplified and functionality is consistent.
+**User Story:** As a developer, I want to properly organize packages by archiving experimental attempts and restructuring legacy implementations, so that the codebase has a clear development path and maintenance is simplified.
 
 #### Acceptance Criteria
 
-1. WHEN duplicate implementations are found THEN the system SHALL evaluate which version is most complete and functional
-2. WHEN consolidating duplicates THEN the system SHALL preserve the best implementation and remove inferior versions
-3. WHEN merging functionality THEN the system SHALL ensure no useful features are lost in the consolidation
-4. WHEN duplicate removal is complete THEN the system SHALL update all references to point to the consolidated implementation
-5. WHEN consolidation is finished THEN the system SHALL verify that all dependent components still function correctly
+1. WHEN experimental packages are identified THEN the system SHALL archive them for reference while continuing development with active packages
+2. WHEN legacy packages need restructuring THEN the system SHALL transform them into proper organizational structures (e.g., repo collections)
+3. WHEN organizing functionality THEN the system SHALL ensure hardware control components (DC motors, servos, ESCs) are properly distributed across appropriate packages
+4. WHEN package reorganization is complete THEN the system SHALL update all references to point to the restructured implementations
+5. WHEN reorganization is finished THEN the system SHALL verify that all dependent components still function correctly
 
 ### Requirement 4
 

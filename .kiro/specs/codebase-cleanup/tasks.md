@@ -25,27 +25,27 @@
   - _Requirements: 1.1, 1.2, 1.3_
 
 - [x] 1.4 Write unit tests for analysis tools
-
-
-
-
-
   - Create test cases for package status analyzer with mock packages
   - Write tests for duplicate detection with known duplicate scenarios
   - Test dependency resolution with various dependency configurations
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 2. Execute comprehensive codebase analysis
-  - Run package analysis on all existing packages in src/ directory
+- [-] 2. Execute comprehensive codebase analysis
+
+
+
+  - Run package analysis on all existing packages in src/ directry
   - Generate detailed status report for each package (functional/broken/empty/duplicate)
   - Create dependency graph showing relationships between packages
   - Document current functionality inventory
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
+
 - [ ] 2.1 Analyze core robot packages
-  - Evaluate robot vs robot_description package overlap and functionality
-  - Assess robot_hardware vs mecabridge_hardware implementations
+  - Evaluate robot package structure and plan repo collection reorganization
+  - Assess mecabridge_hardware (experimental) vs robot_hardware_interfaces (active development)
   - Check robot_controller vs robot_controllers for duplicate functionality
+  - Analyze hardware functionality distribution (DC motors, servos, ESCs)
   - _Requirements: 1.1, 1.2, 1.3_
 
 - [ ] 2.2 Analyze functionality packages
@@ -53,6 +53,7 @@
   - Check robot_vision, robot_nerf_launcher, robot_autonomy implementation status
   - Assess robot_localization, robot_firmware package states
   - _Requirements: 1.1, 1.2_
+
 
 - [ ] 2.3 Analyze external dependencies
   - Evaluate open_manipulator_x necessity and integration status
@@ -66,16 +67,18 @@
   - Design package merge strategy preserving best implementations
   - _Requirements: 2.1, 2.2, 3.1, 3.2, 6.1_
 
-- [ ] 3.1 Design robot description consolidation
-  - Plan merge of robot and robot_description packages into single robot_description
-  - Identify best URDF/XACRO files to preserve from both packages
-  - Plan configuration file consolidation and launch file updates
+- [ ] 3.1 Design robot package restructuring
+  - Plan restructuring of robot package into repo collection format
+  - Design structure with manipulator.repos, robot_hardware.repos, robot_simulation.repos
+  - Clarify purpose and content of nerf_launcher.repos
+  - Plan integration with existing robot_description package
   - _Requirements: 3.1, 3.2, 6.3_
 
-- [ ] 3.2 Design hardware interface consolidation
-  - Plan merge of robot_hardware and mecabridge_hardware into unified interface
-  - Identify superior implementation and features to preserve
-  - Design ros2_control integration strategy for consolidated package
+- [ ] 3.2 Design hardware interface strategy
+  - Plan archiving of mecabridge_hardware (experimental attempt) for reference
+  - Design expansion of robot_hardware_interfaces for active development
+  - Plan integration of DC motors, servos, ESCs functionality
+  - Design ros2_control integration strategy for robot_hardware_interfaces
   - _Requirements: 3.1, 3.2, 6.3_
 
 - [ ] 3.3 Plan controller package consolidation
@@ -90,16 +93,18 @@
   - Update all configuration files and launch file references
   - _Requirements: 2.2, 2.4, 3.1, 3.2, 3.4, 6.4_
 
-- [ ] 4.1 Consolidate robot description packages
-  - Merge robot and robot_description into single robot_description package
-  - Copy best URDF/XACRO files and remove inferior versions
-  - Update all launch files referencing the merged packages
+- [ ] 4.1 Restructure robot package
+  - Transform robot package into repo collection structure
+  - Create manipulator.repos, robot_hardware.repos, robot_simulation.repos files
+  - Clarify and implement nerf_launcher.repos (pending clarification)
+  - Update package.xml and CMakeLists.txt for new structure
   - _Requirements: 3.1, 3.2, 6.4_
 
-- [ ] 4.2 Consolidate hardware interface packages
-  - Merge robot_hardware and mecabridge_hardware into unified robot_hardware
-  - Preserve superior hardware interface implementation
-  - Update ros2_control configuration files to reference consolidated interface
+- [ ] 4.2 Organize hardware interface packages
+  - Archive mecabridge_hardware as experimental reference
+  - Expand robot_hardware_interfaces with DC motors, servos, ESCs functionality
+  - Organize hardware control distribution across appropriate packages
+  - Update ros2_control configuration files to reference robot_hardware_interfaces
   - _Requirements: 3.1, 3.2, 6.4_
 
 - [ ] 4.3 Consolidate controller packages
