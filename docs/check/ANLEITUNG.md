@@ -15,16 +15,16 @@ Diese Anleitung kombiniert die bisherigen Hinweise aus `ROBOTER_ANPASSEN.md` und
 | `src/robot_ros/robot_description/urdf/robot_properties.urdf.xacro` | Datei       | Bündelt Parameter wie Mesh-Pfade, Abmessungen und Massen – zentrale Stelle für optische Anpassungen. |
 | `src/robot_ros/robot_description/meshes/robot/`                    | Verzeichnis | Meshes (z.B. `body.stl`, `cover.stl`) für den robot.                                                 |
 | `src/robot_ros/robot_description/meshes/robot_xl/`                 | Verzeichnis | Meshes für den robot XL.                                                                             |
-| Pfad | Typ | Zweck |
-| --- | --- | --- |
-| `src/robot_ros/robot_description/` | Verzeichnis | ROS-Paket mit allen Beschreibungen beider Robotervarianten. |
-| `src/robot_ros/robot_description/urdf/` | Verzeichnis | Enthält die XACRO-Dateien, die Struktur, Gelenke und Materialien definieren. |
-| `src/robot_ros/robot_description/urdf/robot.urdf.xacro` | Datei | Haupteinstiegspunkt für den robot. Bindet Basis, Sensoren und Zubehör ein. |
-| `src/robot_ros/robot_description/urdf/robot_xl.urdf.xacro` | Datei | Pendant für den robot XL. |
-| `src/robot_ros/robot_description/urdf/robot_base.urdf.xacro` | Datei | Definiert die Basisgeometrie und lädt die Meshes des robot. |
-| `src/robot_ros/robot_description/urdf/robot_properties.urdf.xacro` | Datei | Bündelt Parameter wie Mesh-Pfade, Abmessungen und Massen – zentrale Stelle für optische Anpassungen. |
-| `src/robot_ros/robot_description/meshes/robot/` | Verzeichnis | Meshes (z.B. `body.stl`, `cover.stl`) für den robot. |
-| `src/robot_ros/robot_description/meshes/robot_xl/` | Verzeichnis | Meshes für den robot XL. |
+| Pfad                                                               | Typ         | Zweck                                                                                                |
+| ---                                                                | ---         | ---                                                                                                  |
+| `src/robot_ros/robot_description/`                                 | Verzeichnis | ROS-Paket mit allen Beschreibungen beider Robotervarianten.                                          |
+| `src/robot_ros/robot_description/urdf/`                            | Verzeichnis | Enthält die XACRO-Dateien, die Struktur, Gelenke und Materialien definieren.                         |
+| `src/robot_ros/robot_description/urdf/robot.urdf.xacro`            | Datei       | Haupteinstiegspunkt für den robot. Bindet Basis, Sensoren und Zubehör ein.                           |
+| `src/robot_ros/robot_description/urdf/robot_xl.urdf.xacro`         | Datei       | Pendant für den robot XL.                                                                            |
+| `src/robot_ros/robot_description/urdf/robot_base.urdf.xacro`       | Datei       | Definiert die Basisgeometrie und lädt die Meshes des robot.                                          |
+| `src/robot_ros/robot_description/urdf/robot_properties.urdf.xacro` | Datei       | Bündelt Parameter wie Mesh-Pfade, Abmessungen und Massen – zentrale Stelle für optische Anpassungen. |
+| `src/robot_ros/robot_description/meshes/robot/`                    | Verzeichnis | Meshes (z.B. `body.stl`, `cover.stl`) für den robot.                                                 |
+| `src/robot_ros/robot_description/meshes/robot_xl/`                 | Verzeichnis | Meshes für den robot XL.                                                                             |
 
 ## Geometrie anpassen
 

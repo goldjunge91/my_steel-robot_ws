@@ -5,7 +5,7 @@
 
 set -e
 
-UART_PORT="${1:-/dev/ttyUSB0}"
+UART_PORT="${1:-/dev/ttyUSBO}"
 UART_BAUD="${2:-115200}"
 USB_PORT="${3:-/dev/ttyACM0}"
 
