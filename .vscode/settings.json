@@ -418,4 +418,9 @@
     "python.analysis.autoImportCompletions": true,
     "git.ignoreLimitWarning": true,
     "ROS2.autoShowOutputChannel": true,
+    "editor.aiStats.enabled": true,
+    "editor.unfoldOnClickAfterEndOfLine": true,
+    "todo-tree.regex.enableMultiLine": true,
+    "files.eol": "\n",
+    "files.trimFinalNewlines": true,
 }
