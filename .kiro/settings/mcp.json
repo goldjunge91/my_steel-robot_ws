@@ -30,7 +30,13 @@
         "-y",
         "@modelcontextprotocol/server-memory"
       ],
-      "disabled": false
+      "disabled": false,
+      "autoApprove": [
+        "create_entities",
+        "add_observations",
+        "create_relations",
+        "read_graph"
+      ]
     },
     "fast-filesystem": {
       "command": "npx",
