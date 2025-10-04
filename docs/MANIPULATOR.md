@@ -1,4 +1,4 @@
-# ROSbot XL Manipulation
+# robot XL Manipulation
 
 > [!WARNING]
 > **Limitations**
@@ -9,22 +9,22 @@
 > 4. To improve the range of the manipulator's movements. The robot's URDF has hardcoded that the antenna is set at 90 degrees. It is a good idea to position the antenna in the same way on the physical robot.
 > 5. In the event of overload, loss of communication or sudden stopping of the manipulator process (e.g. during reboot), some joints may not receive the command to stop operation. This may prevent re-establishing communication. In such a case, it will be necessary to **reset the power supply**.
 
-Below is a handful of the most important information for the ROSbot Manipulation/Manipulation PRO package.
+Below is a handful of the most important information for the robot Manipulation/Manipulation PRO package.
 
 ## Control
 
-After starting, the manipulator should be in the Home position after a few seconds. Now you can control ROSbot XL and OpenMANIPULATOR-X using a gamepad or RViz.
+After starting, the manipulator should be in the Home position after a few seconds. Now you can control robot XL and OpenMANIPULATOR-X using a gamepad or RViz.
 
 > [!NOTE]
-> The instructions presented are for the Jazzy version. You can check the difference in versions by changing the branch in the [rosbot_ros/MANIPULATOR.MD](https://github.com/husarion/rosbot_ros/blob/jazzy/MANIPULATOR.md) repository.
+> The instructions presented are for the Jazzy version. You can check the difference in versions by changing the branch in the [robot_ros/MANIPULATOR.MD](https://github.com/husarion/robot_ros/blob/jazzy/MANIPULATOR.md) repository.
 
 ### Gamepad
 
-After running the ROSbot XL Manipulation Package, you should be able to control the manipulator. The easiest way to move the manipulator is to connect a gamepad and steer the robot. The graphic below shows how to steer the manipulator using a gamepad.
+After running the robot XL Manipulation Package, you should be able to control the manipulator. The easiest way to move the manipulator is to connect a gamepad and steer the robot. The graphic below shows how to steer the manipulator using a gamepad.
 
 ![gamepad_manipulation](.docs/gamepad_manipulation.drawio.png)
 
-Gamepad controls are defined in the `config` directory in the [`joy_servo.yaml`](https://github.com/husarion/open_manipulator_x/blob/humble/open_manipulator_x_joy/config/joy_servo.yaml) (manipulator) and [`joy2twist.yaml`](rosbot_joy/config/joy.yaml) (ROSbot XL). Feel free to adjust them to your preference.
+Gamepad controls are defined in the `config` directory in the [`joy_servo.yaml`](https://github.com/husarion/open_manipulator_x/blob/humble/open_manipulator_x_joy/config/joy_servo.yaml) (manipulator) and [`joy2twist.yaml`](robot_joy/config/joy.yaml) (robot XL). Feel free to adjust them to your preference.
 
 You may have noticed that the movement of the manipulator is slow, and the full capabilities of the manipulator are not fully utilized. This is a safety precaution to ensure that the collision checker effectively prevents the manipulator from bumping into the robot.
 The dynamic limits of the manipulator have been tuned in order to provide a reliable collision prevention mechanism. While this setup should cover most situations, there is still a possibility of accidental contact with the robot or its sensors. Therefore, we advise you to remain aware of this potential risk when operating the manipulator.
@@ -53,24 +53,24 @@ It is also possible to control the manipulator in the RViz using the *MotionPlan
 
 In some situations it may be necessary to manually move the manipulator out of an invalid configuration.
 To do it, first you will have to disable the torque of the manipulator, for example using the service.
-On your ROSbot XL execute. **Hold the manipulator** while doing it, as it disables the torque and the manipulator can fall.
+On your robot XL execute. **Hold the manipulator** while doing it, as it disables the torque and the manipulator can fall.
 
 ```bash
-sudo rosbot.arm-disactivate
+sudo robot.arm-disactivate
 ```
 
 Now you can manually move the manipulator to the desired position and launch:
 
 ```bash
-sudo rosbot.arm-activate
+sudo robot.arm-activate
 ```
 
 ### Modifications
 
-For more advanced purpose you may want to change default **manipulator position** or edit dynamixel **servo setting**. To do this it will be necessary to build [`rosbot_ros`](https://github.com/husarion/rosbot_ros/) and for:
+For more advanced purpose you may want to change default **manipulator position** or edit dynamixel **servo setting**. To do this it will be necessary to build [`robot_ros`](https://github.com/husarion/robot_ros/) and for:
 
 1. Manipulator position
-   - change position of the manipulator in the [`rosbot_xl.urdf.xacro`](https://github.com/husarion/rosbot_ros/blob/jazzy/rosbot_description/urdf/rosbot_xl.urdf.xacro)
+   - change position of the manipulator in the [`robot_xl.urdf.xacro`](https://github.com/husarion/robot_ros/blob/jazzy/robot_description/urdf/robot_xl.urdf.xacro)
    - regenerate collision matrix using [MoveIt Setup Assistant](https://moveit.picknik.ai/main/doc/examples/setup_assistant/setup_assistant_tutorial.html)
 
 2. Servo setting
@@ -78,6 +78,6 @@ For more advanced purpose you may want to change default **manipulator position*
 
 ### Troubleshooting
 
-- **Gripper does not move** - it could be caused by the wrong initial position. Turn off the torque as described in the [**Resetting the manipulator**](/tutorials/ros-projects/rosbot-xl-openmanipulator-x/#resetting-the-manipulator). Now manually rotate the hub of the manipulator servo 180 degrees (if the connecting rod of the left finger was below the right finger's one, the hub should be rotated so that it is above). Now once again launch controllers.
+- **Gripper does not move** - it could be caused by the wrong initial position. Turn off the torque as described in the [**Resetting the manipulator**](/tutorials/ros-projects/robot-xl-openmanipulator-x/#resetting-the-manipulator). Now manually rotate the hub of the manipulator servo 180 degrees (if the connecting rod of the left finger was below the right finger's one, the hub should be rotated so that it is above). Now once again launch controllers.
 - **Manipulator stopped moving** - it can be too close to collision or singularity (you can verify it by examining console logs). The easiest solution to this problem is to return the manipulator to the *Home* position (`RT` + `Start` button).
-- **Manipulator stopped moving and *Start* button does not work** - if the manipulator still won't move, it could be already in the collision (you can verify it by examining console logs). In this case, follow the [**Resetting the manipulator**](/tutorials/ros-projects/rosbot-xl-openmanipulator-x/#resetting-the-manipulator) step and return it manually to some valid position. If nothing helps try restart power supply.
+- **Manipulator stopped moving and *Start* button does not work** - if the manipulator still won't move, it could be already in the collision (you can verify it by examining console logs). In this case, follow the [**Resetting the manipulator**](/tutorials/ros-projects/robot-xl-openmanipulator-x/#resetting-the-manipulator) step and return it manually to some valid position. If nothing helps try restart power supply.
