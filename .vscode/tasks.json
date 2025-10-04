@@ -242,6 +242,20 @@
             "type": "shell",
             "command": "python3 .devcontainer/repos_to_submodules.py",
             "problemMatcher": []
+        },
+        {
+            "label": "add submodules from .repos with logging file",
+            "detail": "Create a git submodule for all repositories in your .repos file",
+            "type": "shell",
+            "command": "python3 .devcontainer/repos_to_submodules.py --log-file .devcontainer/repos_to_submodules.log",
+            "problemMatcher": []
+        },
+        {
+            "label": "add submodules from .repos with logging file[windows]",
+            "detail": "Create a git submodule for all repositories in your .repos file",
+            "type": "shell",
+            "command": "python .devcontainer/repos_to_submodules.py --log-file .devcontainer/repos_to_submodules.log",
+            "problemMatcher": []
         }
     ],
     "inputs": [

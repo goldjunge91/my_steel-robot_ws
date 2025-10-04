@@ -1,0 +1,13 @@
+# Udev rule to create a stable symlink for Raspberry Pi Pico running micro-ROS
+# Save as /etc/udev/rules.d/99-pico.rules or keep here as example
+
+# Raspberry Pi Pico (micro-ROS) udev rule
+# This rule creates a stable symlink /dev/pico_micro_ros for the Pico when connected via USB (CDC ACM).
+# The idVendor/idProduct below were observed on the user's system (idVendor=2e8a, idProduct=000a).
+# If your device differs, run: `udevadm info -a -n /dev/ttyACM0` and update these values accordingly.
+
+# Match the tty device (ttyACM* for CDC-ACM devices) and the USB parent attributes
+SUBSYSTEM=="tty", KERNEL=="ttyACM*", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000a", SYMLINK+="pico_micro_ros", MODE="0666"
+
+# Note: Some systems expose different product ids depending on boot mode; if you don't get a symlink,
+# check /dev/ttyACM0 presence and adjust the idProduct accordingly.
