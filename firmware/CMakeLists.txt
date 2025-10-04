@@ -14,6 +14,7 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
 set (FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_LIST_DIR}/../lib/FreeRTOS-Kernel" CACHE STRING "Common Lib" FORCE)
+set (FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_LIST_DIR}/../lib/FreeRTOS-Kernel" CACHE STRING "Common Lib" FORCE)
 
 # SET(FREERTOS_CONFIG_FILE_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/port/FreeRTOS-Kernel" CACHE STRING "Local Config")
 
@@ -35,8 +36,12 @@ target_include_directories(freertos_config SYSTEM INTERFACE
 # )
 target_compile_definitions(freertos_config INTERFACE
     projCOVERAGE_TEST=0
-    # configNUMBER_OF_CORES=2
     configNUM_CORES=2
+    configUSE_CORE_AFFINITY=1
+    # configRUN_MULTIPLE_PRIORITIES=0
+    # configTICK_CORE=0
+    # Undefine SMP flag to prevent SMP-specific code
+    # FREE_RTOS_KERNEL_SMP=0
 )
 # === ENDE DER FREERTOS-KORREKTUR ===
 include(FreeRTOS_Kernel_import.cmake)
