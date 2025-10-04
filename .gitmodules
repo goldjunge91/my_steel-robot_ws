@@ -58,11 +58,22 @@
 	path = src/robot_vision
 	url = git@github.com:goldjunge91/robot_vision.git
 	branch = main
-[submodule "lib/micro_ros_raspberrypi_pico_sdk"]
-        path = lib/micro_ros_raspberrypi_pico_sdk
-        url = https://github.com/micro-ROS/micro_ros_raspberrypi_pico_sdk
-        branch = humble
-	ignore = dirty
+[submodule "src/robot-micro-ROS-Agent"]
+	path = src/robot-micro-ROS-Agent
+	url = https://github.com/goldjunge91/robot-micro-ROS-Agent.git
+	branch = humble
+[submodule "src/robot_controllers"]
+	path = src/robot_controllers
+	url = git@github.com:goldjunge91/robot_controllers.git
+	branch = main
+[submodule "src/robot_hardware_interfaces"]
+	path = src/robot_hardware_interfaces
+	url = git@github.com:goldjunge91/robot_hardware_interfaces.git
+	branch = main
+[submodule "src/robot_gz_worlds"]
+	path = src/robot_gz_worlds
+	url = https://github.com/goldjunge91/robot_gz_worlds.git
+	branch = main
 [submodule "lib/FreeRTOS-Kernel"]
         path = lib/FreeRTOS-Kernel
         url = https://github.com/FreeRTOS/FreeRTOS-Kernel
@@ -80,18 +91,8 @@
 	url = https://github.com/FreeRTOS/FreeRTOS
 	branch = main
 	ignore = dirty
-[submodule "src/robot-micro-ROS-Agent"]
-	path = src/robot-micro-ROS-Agent
-	url = https://github.com/goldjunge91/robot-micro-ROS-Agent.git
-	branch = humble
-[submodule "src/robot_controllers"]
-	path = src/robot_controllers
-	url = git@github.com:goldjunge91/robot_controllers.git
-	branch = main
-[submodule "src/robot_hardware_interfaces"]
-	path = src/robot_hardware_interfaces
-	url = git@github.com:goldjunge91/robot_hardware_interfaces.git
-	branch = main
-[submodule "src/robot_gz_worlds"]
-	path = src/robot_gz_worlds
-	url = https://github.com/goldjunge91/robot_gz_worlds.git
+[submodule "lib/micro_ros_raspberrypi_pico_sdk"]
+        path = lib/micro_ros_raspberrypi_pico_sdk
+        url = https://github.com/micro-ROS/micro_ros_raspberrypi_pico_sdk
+        branch = humble
+	ignore = dirty
