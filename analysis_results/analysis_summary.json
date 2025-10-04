@@ -1,0 +1,73 @@
+{
+  "analysis_summary": {
+    "timestamp": "2025-10-04T02:41:45.805540",
+    "workspace_root": "/mnt/c/GIT/my_steel/my_steel-robot_ws",
+    "analysis_steps": {
+      "package_status": {
+        "status": "completed",
+        "report_file": "package_status_report.json",
+        "summary": {
+          "total_packages": 12,
+          "status_breakdown": {
+            "functional": 7,
+            "partial": 0,
+            "broken": 5,
+            "empty": 0,
+            "duplicate": 0,
+            "unknown": 0
+          },
+          "functional_packages": [
+            "mecabridge_hardware",
+            "open_manipulator_x_description",
+            "open_manipulator_x_joy",
+            "open_manipulator_x_moveit",
+            "micro_ros_agent",
+            "mecanum_drive_controller",
+            "robot_hardware_interfaces"
+          ],
+          "broken_packages": [
+            "robot",
+            "robot_controller",
+            "robot_description",
+            "rosbot_localization",
+            "robot_utils"
+          ],
+          "empty_packages": []
+        }
+      },
+      "duplicate_detection": {
+        "status": "completed",
+        "report_file": "duplicate_analysis_report.json",
+        "summary": {
+          "total_packages_analyzed": 12,
+          "duplicate_pairs_found": 2,
+          "duplicate_types": {
+            "URDF/description overlap": 2
+          }
+        }
+      },
+      "dependency_mapping": {
+        "status": "completed",
+        "report_file": "dependency_map.json",
+        "total_packages": 12
+      },
+      "build_test": {
+        "status": "failed",
+        "build_success": false,
+        "build_log": "/mnt/c/GIT/my_steel/my_steel-robot_ws/analysis_results/complete_build_log.txt"
+      }
+    }
+  },
+  "recommendations": [
+    "Fix or remove 5 broken packages",
+    "Consolidate 2 duplicate package pairs"
+  ],
+  "next_steps": [
+    "Review package status report and fix broken packages",
+    "Review duplicate detection report and plan consolidations",
+    "Create backup branches before making changes",
+    "Implement package consolidations incrementally",
+    "Update all configuration files and references",
+    "Run final build validation after cleanup"
+  ]
+}

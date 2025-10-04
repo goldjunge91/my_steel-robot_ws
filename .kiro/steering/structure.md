@@ -1,95 +1,120 @@
-# Project Structure
+# Project Structure & Organization
 
-## Workspace Organization
-The project follows ROS2 workspace conventions with clear separation between firmware, ROS2 packages, and utilities.
+> **TODO: This steering document needs approval before being considered final**
 
-## Root Directory Layout
+## Workspace Layout
 ```
 my_steel-robot_ws/
-├── src/                    # ROS2 packages (vcs import target)
-├── firmware/               # Raspberry Pi Pico firmware
-├── lib/                    # External libraries (submodules)
-├── docs/                   # Documentation and guides
-├── scripts/                # Utility scripts and tools
-├── build/                  # Build artifacts (generated)
-├── install/                # Installation artifacts (generated)
-├── log/                    # Build logs (generated)
-├── Justfile               # Command runner recipes
-├── .env.example           # Environment configuration template
-└── README.md              # Main project documentation
+├── src/                     # ROS2 packages (imported via vcs)
+├── firmware/                # Raspberry Pi Pico firmware
+├── docs/                    # Documentation and guides
+├── scripts/                 # Utility scripts and tools
+├── config/                  # Global configuration files
+├── lib/                     # External libraries (FreeRTOS, Eigen, etc.)
+├── .kiro/steering/          # AI assistant guidance documents
+├── Justfile                 # Task automation (being updated)
+├── setup.sh                 # Environment setup script
+├── .env                     # Environment configuration
+└── .env.example             # Environment template
 ```
 
-## Core ROS2 Packages (src/)
+## Package Architecture
 
-### Hardware & Control
-- **`mecabridge_hardware/`**: ros2_control hardware interface for Pico communication
-- **`robot_controller/`**: High-level robot control logic
-- **`robot_utils/`**: Utility scripts, flashing tools, port discovery
+### Core ROS2 Packages (src/)
+- **robot_description/** - URDF/XACRO models, meshes, component configurations
+- **robot_bringup/** - Launch files and system orchestration
+- **robot_hardware/** - ros2_control SystemInterface for hardware abstraction
+- **robot_controllers/** - Controller configurations (mecanum/differential drive)
+- **robot_gazebo/** - Simulation assets and launch files
 
-### Robot Definition & Bringup
-- **`robot/`**: Main robot package with launch files and configurations
-- **`robot_description/`**: URDF/XACRO files, meshes, robot models
-- **`robot_bringup/`**: System launch files and orchestration
+### Specialized Packages
+- **robot_localization/** - Sensor fusion and EKF configuration for odometry
+- **robot_vision/** - Computer vision nodes (face detection, tracking with OpenCV/YOLOv5)
+- **robot_nerf_launcher/** - High-level Nerf launcher control and safety systems
+- **robot_autonomy/** - Nav2 configuration and autonomous navigation behaviors
+- **robot_utils/** - Development tools, scripts, and utilities
 
-### External Dependencies
-- **`husarion_controllers/`**: Mecanum drive controller
-- **`micro-ROS-Agent/`**: Communication bridge for micro-ROS
-- **`open_manipulator_x/`**: Manipulator arm support
-- **`robot_hardware_interfaces/`**: Additional hardware interfaces
+### Hardware Integration
+- **mecabridge_hardware/** - Hardware interface bridge for ros2_control
+- **robot_hardware_interfaces/** - Custom hardware interface definitions
+- **robot-micro-ROS-Agent/** - micro-ROS communication bridge for Pico
+- **open_manipulator_x/** - Manipulator arm integration (if applicable)
 
-## Firmware Structure (firmware/)
+### External Dependencies (lib/)
+- **eigen/** - Linear algebra library for sensor processing
+- **FreeRTOS-Kernel/** - Real-time operating system for Pico
+- **micro_ros_raspberrypi_pico_sdk/** - micro-ROS SDK for Pico
+- **pico-distance-sensor/** - VL53L0X ToF sensor library
+
+## Key Configuration Patterns
+
+### Controller Configuration
 ```
-firmware/
-├── src/                   # Main firmware source code
-│   ├── hal/              # Hardware abstraction layer
-│   ├── include/          # Header files organized by layer
-│   ├── lib/              # External libraries (IMU drivers)
-│   └── main.cpp          # Main firmware entry point
-├── port/                 # FreeRTOS port configuration
-├── tests/                # Unit and integration tests
-├── build/                # Debug build artifacts
-├── build_release/        # Release build artifacts
-└── CMakeLists.txt        # Build configuration
-```
-
-## External Libraries (lib/)
-- **`FreeRTOS-Kernel/`**: Real-time operating system
-- **`eigen/`**: Linear algebra library
-- **`micro_ros_raspberrypi_pico_sdk/`**: micro-ROS Pico integration
-- **`pico-distance-sensor/`**: Distance sensor drivers
-
-## Configuration Patterns
-
-### Environment Configuration
-- **`.env`**: Runtime configuration (copied from `.env.example`)
-- **Target platforms**: `robot` (SBC) or `remote_pc` (development)
-- **Drive mode**: `mecanum` (four-wheel omnidirectional)
-
-### Package Structure Conventions
-```
-typical_package/
-├── package.xml           # ROS2 package manifest
-├── CMakeLists.txt        # Build configuration
-├── launch/               # Launch files
-├── config/               # YAML configurations
-├── src/                  # Source code
-├── include/              # Header files
-└── test/                 # Unit tests
+robot_controllers/config/
+├── my_steel/
+│   ├── mecanum_drive_controller.yaml
+│   └── diff_drive_controller.yaml
+└── robot_xl/
+    ├── mecanum_drive_controller.yaml
+    └── diff_drive_controller.yaml
 ```
 
-## Key Configuration Files
-- **`docs/PINMAP.md`**: Authoritative pin mapping documentation
-- **`robot_controllers/config/`**: Controller YAML configurations
-- **`robot_description/urdf/`**: Robot model definitions
-- **`firmware/port/FreeRTOS-Kernel/`**: RTOS configuration
+### Launch File Hierarchy
+```
+robot_bringup/launch/
+├── bringup.launch.py        # Main system launch
+├── microros.launch.py       # micro-ROS agent
+└── simulation.launch.py     # Gazebo simulation
+```
 
-## Build Artifacts
-- **`build/`**: Intermediate build files (colcon)
-- **`install/`**: Installed packages and binaries
-- **`log/`**: Build and test logs
-- **`firmware/build*/`**: Firmware build outputs (.uf2, .elf files)
+### Hardware Description
+```
+robot_description/
+├── urdf/
+│   ├── my_steel.urdf.xacro  # Main robot model
+│   └── components/          # Modular components
+├── meshes/                  # 3D models
+└── config/
+    └── components_config/   # Hardware-specific configs
+```
 
-## Documentation Structure
-- **`docs/`**: Project-wide documentation
-- **`docs/check/`**: Validation and testing guides
-- **Package-level**: Each package contains its own README.md
+## Naming Conventions
+
+### Joint Names
+- Wheel joints: `front_left_wheel_joint`, `front_right_wheel_joint`, etc.
+- Must match between URDF, controller YAML, and hardware interface
+
+### Topic Naming
+- Controllers publish to: `/mecanum_cont/cmd_vel_unstamped`
+- Hardware feedback: `/joint_states`, `/odom`
+- Sensors: `/scan` (LiDAR), `/imu/data_raw` (IMU)
+- Custom: `/battery/status`, `/nerf/fire_cmd`
+
+### Package Naming
+- Prefix with `robot_` for core functionality
+- Use underscores for multi-word names
+- Keep names descriptive but concise
+
+## File Organization Rules
+
+### Documentation
+- **docs/PINMAP.md** - Authoritative hardware pin mapping
+- **README.md** files in each package root
+- Architecture docs in **docs/** directory
+
+### Configuration Files
+- Environment-specific configs in package **config/** directories
+- Global workspace settings in root **config/** directory
+- Use YAML for ROS2 parameters and launch configurations
+- Environment variables in **.env** file for deployment targets
+
+### Scripts and Tools
+- Development scripts in **scripts/** directory
+- Robot-specific tools in respective **robot_utils/**
+- Executable scripts should have proper shebang and permissions
+
+## Multi-Repository Management
+- **src/ros2.repos** - VCS import configuration for all packages
+- Each package maintained in separate Git repository under goldjunge91 organization
+- Use `vcs import src < src/ros2.repos` to populate workspace
+- Submodules in **lib/** directory for external dependencies

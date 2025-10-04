@@ -1,0 +1,471 @@
+{
+  "summary": {
+    "total_packages": 12,
+    "status_breakdown": {
+      "functional": 7,
+      "partial": 0,
+      "broken": 5,
+      "empty": 0,
+      "duplicate": 0,
+      "unknown": 0
+    },
+    "functional_packages": [
+      "mecabridge_hardware",
+      "open_manipulator_x_description",
+      "open_manipulator_x_joy",
+      "open_manipulator_x_moveit",
+      "micro_ros_agent",
+      "mecanum_drive_controller",
+      "robot_hardware_interfaces"
+    ],
+    "broken_packages": [
+      "robot",
+      "robot_controller",
+      "robot_description",
+      "rosbot_localization",
+      "robot_utils"
+    ],
+    "empty_packages": []
+  },
+  "packages": {
+    "mecabridge_hardware": {
+      "name": "mecabridge_hardware",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/mecabridge_hardware",
+      "status": "PackageStatus.FUNCTIONAL",
+      "build_success": true,
+      "dependencies_met": true,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [],
+      "recommendation": "Keep",
+      "metadata": {
+        "name": "mecabridge_hardware",
+        "version": "1.0.0",
+        "description": "MecaBridge: A ros2_control SystemInterface providing a safe, low-latency serial bridge for mecanum mobile bases with DC wheel motors, servos, and ESCs",
+        "maintainer": "MecaBridge Developer",
+        "license": "BSD",
+        "build_type": "ament_cmake",
+        "dependencies": {
+          "buildtool_depend": [
+            "ament_cmake"
+          ],
+          "build_depend": [],
+          "exec_depend": [],
+          "test_depend": [
+            "ament_lint_auto",
+            "ament_lint_common",
+            "ament_cmake_gtest"
+          ]
+        }
+      }
+    },
+    "open_manipulator_x_description": {
+      "name": "open_manipulator_x_description",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/open_manipulator_x/open_manipulator_x_description",
+      "status": "PackageStatus.FUNCTIONAL",
+      "build_success": true,
+      "dependencies_met": true,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [
+        "CMakeLists.txt exists but has no build targets"
+      ],
+      "recommendation": "Keep",
+      "metadata": {
+        "name": "open_manipulator_x_description",
+        "version": "3.0.0",
+        "description": "open_manipulator_x_description ROS 2 package.",
+        "maintainer": "Pyo",
+        "license": "Apache 2.0",
+        "build_type": "ament_cmake",
+        "dependencies": {
+          "buildtool_depend": [
+            "ament_cmake"
+          ],
+          "build_depend": [],
+          "exec_depend": [
+            "dynamixel_hardware_interface",
+            "xacro"
+          ],
+          "test_depend": []
+        }
+      }
+    },
+    "open_manipulator_x_joy": {
+      "name": "open_manipulator_x_joy",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/open_manipulator_x/open_manipulator_x_joy",
+      "status": "PackageStatus.FUNCTIONAL",
+      "build_success": true,
+      "dependencies_met": true,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [],
+      "recommendation": "Keep",
+      "metadata": {
+        "name": "open_manipulator_x_joy",
+        "version": "0.3.0",
+        "description": "An automatically generated package with all the configuration and launch files for using the robot_xl with the MoveIt Motion Planning Framework",
+        "maintainer": "rafal.gorecki@husarion.com",
+        "license": "BSD-3-Clause",
+        "build_type": "ament_cmake",
+        "dependencies": {
+          "buildtool_depend": [
+            "ament_cmake"
+          ],
+          "build_depend": [],
+          "exec_depend": [],
+          "test_depend": []
+        }
+      }
+    },
+    "open_manipulator_x_moveit": {
+      "name": "open_manipulator_x_moveit",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/open_manipulator_x/open_manipulator_x_moveit",
+      "status": "PackageStatus.FUNCTIONAL",
+      "build_success": true,
+      "dependencies_met": true,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [],
+      "recommendation": "Keep",
+      "metadata": {
+        "name": "open_manipulator_x_moveit",
+        "version": "0.3.0",
+        "description": "An automatically generated package with all the configuration and launch files for using the robot_xl with the MoveIt Motion Planning Framework",
+        "maintainer": "rafal.gorecki@husarion.com",
+        "license": "BSD-3-Clause",
+        "build_type": "ament_cmake",
+        "dependencies": {
+          "buildtool_depend": [
+            "ament_cmake"
+          ],
+          "build_depend": [],
+          "exec_depend": [
+            "controller_manager",
+            "joint_state_publisher",
+            "joint_state_publisher_gui",
+            "moveit_configs_utils",
+            "moveit_kinematics",
+            "moveit_planners",
+            "moveit_ros_move_group",
+            "moveit_ros_visualization",
+            "moveit_servo",
+            "moveit_setup_assistant",
+            "moveit_simple_controller_manager",
+            "open_manipulator_x_joy",
+            "robot_description",
+            "rviz2",
+            "rviz_common",
+            "rviz_default_plugins",
+            "tf2_ros",
+            "xacro"
+          ],
+          "test_depend": []
+        }
+      }
+    },
+    "robot": {
+      "name": "robot",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/robot",
+      "status": "PackageStatus.BROKEN",
+      "build_success": true,
+      "dependencies_met": false,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [
+        "CMakeLists.txt exists but has no build targets",
+        "Missing dependencies: python3-pytest"
+      ],
+      "recommendation": "Fix dependencies or remove",
+      "metadata": {
+        "name": "robot",
+        "version": "0.0.0",
+        "description": "TODO: Package description",
+        "maintainer": "MY NAME",
+        "license": "TODO: License declaration",
+        "build_type": "ament_cmake",
+        "dependencies": {
+          "buildtool_depend": [
+            "ament_cmake"
+          ],
+          "build_depend": [],
+          "exec_depend": [
+            "robot_state_publisher",
+            "xacro",
+            "ros2_control",
+            "ros2_controllers",
+            "controller_manager",
+            "gazebo_ros2_control",
+            "gazebo_ros"
+          ],
+          "test_depend": [
+            "ament_lint_auto",
+            "ament_lint_common",
+            "ament_cmake_pytest",
+            "python3-pytest",
+            "ament_flake8",
+            "ament_pep257"
+          ]
+        }
+      }
+    },
+    "micro_ros_agent": {
+      "name": "micro_ros_agent",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/robot-micro-ROS-Agent/micro_ros_agent",
+      "status": "PackageStatus.FUNCTIONAL",
+      "build_success": true,
+      "dependencies_met": true,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [],
+      "recommendation": "Keep",
+      "metadata": {
+        "name": "micro_ros_agent",
+        "version": "3.0.6",
+        "description": "micro-ROS Agent package",
+        "maintainer": "Pablo Garrido",
+        "license": "Apache License 2.0",
+        "build_type": "ament_cmake",
+        "dependencies": {
+          "buildtool_depend": [
+            "ament_cmake"
+          ],
+          "build_depend": [],
+          "exec_depend": [],
+          "test_depend": [
+            "rosidl_default_generators",
+            "ament_lint_auto",
+            "ament_lint_common",
+            "rosidl_typesupport_fastrtps_cpp",
+            "ament_cmake_gtest",
+            "builtin_interfaces"
+          ]
+        }
+      }
+    },
+    "robot_controller": {
+      "name": "robot_controller",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/robot_controller",
+      "status": "PackageStatus.BROKEN",
+      "build_success": true,
+      "dependencies_met": false,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [
+        "Missing dependencies: python3-pytest"
+      ],
+      "recommendation": "Fix dependencies or remove",
+      "metadata": {
+        "name": "robot_controller",
+        "version": "0.15.2",
+        "description": "Hardware configuration for robot Series",
+        "maintainer": "goljunge91",
+        "license": "Apache License 2.0",
+        "build_type": "ament_python",
+        "dependencies": {
+          "buildtool_depend": [
+            "ament_cmake"
+          ],
+          "build_depend": [],
+          "exec_depend": [
+            "controller_manager",
+            "diff_drive_controller",
+            "imu_sensor_broadcaster",
+            "joint_state_broadcaster",
+            "launch",
+            "launch_ros",
+            "mecanum_drive_controller",
+            "nav2_common",
+            "position_controllers",
+            "robot",
+            "robot_utils",
+            "xacro"
+          ],
+          "test_depend": [
+            "python3-pytest",
+            "robot_description",
+            "xacro"
+          ]
+        }
+      }
+    },
+    "mecanum_drive_controller": {
+      "name": "mecanum_drive_controller",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/robot_controllers/mecanum_drive_controller",
+      "status": "PackageStatus.FUNCTIONAL",
+      "build_success": true,
+      "dependencies_met": true,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [],
+      "recommendation": "Keep",
+      "metadata": {
+        "name": "mecanum_drive_controller",
+        "version": "1.0.0",
+        "description": "Controller for a mecanum drive mobile base.",
+        "maintainer": "Husarion",
+        "license": "Apache License 2.0",
+        "build_type": "ament_cmake",
+        "dependencies": {
+          "buildtool_depend": [
+            "ament_cmake"
+          ],
+          "build_depend": [
+            "pluginlib"
+          ],
+          "exec_depend": [],
+          "test_depend": []
+        }
+      }
+    },
+    "robot_description": {
+      "name": "robot_description",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/robot_description",
+      "status": "PackageStatus.BROKEN",
+      "build_success": true,
+      "dependencies_met": false,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [
+        "CMakeLists.txt exists but has no build targets",
+        "Missing dependencies: python3-pytest"
+      ],
+      "recommendation": "Fix dependencies or remove",
+      "metadata": {
+        "name": "robot_description",
+        "version": "0.15.2",
+        "description": "The robot_description package",
+        "maintainer": "goldjunge091",
+        "license": "Apache License 2.0",
+        "build_type": "ament_cmake",
+        "dependencies": {
+          "buildtool_depend": [
+            "ament_cmake"
+          ],
+          "build_depend": [],
+          "exec_depend": [
+            "husarion_components_description",
+            "joint_state_publisher",
+            "launch",
+            "launch_ros",
+            "open_manipulator_x_description",
+            "robot_state_publisher",
+            "robot_hardware_interfaces",
+            "rviz2",
+            "xacro"
+          ],
+          "test_depend": [
+            "ament_cmake_pytest",
+            "python3-pytest",
+            "xacro"
+          ]
+        }
+      }
+    },
+    "robot_hardware_interfaces": {
+      "name": "robot_hardware_interfaces",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/robot_hardware_interfaces",
+      "status": "PackageStatus.FUNCTIONAL",
+      "build_success": true,
+      "dependencies_met": true,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [],
+      "recommendation": "Keep",
+      "metadata": {
+        "name": "robot_hardware_interfaces",
+        "version": "1.0.0",
+        "description": "Hardware controller for robot 2 and robot XL",
+        "maintainer": "Maciej St\u0119pie\u0144",
+        "license": "Apache License 2.0",
+        "build_type": "ament_cmake",
+        "dependencies": {
+          "buildtool_depend": [
+            "ament_cmake"
+          ],
+          "build_depend": [
+            "pluginlib"
+          ],
+          "exec_depend": [],
+          "test_depend": [
+            "ament_cmake_gtest"
+          ]
+        }
+      }
+    },
+    "rosbot_localization": {
+      "name": "rosbot_localization",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/robot_localization",
+      "status": "PackageStatus.BROKEN",
+      "build_success": true,
+      "dependencies_met": false,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [
+        "CMakeLists.txt exists but has no build targets",
+        "Missing dependencies: robot_localization"
+      ],
+      "recommendation": "Fix dependencies or remove",
+      "metadata": {
+        "name": "rosbot_localization",
+        "version": "0.15.2",
+        "description": "The rosbot_localization package",
+        "maintainer": "example",
+        "license": "Apache License 2.0",
+        "build_type": "ament_cmake",
+        "dependencies": {
+          "buildtool_depend": [
+            "ament_cmake"
+          ],
+          "build_depend": [],
+          "exec_depend": [
+            "launch",
+            "launch_ros",
+            "robot_localization"
+          ],
+          "test_depend": []
+        }
+      }
+    },
+    "robot_utils": {
+      "name": "robot_utils",
+      "path": "/mnt/c/GIT/my_steel/my_steel-robot_ws/src/robot_utils",
+      "status": "PackageStatus.BROKEN",
+      "build_success": true,
+      "dependencies_met": false,
+      "has_implementation": true,
+      "duplicate_of": null,
+      "issues": [
+        "Missing dependencies: python3-libgpiod, python3-pyftdi-pip, python3-pyudev, python3-requests, python3-serial, python3-sh, usbutils, python3-pytest"
+      ],
+      "recommendation": "Fix dependencies or remove",
+      "metadata": {
+        "name": "robot_utils",
+        "version": "0.15.2",
+        "description": "Utilities for Robot Series",
+        "maintainer": "goldjunge91",
+        "license": "Apache License 2.0",
+        "build_type": "ament_python",
+        "dependencies": {
+          "buildtool_depend": [],
+          "build_depend": [],
+          "exec_depend": [
+            "laser_filters",
+            "launch_ros",
+            "python3-libgpiod",
+            "python3-pyftdi-pip",
+            "python3-pyudev",
+            "python3-requests",
+            "python3-serial",
+            "python3-sh",
+            "usbutils"
+          ],
+          "test_depend": [
+            "ament_pep257",
+            "python3-pytest"
+          ]
+        }
+      }
+    }
+  }
+}
