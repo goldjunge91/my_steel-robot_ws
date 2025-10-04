@@ -87,3 +87,6 @@
 	path = src/robot_hardware_interfaces
 	url = git@github.com:goldjunge91/robot_hardware_interfaces.git
 	branch = main
+[submodule "src/robot_gz_worlds"]
+	path = src/robot_gz_worlds
+	url = https://github.com/goldjunge91/robot_gz_worlds.git
