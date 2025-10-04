@@ -8,14 +8,14 @@ source /opt/ros/humble/setup.bash
 source install/setup.bash
 
 echo "1. Überprüfe verfügbare Pakete..."
-if ! ros2 pkg list | grep -q "rosbot_gazebo"; then
-    echo "❌ rosbot_gazebo Paket nicht gefunden"
+if ! ros2 pkg list | grep -q "robot_gazebo"; then
+    echo "❌ robot_gazebo Paket nicht gefunden"
     echo "Baue Workspace..."
-    colcon build --packages-select rosbot_gazebo rosbot_description rosbot_controller
+    colcon build --packages-select robot_gazebo robot_description robot_controller
     source install/setup.bash
 fi
 
-echo "✅ ROSbot Pakete verfügbar"
+echo "✅ robot Pakete verfügbar"
 
 echo ""
 echo "2. Starte micro-ROS Agent (falls nicht läuft)..."
@@ -40,8 +40,8 @@ echo ""
 echo "4. Starte Gazebo Simulation..."
 echo "Starte Gazebo im Hintergrund..."
 
-# Gazebo mit ROSbot starten
-ros2 launch rosbot_gazebo simulation.launch.py rviz:=false &
+# Gazebo mit robot starten
+ros2 launch robot_gazebo simulation.launch.py rviz:=false &
 GAZEBO_PID=$!
 echo "Gazebo gestartet mit PID: $GAZEBO_PID"
 
@@ -87,7 +87,7 @@ echo "✅ Bridge-Konfiguration erstellt"
 
 echo ""
 echo "8. Starte RViz für Visualisierung..."
-ros2 launch rosbot_description rviz.launch.py &
+ros2 launch robot_description rviz.launch.py &
 RVIZ_PID=$!
 echo "RViz gestartet mit PID: $RVIZ_PID"
 

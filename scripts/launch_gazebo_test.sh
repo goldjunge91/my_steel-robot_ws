@@ -30,7 +30,7 @@ echo ""
 echo "🎮 Starte Gazebo Simulation..."
 
 # Starte Gazebo im Hintergrund
-ros2 launch rosbot_gazebo simulation.launch.py rviz:=true robot_model:=rosbot_xl & 
+ros2 launch robot_gazebo simulation.launch.py rviz:=true robot_model:=robot_xl & 
 GAZEBO_PID=$!
 
 echo "Gazebo PID: $GAZEBO_PID"
@@ -85,7 +85,7 @@ read
 echo ""
 echo "🛑 Beende alle Prozesse..."
 kill $GAZEBO_PID $COMPARISON_PID 2>/dev/null
-pkill -f "ros2 launch rosbot_gazebo" 2>/dev/null
+pkill -f "ros2 launch robot_gazebo" 2>/dev/null
 pkill -f "gazebo" 2>/dev/null
 pkill -f "rviz" 2>/dev/null
 

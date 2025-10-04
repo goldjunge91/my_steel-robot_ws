@@ -53,7 +53,7 @@ repositories:
   robot_gazebo:
     type: git
     url: https://github.com/goldjunge91/robot_gazebo.git
-    version: main
+    version: humble
   robot_hardware:
     type: git
     url: https://github.com/goldjunge91/robot_hardware.git

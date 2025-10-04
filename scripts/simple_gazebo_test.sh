@@ -33,7 +33,7 @@ echo ""
 echo "🎮 Starte Gazebo mit korrektem robot_model..."
 
 # Starte Gazebo mit explizitem robot_model Parameter
-ros2 launch rosbot_gazebo simulation.launch.py robot_model:=rosbot rviz:=false &
+ros2 launch robot_gazebo simulation.launch.py robot_model:=robot rviz:=false &
 GAZEBO_PID=$!
 
 echo "Gazebo PID: $GAZEBO_PID"
@@ -211,7 +211,7 @@ echo "✅ Test abgeschlossen!"
 echo ""
 echo "=== Nächste Schritte ==="
 echo "1. Für detaillierten Vergleich mit RViz:"
-echo "   ros2 launch rosbot_gazebo simulation.launch.py robot_model:=rosbot"
+echo "   ros2 launch robot_gazebo simulation.launch.py robot_model:=robot"
 echo ""
 echo "2. Manuelle Steuerung testen:"
 echo "   ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --remap cmd_vel:=/ddd/cmd_vel"

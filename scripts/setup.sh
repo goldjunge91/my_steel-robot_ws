@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+# set -o 
 
 # Load environment variables (support files with CRLF)
 if [ -f .env ]; then
@@ -54,13 +54,13 @@ if [ "$TARGET" = "robot" ]; then
         ros-humble-xacro \
         ros-humble-urdf \
         ros-humble-urdf-launch \
-        ros-humble-urdf-tutorial \
         ros-humble-twist-mux \
         ros-humble-rmw-fastrtps-cpp \
         ros-humble-rmw-fastrtps-shared-cpp \
         joystick \
         jstest-gtk \
         evtest \
+        # ros-humble-urdf-tutorial \
         # micro-ros-agent
 
     # Enable hardware interfaces (I2C, SPI, camera)
@@ -92,6 +92,8 @@ elif [ "$TARGET" = "remote_pc" ]; then
         ros-humble-moveit-ros-planning \
         ros-humble-moveit-ros-planning-interface \
         ros-humble-moveit-servo \
+        ros-humble-micro-ros-msgs \
+        ros-humble-micro-ros-agent \
         joystick \
         jstest-gtk \
         evtest
@@ -103,6 +105,7 @@ fi
 # Check if repo directory exists
 if [ ! -d src/ ]; then
     vcs import < src/ros2.repos src
+    vcs import < lib/lib_repos.repos lib
 fi
 
 # Update rosdep and install project-specific dependencies

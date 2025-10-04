@@ -28,8 +28,8 @@ done
 echo ""
 echo "🎮 Starte Gazebo als virtueller Roboter..."
 
-# Starte Gazebo ROSbot Simulation
-ros2 launch rosbot_gazebo simulation.launch.py robot_model:=rosbot rviz:=true &
+# Starte Gazebo robot Simulation
+ros2 launch robot_gazebo simulation.launch.py robot_model:=robot rviz:=true &
 GAZEBO_PID=$!
 
 echo "Gazebo PID: $GAZEBO_PID"
