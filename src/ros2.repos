@@ -1,38 +1,3 @@
-# # List of repositories to use within your workspace
-# # See https://github.com/dirk-thomas/vcstool
-# ############
-# # Example:
-# ############
-# repositories:
-#   examples:
-#     type: git
-#     url: https://github.com/ros2/examples.git
-#     version: humble
-# # List of repositories to use within your workspace
-# # See https://github.com/dirk-thomas/vcstool
-# ############
-# # Example:
-# ############
-  # serial:
-  #   type: git
-  #   url: https://github.com/joshnewans/serial
-  #   version: newans_ros2
-  # mecabridge_hardware:
-  #   type: git
-  #   url: https://github.com/goldjunge91/mecabridge_hardware.git
-  #   version: main
-  # robot_autonomy:
-  #   type: git
-  #   url: https://github.com/goldjunge91/robot_autonomy.git
-  #   version: main
-  # robot_firmware:
-  #   type: git
-  #   url: https://github.com/goldjunge91/robot_firmware.git
-  #   version: main
-  # robot_hardware:
-  #   type: git
-  #   url: https://github.com/goldjunge91/robot_hardware.git
-  #   version: main
 repositories:
   robot:
     type: git
@@ -85,4 +50,39 @@ repositories:
   robot-micro-ROS-Agent:
     type: git
     url: https://github.com/goldjunge91/robot-micro-ROS-Agent.git
-  version: humble
+    version: humble
+# # List of repositories to use within your workspace
+# # See https://github.com/dirk-thomas/vcstool
+# ############
+# # Example:
+# ############
+# repositories:
+#   examples:
+#     type: git
+#     url: https://github.com/ros2/examples.git
+#     version: humble
+# # List of repositories to use within your workspace
+# # See https://github.com/dirk-thomas/vcstool
+# ############
+# # Example:
+# ############
+  # serial:
+  #   type: git
+  #   url: https://github.com/joshnewans/serial
+  #   version: newans_ros2
+  # mecabridge_hardware:
+  #   type: git
+  #   url: https://github.com/goldjunge91/mecabridge_hardware.git
+  #   version: main
+  # robot_autonomy:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_autonomy.git
+  #   version: main
+  # robot_firmware:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_firmware.git
+  #   version: main
+  # robot_hardware:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_hardware.git
+  #   version: main
