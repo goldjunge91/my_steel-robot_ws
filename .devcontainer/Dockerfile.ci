@@ -71,7 +71,7 @@ RUN apt-get -o Acquire::Check-Valid-Until=false update \
 #     echo "Installing remote PC packages..." && \
 #     apt-get -y install --no-install-recommends \
 #     ros-humble-gazebo-ros-pkgs \
-#     ros-humble-gazebo-ros2-control \
+#      \
 #     ros-humble-joint-state-publisher-gui \
 #     ros-humble-rqt-image-view \
 #     ros-humble-rosbridge-suite \

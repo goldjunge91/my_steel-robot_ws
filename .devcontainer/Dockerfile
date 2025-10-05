@@ -70,7 +70,7 @@ RUN echo "if [ -f ${WORKSPACE}/install/setup.bash ]; then source ${WORKSPACE}/in
 # RUN --mount=type=cache,target=/var/cache/apt --mount=type=cache,target=/var/lib/apt/lists \
 #         sh -c 'set -eux; apt-get -o Acquire::Check-Valid-Until=false update; \
 #         PKGS="python3-colcon-common-extensions python3-rosdep git cmake build-essential ninja-build"; \
-#         if [ "${INSTALL_GAZEBO}" = "true" ]; then PKGS="$PKGS ros-humble-gazebo-ros-pkgs ros-humble-gazebo-ros2-control"; fi; \
+#         if [ "${INSTALL_GAZEBO}" = "true" ]; then PKGS="$PKGS ros-humble-gazebo-ros-pkgs "; fi; \
 #         if [ "${INSTALL_MOVEIT}" = "true" ]; then PKGS="$PKGS ros-humble-moveit ros-humble-moveit-msgs ros-humble-moveit-ros-planning"; fi; \
 #         if [ "${INSTALL_LINT_TOOLS}" = "true" ]; then PKGS="$PKGS cppcheck clang-format python3-flake8 python3-pep257 xmllint"; fi; \
 #         apt-get -y install --no-install-recommends $PKGS || true; \
@@ -138,7 +138,7 @@ RUN echo "if [ -f ${WORKSPACE}/install/setup.bash ]; then source ${WORKSPACE}/in
 #         apt-get $APT_OPTS update; \
 #         PKGS=""; \
 #         if [ "${INSTALL_GAZEBO}" = "true" ]; then \
-#         PKGS="$PKGS ros-humble-gazebo-ros-pkgs ros-humble-gazebo-ros2-control"; \
+#         PKGS="$PKGS ros-humble-gazebo-ros-pkgs "; \
 #         fi; \
 #         if [ "${INSTALL_MOVEIT}" = "true" ]; then \
 #         PKGS="$PKGS ros-humble-moveit ros-humble-moveit-msgs ros-humble-moveit-ros-planning \
