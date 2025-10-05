@@ -36,7 +36,7 @@ repositories:
   #   version: main
   robot:
     type: git
-    url: git@github.com:goldjunge91/robot.git
+    url: https://github.com/goldjunge91/robot.git
     version: humble
   open_manipulator_x:
     type: git
