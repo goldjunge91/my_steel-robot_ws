@@ -42,8 +42,8 @@
 	path = src/robot_hardware
 	url = git@github.com:goldjunge91/robot_hardware.git
 	branch = main
-[submodule "src/robot_localization"]
-	path = src/robot_localization
+[submodule "src/robot_localization_tool"]
+	path = src/robot_localization_tool
 	url = git@github.com:goldjunge91/robot_localization.git
 	branch = main
 [submodule "src/robot_nerf_launcher"]
