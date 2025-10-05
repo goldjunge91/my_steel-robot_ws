@@ -13,7 +13,6 @@
 # ############
 # # Example:
 # ############
-repositories:
   # serial:
   #   type: git
   #   url: https://github.com/joshnewans/serial
@@ -34,55 +33,56 @@ repositories:
   #   type: git
   #   url: https://github.com/goldjunge91/robot_hardware.git
   #   version: main
+repositories:
   robot:
     type: git
     url: https://github.com/goldjunge91/robot.git
     version: humble
-  open_manipulator_x:
-    type: git
-    url: https://github.com/goldjunge91/open_manipulator_x.git
-    version: main
-  robot_bringup:
-    type: git
-    url: https://github.com/goldjunge91/robot_bringup.git
-    version: main
-  robot_controller:
-    type: git
-    url: https://github.com/goldjunge91/robot_controller.git
-    version: main
-  robot_description:
-    type: git
-    url: https://github.com/goldjunge91/robot_description.git
-    version: main
-  robot_gazebo:
-    type: git
-    url: https://github.com/goldjunge91/robot_gazebo.git
-    version: humble
-  robot_localization_tool:
-    type: git
-    url: https://github.com/goldjunge91/robot_localization.git
-    version: main
-  robot_nerf_launcher:
-    type: git
-    url: https://github.com/goldjunge91/robot_nerf_launcher.git
-    version: main
-  robot_utils:
-    type: git
-    url: https://github.com/goldjunge91/robot_utils.git
-    version: main
-  robot_vision:
-    type: git
-    url: https://github.com/goldjunge91/robot_vision.git
-    version: main
-  robot_controllers:
-    type: git
-    url: https://github.com/goldjunge91/robot_controllers.git
-    version: main
-  robot_hardware_interfaces:
-    type: git
-    url: https://github.com/goldjunge91/robot_hardware_interfaces.git
-    version: main
-  robot-micro-ROS-Agent:
-    type: git
-    url: https://github.com/goldjunge91/robot-micro-ROS-Agent.git
-    version: humble
+  # open_manipulator_x:
+  #   type: git
+  #   url: https://github.com/goldjunge91/open_manipulator_x.git
+  #   version: main
+  # robot_bringup:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_bringup.git
+  #   version: main
+  # robot_controller:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_controller.git
+  #   version: main
+  # robot_description:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_description.git
+  #   version: main
+  # robot_gazebo:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_gazebo.git
+  #   version: humble
+  # robot_localization_tool:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_localization.git
+  #   version: main
+  # robot_nerf_launcher:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_nerf_launcher.git
+  #   version: main
+  # robot_utils:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_utils.git
+  #   version: main
+  # robot_vision:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_vision.git
+  #   version: main
+  # robot_controllers:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_controllers.git
+  #   version: main
+  # robot_hardware_interfaces:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_hardware_interfaces.git
+  #   version: main
+  # robot-micro-ROS-Agent:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot-micro-ROS-Agent.git
+  # version: humble
