@@ -15,7 +15,13 @@ source "$ROS_SETUP"
 if [ -f "src/ros2.repos" ]; then
   if command -v vcs >/dev/null 2>&1; then
     echo "Importing repositories from src/ros2.repos..."
-    vcs import src < src/ros2.repos || echo "Warning: vcs import failed or no repositories to import"
+    set +e
+    vcs import src < src/ros2.repos
+    VCS_EXIT=$?
+    set -e
+    if [ $VCS_EXIT -ne 0 ]; then
+      echo "Warning: vcs import failed or no repositories to import"
+    fi
   else
     echo "Warning: vcs tool not found, skipping repository import"
   fi
@@ -29,9 +35,16 @@ fi
 
 # Update package lists and install dependencies
 echo "Updating apt package lists..."
-$SUDO apt-get update || echo "Warning: apt-get update failed"
+set +e
+$SUDO apt-get update
+APT_UPDATE_EXIT=$?
+set -e
+if [ $APT_UPDATE_EXIT -ne 0 ]; then
+  echo "Warning: apt-get update failed"
+fi
 
 echo "Installing required packages..."
+set +e
 $SUDO apt-get install -y --no-install-recommends \
   libboost1.74-dev \
   "ros-${ROS_DISTRO}-ament-cppcheck" \
@@ -40,12 +53,42 @@ $SUDO apt-get install -y --no-install-recommends \
   "ros-${ROS_DISTRO}-ament-lint-cmake" \
   "ros-${ROS_DISTRO}-ament-xmllint" \
   "ros-${ROS_DISTRO}-ament-flake8" \
-  "ros-${ROS_DISTRO}-ament-pep257" 2>/dev/null || echo "Warning: Some apt packages could not be installed"
+  "ros-${ROS_DISTRO}-ament-pep257" 2>/dev/null
+APT_INSTALL_EXIT=$?
+set -e
+if [ $APT_INSTALL_EXIT -ne 0 ]; then
+  echo "Warning: Some apt packages could not be installed"
+fi
 
 # Update rosdep
 echo "Updating rosdep..."
-rosdep update --rosdistro="$ROS_DISTRO" || echo "Warning: rosdep update failed"
+# Initialize rosdep if not already initialized (safe to run multiple times)
+if [ ! -d "/etc/ros/rosdep/sources.list.d" ] || [ -z "$(ls -A /etc/ros/rosdep/sources.list.d 2>/dev/null)" ]; then
+  echo "Initializing rosdep..."
+  set +e
+  $SUDO rosdep init
+  ROSDEP_INIT_EXIT=$?
+  set -e
+  if [ $ROSDEP_INIT_EXIT -ne 0 ]; then
+    echo "Warning: rosdep init failed (may already be initialized)"
+  fi
+fi
+set +e
+rosdep update --rosdistro="$ROS_DISTRO"
+ROSDEP_UPDATE_EXIT=$?
+set -e
+if [ $ROSDEP_UPDATE_EXIT -ne 0 ]; then
+  echo "Warning: rosdep update failed"
+fi
 
 # Install dependencies from package.xml files
 echo "Installing ROS dependencies..."
-rosdep install --from-paths src --ignore-src -y --rosdistro="$ROS_DISTRO" || echo "Warning: Some rosdep dependencies could not be installed"
+set +e
+rosdep install --from-paths src --ignore-src -y --rosdistro="$ROS_DISTRO"
+ROSDEP_INSTALL_EXIT=$?
+set -e
+if [ $ROSDEP_INSTALL_EXIT -ne 0 ]; then
+  echo "Warning: Some rosdep dependencies could not be installed"
+fi
+
+echo "Setup completed successfully!"
