@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+# set -e
 
 ./setup.sh
 ament_${LINTER} src/
