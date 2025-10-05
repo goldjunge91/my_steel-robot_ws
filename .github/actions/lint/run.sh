@@ -11,9 +11,11 @@ fi
 # shellcheck disable=SC1090
 source "$ROS_SETUP"
 
+echo "Running setup script..."
 ./setup.sh
 
 if [ -f "install/setup.bash" ]; then
+  echo "Sourcing workspace setup..."
   # shellcheck disable=SC1090
   source install/setup.bash
 fi
@@ -23,4 +25,5 @@ if [ -z "${LINTER:-}" ]; then
   exit 1
 fi
 
+echo "Running linter: ament_${LINTER}..."
 ament_"${LINTER}" src/

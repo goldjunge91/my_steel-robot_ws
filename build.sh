@@ -12,12 +12,14 @@ fi
 source "$ROS_SETUP"
 
 if [ -f "install/setup.bash" ]; then
+  echo "Sourcing existing workspace setup..."
   # shellcheck disable=SC1090
   source install/setup.bash
 fi
 
 # Set the default build type
 BUILD_TYPE=${BUILD_TYPE:-RelWithDebInfo}
+echo "Building workspace with build type: $BUILD_TYPE"
 colcon build \
         --merge-install \
         --symlink-install \
