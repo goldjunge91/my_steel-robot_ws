@@ -1,17 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-# HTTPS statt SSH
-if [ -n "${GITHUB_TOKEN:-}" ]; then
-  git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "ssh://git@github.com/"
-  git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "git@github.com:"
+repo_root="/mnt/c/GIT/my_steel/my_steel-robot_ws"
+
+# Prefer HTTPS in CI when a token is available
+if [ -n "" ]; then
+  git config --global url."https://x-access-token:@github.com/".insteadOf "ssh://git@github.com/"
+  git config --global url."https://x-access-token:@github.com/".insteadOf "git@github.com:"
 fi
 
-# known_hosts absichern (falls doch SSH vorkommt)
+# Ensure GitHub's host key is present should SSH be used somewhere
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
 ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true
 chmod 600 ~/.ssh/known_hosts
 
+pushd "" >/dev/null
 ./setup.sh
-ament_${LINTER} src/
+ament_ src/
+popd >/dev/null
