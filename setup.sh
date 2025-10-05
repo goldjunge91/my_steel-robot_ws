@@ -17,6 +17,12 @@ safe_source() {
 ROS_DISTRO=${ROS_DISTRO:-humble}
 ROS_SETUP="/opt/ros/${ROS_DISTRO}/setup.bash"
 
+# Some ROS setup scripts expect this variable to exist even when tracing is disabled.
+if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
+  AMENT_TRACE_SETUP_FILES=""
+fi
+export AMENT_TRACE_SETUP_FILES
+
 if safe_source "$ROS_SETUP"; then
   :
 else

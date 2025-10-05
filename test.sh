@@ -14,6 +14,11 @@ safe_source() {
   return 1
 }
 
+if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
+  AMENT_TRACE_SETUP_FILES=""
+fi
+export AMENT_TRACE_SETUP_FILES
+
 if [ -f install/setup.bash ]; then
   safe_source install/setup.bash
 fi
