@@ -16,7 +16,8 @@
 		"--security-opt=apparmor:unconfined",
 		"--volume=/tmp/.X11-unix:/tmp/.X11-unix",
 		"--volume=/mnt/wslg:/mnt/wslg",
-		"--ipc=host"
+		"--ipc=host",
+		"--volume=/var/run/docker.sock:/var/run/docker.sock"
 		// uncomment to use intel iGPU
 		// "--device=/dev/dri"
 	],
@@ -63,7 +64,12 @@
 				"doppler.doppler-vscode",
 				"VisualStudioExptTeam.vscodeintellicode",
 				"VisualStudioExptTeam.vscodeintellicode-completions",
-				"openai.chatgpt"
+				"openai.chatgpt",
+				"eamodio.gitlens",
+				"WakaTime.vscode-wakatime",
+				"Ranch-Hand-Robotics.rde-pack",
+				"Ranch-Hand-Robotics.urdf-editor",
+				"Ranch-Hand-Robotics.rde-ros-2"
 			]
 		}
 	}

@@ -1,0 +1,20 @@
+# Quick Start
+#
+# 1. Run `docker compose -f compose.robot_xl.yaml up` on the robot
+# 2. Open a shell inside a docker container `docker compose -f compose.hardware.yaml exec -it robot bash`
+# 3. Run `ros2 run teleop_twist_keyboard teleop_twist_keyboard` inside the container
+
+services:
+  robot:
+    # image: goldjunge91/robot:humble
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.hardware
+    network_mode: host
+    ipc: host
+    restart: unless-stopped
+    environment:
+      - USER
+    command: >
+      ros2 launch robot_bringup bringup.launch.py
+        robot_model:=robot_xl

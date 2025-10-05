@@ -1,0 +1,103 @@
+---
+name: Build/Publish ROS Docker Image
+permissions:
+  contents: read
+  packages: write
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: Is it a "development" or a "stable" release?
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - stable
+      target_distro:
+        description: In case of "stable" release specify the ROS distro of the existing docker image (eg.
+          humble)
+        type: string
+        default: ardent
+      target_release:
+        description: In case of "stable" release specify the version of the existing docker image (eg.
+          1.0.12)
+        type: string
+        default: 0.0.0
+      target_date:
+        description: In case of "stable" release specify the date of the existing docker image in format
+          YYYYMMDD (eg. 20220124)
+        type: string
+        default: '20131206'
+  repository_dispatch:
+    types: [rebuild, ros-package-update]
+  pull_request:
+    types:
+      - closed
+      - opened
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: docker/Dockerfile.hardware
+            repo_name: robot-xl-hardware
+            platforms: linux/amd64,linux/arm64
+            ros_distro: humble
+          - dockerfile: docker/Dockerfile.simulation
+            repo_name: robot-xl-gazebo
+            platforms: linux/amd64
+            ros_distro: humble
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up QEMU
+        if: contains(matrix.platforms, 'linux/arm64')
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.repo_name }}
+          tags: |
+            type=raw,value=${{ inputs.build_type }}-${{ matrix.ros_distro }}
+            type=raw,value=latest,enable=${{ inputs.build_type == 'development' }}
+            type=raw,value=${{ inputs.target_release }},enable=${{ inputs.build_type == 'stable' }}
+            type=raw,value=${{ inputs.target_date }},enable=${{ inputs.build_type == 'stable' }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: ${{ matrix.platforms }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BUILD_TYPE=${{ inputs.build_type }}
+            ROS_DISTRO=${{ matrix.ros_distro }}
+            TARGET_DISTRO=${{ inputs.target_distro }}
+            TARGET_RELEASE=${{ inputs.target_release }}
+            TARGET_DATE=${{ inputs.target_date }}
