@@ -4,17 +4,21 @@ FROM althack/ros2:humble-dev
 #
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
-        && apt-get -y install --no-install-recommends python3-ament-xmllint \
+        && apt-get -y install --no-install-recommends \
+        python3-ament-xmllint \
         libxml2-utils \
-        python3-ament-flake8 python3-ament-pep257 \
-        python3-ament-cpplint python3-ament-cppcheck \
-        ament-cmake-cpplint ament-cmake-cppcheck ament-cmake-uncrustify ; \
-        #
+        python3-ament-flake8 \
+        python3-ament-pep257 \
+        python3-ament-cpplint \
+        python3-ament-cppcheck \
+        ament-cmake-cpplint \
+        ament-cmake-cppcheck \
+        ament-cmake-uncrustify; \
         # Clean up
         && apt-get autoremove -y \
-        && apt-get clean -y \
-        # && rm -rf /var/lib/apt/lists/*
-        ENV DEBIAN_FRONTEND=dialog
+        && apt-get clean -y
+# && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=dialog
 
 # Set up auto-source of workspace for ros user
 ARG WORKSPACE
