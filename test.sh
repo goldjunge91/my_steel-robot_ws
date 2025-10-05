@@ -8,6 +8,9 @@ if [ ! -f "$ROS_SETUP" ]; then
   exit 1
 fi
 
+# Set AMENT_TRACE_SETUP_FILES to avoid unset variable error with set -u
+export AMENT_TRACE_SETUP_FILES=${AMENT_TRACE_SETUP_FILES:-0}
+
 # shellcheck disable=SC1090
 source "$ROS_SETUP"
 
