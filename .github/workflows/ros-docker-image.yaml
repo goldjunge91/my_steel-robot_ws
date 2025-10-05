@@ -39,6 +39,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    env:
+      BUILD_TYPE: ${{ inputs.build_type != '' && inputs.build_type || github.event.client_payload.build_type != '' && github.event.client_payload.build_type || 'development' }}
+      TARGET_DISTRO: ${{ inputs.target_distro != '' && inputs.target_distro || github.event.client_payload.target_distro != '' && github.event.client_payload.target_distro || 'humble' }}
+      TARGET_RELEASE: ${{ inputs.target_release != '' && inputs.target_release || github.event.client_payload.target_release != '' && github.event.client_payload.target_release || '' }}
+      TARGET_DATE: ${{ inputs.target_date != '' && inputs.target_date || github.event.client_payload.target_date != '' && github.event.client_payload.target_date || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -79,10 +84,11 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.repo_name }}
           tags: |
-            type=raw,value=${{ inputs.build_type }}-${{ matrix.ros_distro }}
-            type=raw,value=latest,enable=${{ inputs.build_type == 'development' }}
-            type=raw,value=${{ inputs.target_release }},enable=${{ inputs.build_type == 'stable' }}
-            type=raw,value=${{ inputs.target_date }},enable=${{ inputs.build_type == 'stable' }}
+            type=raw,value=${{ env.BUILD_TYPE }}-${{ matrix.ros_distro }}
+            type=raw,value=latest,enable=${{ env.BUILD_TYPE == 'development' }}
+            type=raw,value=${{ env.TARGET_RELEASE }},enable=${{ env.BUILD_TYPE == 'stable' && env.TARGET_RELEASE != '' }}
+            type=raw,value=${{ env.TARGET_DATE }},enable=${{ env.BUILD_TYPE == 'stable' && env.TARGET_DATE != '' }}
+
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
@@ -96,8 +102,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BUILD_TYPE=${{ inputs.build_type }}
+            BUILD_TYPE=${{ env.BUILD_TYPE }}
             ROS_DISTRO=${{ matrix.ros_distro }}
-            TARGET_DISTRO=${{ inputs.target_distro }}
-            TARGET_RELEASE=${{ inputs.target_release }}
-            TARGET_DATE=${{ inputs.target_date }}
+            TARGET_DISTRO=${{ env.TARGET_DISTRO }}
+            TARGET_RELEASE=${{ env.TARGET_RELEASE }}
+            TARGET_DATE=${{ env.TARGET_DATE }}
