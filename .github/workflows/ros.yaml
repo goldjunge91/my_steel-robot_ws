@@ -17,6 +17,8 @@ jobs:
       - 
         name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
       -
         name: Test
         uses: ./.github/actions/test/
@@ -32,6 +34,8 @@ jobs:
       - 
         name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
       -
         name: Run linter
         uses: ./.github/actions/lint/
