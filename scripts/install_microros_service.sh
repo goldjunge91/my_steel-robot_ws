@@ -19,6 +19,7 @@ Environment="ROS_DISTRO=humble"
 Environment="RMW_IMPLEMENTATION=rmw_fastrtps_cpp"
 Environment="ROS_DOMAIN_ID=0"
 ExecStartPre=/bin/bash -c 'source /opt/ros/humble/setup.bash'
+ExecStartPre=/bin/bash -c 'sudo apt update && sudo apt install -y ros-humble-micro-ros-agent || true'
 ExecStart=/bin/bash -c 'source /opt/ros/humble/setup.bash && ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200 -v6'
 Restart=always
 RestartSec=5

@@ -20,6 +20,7 @@ Environment="ROS_DISTRO=humble"
 Environment="RMW_IMPLEMENTATION=rmw_fastrtps_cpp"
 Environment="ROS_DOMAIN_ID=0"
 ExecStartPre=/bin/bash -c 'source /opt/ros/humble/setup.bash'
+ExecStartPre=/bin/bash -c 'pkill -f foxglove_bridge || true'
 ExecStart=/bin/bash -c 'source /opt/ros/humble/setup.bash && ros2 run foxglove_bridge foxglove_bridge --port 8765'
 Restart=always
 RestartSec=5
