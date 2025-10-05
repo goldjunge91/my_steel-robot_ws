@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 set -euo pipefail
 
 # HTTPS statt SSH
@@ -15,9 +15,3 @@ chmod 600 ~/.ssh/known_hosts
 
 ./setup.sh
 ament_${LINTER} src/
-
-# #!/bin/bash
-# set -e
-
-# ./setup.sh
-# ament_${LINTER} src/
