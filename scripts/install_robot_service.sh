@@ -20,7 +20,7 @@ Environment="ROS_DISTRO=humble"
 Environment="RMW_IMPLEMENTATION=rmw_fastrtps_cpp"
 Environment="ROS_DOMAIN_ID=0"
 ExecStartPre=/bin/bash -c 'source /opt/ros/humble/setup.bash && source install/setup.bash'
-ExecStart=/bin/bash -c 'source /opt/ros/humble/setup.bash && source install/setup.bash && ros2 launch robot_bringup bringup.launch.py robot_model:=robot_xl mecanum:=True microros:=False'
+ExecStart=/bin/bash -c 'source /opt/ros/humble/setup.bash && source install/setup.bash && ros2 launch robot_bringup bringup.launch.py'
 Restart=always
 RestartSec=10
 StandardOutput=journal
