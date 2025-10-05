@@ -58,7 +58,7 @@ repositories:
     type: git
     url: https://github.com/goldjunge91/robot_gazebo.git
     version: humble
-  robot_localization:
+  robot_localization_tool:
     type: git
     url: https://github.com/goldjunge91/robot_localization.git
     version: main
