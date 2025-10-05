@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="/mnt/c/GIT/my_steel/my_steel-robot_ws"
+repo_root="$(git rev-parse --show-toplevel)"
 
 # Prefer HTTPS in CI when a token is available
-if [ -n "" ]; then
-  git config --global url."https://x-access-token:@github.com/".insteadOf "ssh://git@github.com/"
-  git config --global url."https://x-access-token:@github.com/".insteadOf "git@github.com:"
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+  git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf git@github.com:
+  git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf ssh://git@github.com/
+  git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf https://github.com/
 fi
 
 # Ensure GitHub's host key is present should SSH be used somewhere
@@ -15,7 +16,5 @@ chmod 700 ~/.ssh
 ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true
 chmod 600 ~/.ssh/known_hosts
 
-pushd "" >/dev/null
 ./setup.sh
 ament_ src/
-popd >/dev/null
