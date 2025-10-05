@@ -1,9 +1,21 @@
 #!/bin/bash
 set -euo pipefail
 
+safe_source() {
+  local file="$1"
+  if [ -f "$file" ]; then
+    set +u
+    # shellcheck disable=SC1090
+    source "$file"
+    local status=$?
+    set -u
+    return $status
+  fi
+  return 1
+}
+
 if [ -f install/setup.bash ]; then
-  # shellcheck disable=SC1090
-  source install/setup.bash
+  safe_source install/setup.bash
 fi
 
 if ! command -v colcon >/dev/null 2>&1; then
