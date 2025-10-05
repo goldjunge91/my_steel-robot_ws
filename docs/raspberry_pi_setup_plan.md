@@ -36,11 +36,35 @@ unset CYCLONEDX_URI
 colcon build --symlink-install
 source install/setup.bash
 
-# Basis-System starten (OHNE microros erstmal)
+# Zuerst micro-ROS Agent separat starten (MUSS laufen!)
+# Terminal 1:
+ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200
+
+# Dann in Terminal 2:
+# Basis-System starten 
 ros2 launch robot_bringup bringup.launch.py robot_model:=robot_xl mecanum:=True microros:=False
 ```
 
-### 2. Foxglove Bridge starten (separates Terminal)
+### 2. Raspberry Pi System starten (Terminal 2)
+
+```bash
+# ROS2 Environment laden
+source /opt/ros/humble/setup.bash
+cd ~/my_steel-robot_ws
+
+# Wichtige Environment-Variablen setzen
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+export ROS_DOMAIN_ID=0
+unset CYCLONEDX_URI
+
+# Workspace laden
+source install/setup.bash
+
+# Basis-System starten 
+ros2 launch robot_bringup bringup.launch.py robot_model:=robot_xl mecanum:=True microros:=False
+```
+
+### 3. Foxglove Bridge starten (Terminal 3)
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -49,17 +73,6 @@ export ROS_DOMAIN_ID=0
 
 # Foxglove Bridge starten
 ros2 run foxglove_bridge foxglove_bridge --port 8765
-```
-
-### 3. micro-ROS Agent separat starten (falls benötigt)
-
-```bash
-# Separates Terminal für micro-ROS
-source /opt/ros/humble/setup.bash
-export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-
-# micro-ROS Agent starten
-ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200
 ```
 
 ### 4. Remote-PC Setup
