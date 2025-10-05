@@ -20,19 +20,12 @@ print_header() {
 safe_source() {
   local file="$1"
   if [ -f "$file" ]; then
-    # Prevent recursion by checking if already sourced
-    if [[ ":$SOURCED_FILES:" != *":$file:"* ]]; then
-      export SOURCED_FILES="${SOURCED_FILES:-}:$file:"
-      set +u
-      # shellcheck disable=SC1090
-      source "$file"
-      local status=$?
-      set -u
-      return $status
-    else
-      echo "Skipping already sourced file: $file"
-      return 0
-    fi
+    set +u
+    # shellcheck disable=SC1090
+    source "$file"
+    local status=$?
+    set -u
+    return $status
   fi
   return 1
 }
