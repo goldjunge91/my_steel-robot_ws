@@ -104,6 +104,32 @@ ros2 run teleop_twist_joy teleop_node --ros-args -p joy_config:=xbox
 ros2 run rviz2 rviz2
 ```
 
+## Autostart Setup (Optional)
+
+Für automatischen Start beim Neustart:
+
+```bash
+# Alle Services installieren
+cd ~/my_steel-robot_ws
+chmod +x scripts/setup_autostart.sh
+bash scripts/setup_autostart.sh
+
+# Services manuell steuern:
+sudo systemctl start microros-agent     # micro-ROS Agent
+sudo systemctl start my-steel-robot     # Hauptsystem  
+sudo systemctl start foxglove-bridge    # Web Interface
+
+# Status prüfen:
+sudo systemctl status microros-agent
+sudo systemctl status my-steel-robot
+sudo systemctl status foxglove-bridge
+
+# Logs anzeigen:
+journalctl -u microros-agent -f
+journalctl -u my-steel-robot -f
+journalctl -u foxglove-bridge -f
+```
+
 ## Troubleshooting
 
 ### Häufige Probleme:
