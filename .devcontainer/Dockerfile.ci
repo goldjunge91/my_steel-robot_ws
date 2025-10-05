@@ -12,7 +12,7 @@ ARG TARGET=remote_pc
 ARG INSTALL_PICO_SDK=true
 ARG WORKSPACE
 ENV ROS_DISTRO=humble
-
+RUN sudo groupadd -f docker && sudo usermod -aG docker ros
 # Install minimal packages needed by installer script (git, build tools, cmake, libusb)
 # Use BuildKit cache mounts to speed up repeated builds. Requires DOCKER_BUILDKIT=1 or buildx.
 RUN --mount=type=cache,target=/var/cache/apt \
