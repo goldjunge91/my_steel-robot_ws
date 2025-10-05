@@ -11,7 +11,6 @@ This script orchestrates the complete analysis of the ROS2 workspace by running:
 Requirements addressed: 1.1, 1.2
 """
 
-import os
 import sys
 import json
 import subprocess
@@ -249,7 +248,7 @@ class WorkspaceAnalysisRunner:
         # Load individual reports
         package_report_file = self.output_dir / "package_status_report.json"
         duplicate_report_file = self.output_dir / "duplicate_analysis_report.json"
-        dependency_map_file = self.output_dir / "dependency_map.json"
+        self.output_dir / "dependency_map.json"
         
         final_report = {
             'analysis_summary': analysis_results,

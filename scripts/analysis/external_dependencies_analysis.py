@@ -9,7 +9,7 @@ import os
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 from dataclasses import dataclass, asdict
 
 @dataclass

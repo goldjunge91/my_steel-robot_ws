@@ -22,7 +22,7 @@ import sys
 # Add analysis directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from package_status_analyzer import PackageStatusAnalyzer, PackageStatus, PackageInfo
+from package_status_analyzer import PackageStatusAnalyzer, PackageStatus
 
 class TestPackageStatusAnalyzer(unittest.TestCase):
     """Test cases for PackageStatusAnalyzer class."""

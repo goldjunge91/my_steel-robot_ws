@@ -12,12 +12,10 @@ This script analyzes all ROS2 packages in the workspace to determine their statu
 Requirements addressed: 1.1, 1.2
 """
 
-import os
 import sys
 import xml.etree.ElementTree as ET
 import subprocess
 import json
-import glob
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, asdict

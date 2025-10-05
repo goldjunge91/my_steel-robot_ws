@@ -381,7 +381,7 @@ adjusted in the configuration below.
 import sys
 import time
 import threading
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 import rclpy
 from rclpy.node import Node

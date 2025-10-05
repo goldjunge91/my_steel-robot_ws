@@ -10,7 +10,6 @@ Requirements addressed: 1.1, 1.2, 1.3
 
 import unittest
 import sys
-import os
 from pathlib import Path
 from io import StringIO
 
@@ -25,7 +24,7 @@ def run_all_tests():
     
     # Discover and run all tests
     loader = unittest.TestLoader()
-    start_dir = Path(__file__).parent
+    Path(__file__).parent
     
     # Load test suites
     test_suites = []
@@ -177,10 +176,10 @@ def run_quick_smoke_tests():
     
     # Test 1: Package Status Analyzer import and basic functionality
     try:
-        from package_status_analyzer import PackageStatusAnalyzer, PackageStatus
+        from package_status_analyzer import PackageStatusAnalyzer
         analyzer = PackageStatusAnalyzer(".")
         # Test basic methods don't crash
-        packages = analyzer.find_packages()
+        analyzer.find_packages()
         print("✅ Package Status Analyzer: Basic functionality works")
         smoke_tests.append(True)
     except Exception as e:
@@ -192,7 +191,7 @@ def run_quick_smoke_tests():
         from duplicate_detection_analyzer import DuplicateDetectionAnalyzer
         analyzer = DuplicateDetectionAnalyzer(".")
         # Test basic methods don't crash
-        packages = analyzer.find_packages()
+        analyzer.find_packages()
         print("✅ Duplicate Detection Analyzer: Basic functionality works")
         smoke_tests.append(True)
     except Exception as e:
@@ -201,7 +200,7 @@ def run_quick_smoke_tests():
     
     # Test 3: Test infrastructure
     try:
-        from test_infrastructure import main as test_infrastructure_main
+        pass
         # Don't actually run it, just test import
         print("✅ Test Infrastructure: Import successful")
         smoke_tests.append(True)

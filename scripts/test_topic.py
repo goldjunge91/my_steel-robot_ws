@@ -9,7 +9,7 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 import time
 import sys
-from typing import Dict, List, Callable, Any
+from typing import Dict, List, Any
 import json
 
 # Import message types

@@ -17,14 +17,12 @@ import argparse
 import math
 import os
 import subprocess
-import sys
 import threading
 import time
 
 import rclpy
 from rclpy.node import Node
 
-from std_msgs.msg import Header
 from sensor_msgs.msg import Range, Illuminance, JointState, Imu
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import TransformStamped, Quaternion

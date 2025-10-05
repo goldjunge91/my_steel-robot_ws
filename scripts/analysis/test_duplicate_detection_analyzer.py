@@ -16,13 +16,12 @@ import tempfile
 import shutil
 import json
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 import sys
 
 # Add analysis directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from duplicate_detection_analyzer import DuplicateDetectionAnalyzer, DuplicateMatch, PackageFingerprint
+from duplicate_detection_analyzer import DuplicateDetectionAnalyzer, DuplicateMatch
 
 class TestDuplicateDetectionAnalyzer(unittest.TestCase):
     """Test cases for DuplicateDetectionAnalyzer class."""
@@ -488,8 +487,8 @@ def generate_launch_description():
     def test_detect_duplicates_known_scenario(self):
         """Test duplicate detection with known duplicate scenario."""
         # Create the known duplicate: robot vs robot_description
-        pkg1_path = self.create_mock_package_with_urdf("robot", "my_steel_robot")
-        pkg2_path = self.create_mock_package_with_urdf("robot_description", "my_steel_robot")
+        self.create_mock_package_with_urdf("robot", "my_steel_robot")
+        self.create_mock_package_with_urdf("robot_description", "my_steel_robot")
         
         duplicates = self.analyzer.detect_duplicates(similarity_threshold=0.3)
         
@@ -518,8 +517,8 @@ def generate_launch_description():
     def test_detect_duplicates_hardware_interfaces(self):
         """Test duplicate detection for hardware interface packages."""
         # Create two packages that both implement hardware interfaces
-        pkg1_path = self.create_mock_hardware_interface_package("robot_hardware", "system")
-        pkg2_path = self.create_mock_hardware_interface_package("mecabridge_hardware", "system")
+        self.create_mock_hardware_interface_package("robot_hardware", "system")
+        self.create_mock_hardware_interface_package("mecabridge_hardware", "system")
         
         duplicates = self.analyzer.detect_duplicates(similarity_threshold=0.3)
         

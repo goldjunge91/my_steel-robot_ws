@@ -28,5 +28,6 @@ if ! command -v colcon >/dev/null 2>&1; then
   exit 0
 fi
 
-colcon test --merge-install || true
-colcon test-result --verbose || true
+colcon test --merge-install
+# || true stellt sicher, dass das Skript auch dann fortgesetzt wird, wenn der Test fehlschlägt.
+colcon test-result --verbose

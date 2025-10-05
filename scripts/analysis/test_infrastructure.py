@@ -5,7 +5,6 @@ This validates that all components of task 1 are properly implemented.
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add analysis directory to path
@@ -26,7 +25,7 @@ def test_package_status_analyzer():
         # Test package.xml parsing
         if packages:
             test_pkg = packages[0]
-            metadata = analyzer.parse_package_xml(test_pkg)
+            analyzer.parse_package_xml(test_pkg)
             print(f"✅ Package.xml parsing: Parsed metadata for {test_pkg.name}")
         
         return True
@@ -63,7 +62,7 @@ def test_analysis_runner():
         from run_analysis import WorkspaceAnalysisRunner
         
         # Test initialization
-        runner = WorkspaceAnalysisRunner(".")
+        WorkspaceAnalysisRunner(".")
         print(f"✅ Analysis runner: Initialized successfully")
         
         return True

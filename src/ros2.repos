@@ -6,19 +6,19 @@ repositories:
   open_manipulator_x:
     type: git
     url: https://github.com/goldjunge91/open_manipulator_x.git
-    version: main
+    version: humble
   robot_bringup:
     type: git
     url: https://github.com/goldjunge91/robot_bringup.git
-    version: main
+    version: humble
   robot_controller:
     type: git
     url: https://github.com/goldjunge91/robot_controller.git
-    version: main
+    version: humble
   robot_description:
     type: git
     url: https://github.com/goldjunge91/robot_description.git
-    version: main
+    version: humble
   robot_gazebo:
     type: git
     url: https://github.com/goldjunge91/robot_gazebo.git
@@ -26,27 +26,27 @@ repositories:
   robot_localization_tool:
     type: git
     url: https://github.com/goldjunge91/robot_localization.git
-    version: main
+    version: humble
   robot_nerf_launcher:
     type: git
     url: https://github.com/goldjunge91/robot_nerf_launcher.git
-    version: main
+    version: humble
   robot_utils:
     type: git
     url: https://github.com/goldjunge91/robot_utils.git
-    version: main
+    version: humble
   robot_vision:
     type: git
     url: https://github.com/goldjunge91/robot_vision.git
-    version: main
+    version: humble
   robot_controllers:
     type: git
     url: https://github.com/goldjunge91/robot_controllers.git
-    version: main
+    version: humble
   robot_hardware_interfaces:
     type: git
     url: https://github.com/goldjunge91/robot_hardware_interfaces.git
-    version: main
+    version: humble
   robot-micro-ROS-Agent:
     type: git
     url: https://github.com/goldjunge91/robot-micro-ROS-Agent.git

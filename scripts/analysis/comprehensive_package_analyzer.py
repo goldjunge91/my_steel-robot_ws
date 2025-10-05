@@ -10,7 +10,7 @@ import json
 import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, List, Set, Optional, Tuple
+from typing import Dict, List, Set, Optional
 from dataclasses import dataclass, asdict
 from enum import Enum
 
@@ -389,7 +389,7 @@ def main():
     analyzer = ComprehensivePackageAnalyzer(workspace_root)
     
     # Run analysis
-    packages = analyzer.analyze_all_packages()
+    analyzer.analyze_all_packages()
     
     # Print summary
     analyzer.print_summary()

@@ -12,15 +12,13 @@ This script identifies packages with overlapping or duplicate functionality by a
 Requirements addressed: 1.3
 """
 
-import os
 import sys
 import json
 import hashlib
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, Optional
+from typing import Dict, List, Set, Tuple
 from dataclasses import dataclass, asdict
 from collections import defaultdict
-import difflib
 
 @dataclass
 class DuplicateMatch:
@@ -148,7 +146,7 @@ class DuplicateDetectionAnalyzer:
                 # Add file name for reference
                 urdf_info.append(f"file:{urdf_file.name}")
                 
-            except Exception as e:
+            except Exception:
                 urdf_info.append(f"error:Could not parse {urdf_file.name}")
         
         return urdf_info
