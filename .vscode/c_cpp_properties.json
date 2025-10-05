@@ -4,13 +4,12 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/ros/humble/include/**",
-                "${workspaceFolder}/firmware/**",
-                "${workspaceFolder}/firmware/src/include/shared",
-                " // NEUE PFADE FÜR FREERTOS",
-                "${env:PICO_SDK_PATH}/lib/FreeRTOS-Kernel/include/**",
-                "${env:PICO_SDK_PATH}/lib/FreeRTOS-Kernel/portable/GCC/ARM_CM0/**",
-                "${env:PICO_SDK_PATH}/**"
+                "/opt/ros/humble/include/**"
+                // "${workspaceFolder}/firmware/**",
+                // "${workspaceFolder}/firmware/src/include/shared",
+                // "${env:PICO_SDK_PATH}/lib/FreeRTOS-Kernel/include/**",
+                // "${env:PICO_SDK_PATH}/lib/FreeRTOS-Kernel/portable/GCC/ARM_CM0/**",
+                // "${env:PICO_SDK_PATH}/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

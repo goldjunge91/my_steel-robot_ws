@@ -42,8 +42,8 @@
 	path = src/robot_hardware
 	url = git@github.com:goldjunge91/robot_hardware.git
 	branch = main
-[submodule "src/robot_localization"]
-	path = src/robot_localization
+[submodule "src/robot_localization_tool"]
+	path = src/robot_localization_tool
 	url = git@github.com:goldjunge91/robot_localization.git
 	branch = main
 [submodule "src/robot_nerf_launcher"]
@@ -58,23 +58,6 @@
 	path = src/robot_vision
 	url = git@github.com:goldjunge91/robot_vision.git
 	branch = main
-[submodule "lib/micro_ros_raspberrypi_pico_sdk"]
-        path = lib/micro_ros_raspberrypi_pico_sdk
-        url = https://github.com/micro-ROS/micro_ros_raspberrypi_pico_sdk
-        branch = humble
-[submodule "lib/FreeRTOS-Kernel"]
-        path = lib/FreeRTOS-Kernel
-        url = https://github.com/FreeRTOS/FreeRTOS-Kernel
-[submodule "lib/eigen"]
-        path = lib/eigen
-        url = https://gitlab.com/libeigen/eigen
-[submodule "lib/pico-distance-sensor"]
-        path = lib/pico-distance-sensor
-        url = https://github.com/dangarbri/pico-distance-sensor
-[submodule "lib/FreeRTOS"]
-	path = lib/FreeRTOS
-	url = https://github.com/FreeRTOS/FreeRTOS
-	branch = main
 [submodule "src/robot-micro-ROS-Agent"]
 	path = src/robot-micro-ROS-Agent
 	url = https://github.com/goldjunge91/robot-micro-ROS-Agent.git
@@ -87,3 +70,29 @@
 	path = src/robot_hardware_interfaces
 	url = git@github.com:goldjunge91/robot_hardware_interfaces.git
 	branch = main
+[submodule "src/robot_gz_worlds"]
+	path = src/robot_gz_worlds
+	url = https://github.com/goldjunge91/robot_gz_worlds.git
+	branch = main
+[submodule "lib/FreeRTOS-Kernel"]
+        path = lib/FreeRTOS-Kernel
+        url = https://github.com/FreeRTOS/FreeRTOS-Kernel
+	ignore = dirty
+[submodule "lib/eigen"]
+        path = lib/eigen
+        url = https://gitlab.com/libeigen/eigen
+	ignore = dirty
+[submodule "lib/pico-distance-sensor"]
+        path = lib/pico-distance-sensor
+        url = https://github.com/dangarbri/pico-distance-sensor
+	ignore = dirty
+[submodule "lib/FreeRTOS"]
+	path = lib/FreeRTOS
+	url = https://github.com/FreeRTOS/FreeRTOS
+	branch = main
+	ignore = dirty
+[submodule "lib/micro_ros_raspberrypi_pico_sdk"]
+        path = lib/micro_ros_raspberrypi_pico_sdk
+        url = https://github.com/micro-ROS/micro_ros_raspberrypi_pico_sdk
+        branch = humble
+	ignore = dirty
