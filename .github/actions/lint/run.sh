@@ -30,7 +30,9 @@ fi
 
 ./setup.sh
 
-safe_source "install/setup.bash"
+if [ -f "install/setup.bash" ]; then
+  safe_source "install/setup.bash"
+fi
 
 if [ -z "${LINTER:-}" ]; then
   echo "LINTER environment variable is not set." >&2

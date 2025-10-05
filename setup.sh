@@ -45,6 +45,12 @@ PY
 fi
 
 if command -v rosdep >/dev/null 2>&1; then
+  if command -v apt-get >/dev/null 2>&1; then
+    if [ -z "${APT_UPDATED:-}" ]; then
+      apt-get update || true
+      APT_UPDATED=1
+    fi
+  fi
   rosdep update --rosdistro="$ROS_DISTRO" || true
   rosdep install --from-paths src --ignore-src -y --rosdistro="$ROS_DISTRO" || true
 else
