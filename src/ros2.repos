@@ -51,6 +51,10 @@ repositories:
     type: git
     url: https://github.com/goldjunge91/robot-micro-ROS-Agent.git
     version: humble
+  robot_gz_worlds:
+    type: git
+    url: https://github.com/goldjunge91/robot_gz_worlds.git
+    version: main
 # # List of repositories to use within your workspace
 # # See https://github.com/dirk-thomas/vcstool
 # ############

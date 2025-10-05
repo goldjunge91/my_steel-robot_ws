@@ -57,9 +57,19 @@ if [ "$TARGET" = "robot" ]; then
         ros-humble-twist-mux \
         ros-humble-rmw-fastrtps-cpp \
         ros-humble-rmw-fastrtps-shared-cpp \
+                ros-humble-joint-state-publisher-gui \
+        ros-humble-rqt \
+        ros-humble-rqt-image-view \
+        ros-humble-rosbridge-suite \
+        ros-humble-moveit \
+        ros-humble-moveit-msgs \
+        ros-humble-moveit-ros-planning \
+        ros-humble-moveit-ros-planning-interface \
+        ros-humble-moveit-servo \
+        ros-humble-micro-ros-msgs \
         joystick \
         jstest-gtk \
-        evtest \
+        evtest
         # ros-humble-urdf-tutorial \
         # micro-ros-agent
 
@@ -81,8 +91,9 @@ elif [ "$TARGET" = "remote_pc" ]; then
     echo "Installing remote PC (development) specific dependencies..."
     # Development and simulation packages
     sudo apt-get -y install --no-install-recommends \
+        ros-humble-desktop \
+        python3-rosdep \
         ros-humble-gazebo-ros-pkgs \
-        ros-humble-gazebo-ros2-control \
         ros-humble-joint-state-publisher-gui \
         ros-humble-rqt \
         ros-humble-rqt-image-view \
@@ -93,7 +104,6 @@ elif [ "$TARGET" = "remote_pc" ]; then
         ros-humble-moveit-ros-planning-interface \
         ros-humble-moveit-servo \
         ros-humble-micro-ros-msgs \
-        ros-humble-micro-ros-agent \
         joystick \
         jstest-gtk \
         evtest

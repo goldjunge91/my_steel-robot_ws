@@ -423,4 +423,14 @@
     "todo-tree.regex.enableMultiLine": true,
     "files.eol": "\n",
     "files.trimFinalNewlines": true,
+    "python.autoComplete.extraPaths": [
+        "/home/pi/workspace/ros2_dev_ws/my_steel-robot_ws/install/micro_ros_msgs/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/pi/workspace/ros2_dev_ws/my_steel-robot_ws/install/micro_ros_msgs/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
 }
