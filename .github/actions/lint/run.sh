@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# Ensure we're in the workspace directory
+cd /github/workspace || { echo "Failed to cd to /github/workspace"; exit 1; }
+
 ROS_DISTRO=${ROS_DISTRO:-humble}
 ROS_SETUP="/opt/ros/${ROS_DISTRO}/setup.bash"
 if [ ! -f "$ROS_SETUP" ]; then
