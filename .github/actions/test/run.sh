@@ -5,10 +5,10 @@ set -e
 cd /github/workspace || { echo "Failed to cd to /github/workspace"; exit 1; }
 
 echo "Running setup script..."
-./setup.sh
+bash ./setup.sh
 
 echo "Building workspace..."
-./build.sh
+bash ./build.sh
 
 echo "Running tests..."
-./test.sh
+bash ./test.sh

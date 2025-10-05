@@ -35,7 +35,12 @@ echo "Installing required packages..."
 $SUDO apt-get install -y --no-install-recommends \
   libboost1.74-dev \
   "ros-${ROS_DISTRO}-ament-cppcheck" \
-  "ros-${ROS_DISTRO}-ament-cpplint" 2>/dev/null || echo "Warning: Some apt packages could not be installed"
+  "ros-${ROS_DISTRO}-ament-cpplint" \
+  "ros-${ROS_DISTRO}-ament-uncrustify" \
+  "ros-${ROS_DISTRO}-ament-lint-cmake" \
+  "ros-${ROS_DISTRO}-ament-xmllint" \
+  "ros-${ROS_DISTRO}-ament-flake8" \
+  "ros-${ROS_DISTRO}-ament-pep257" 2>/dev/null || echo "Warning: Some apt packages could not be installed"
 
 # Update rosdep
 echo "Updating rosdep..."

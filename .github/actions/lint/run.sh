@@ -15,7 +15,7 @@ fi
 source "$ROS_SETUP"
 
 echo "Running setup script..."
-./setup.sh
+bash ./setup.sh
 
 if [ -f "install/setup.bash" ]; then
   echo "Sourcing workspace setup..."
