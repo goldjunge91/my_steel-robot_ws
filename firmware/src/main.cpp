@@ -256,8 +256,8 @@ extern "C" {
 #define CONN_LED_PAD 26
 
 // Front Left Motor (Motor 0)
-#define FRONT_LEFT_PWR_CW 2
-#define FRONT_LEFT_PWR_CCW 3
+#define FRONT_LEFT_PWR_CW 20
+#define FRONT_LEFT_PWR_CCW 21
 #define FRONT_LEFT_ROTENC_A 6
 #define FRONT_LEFT_ROTENV_B 7
 
@@ -268,14 +268,14 @@ extern "C" {
 #define FRONT_RIGHT_ROTENV_B 9
 
 // Rear Left Motor (Motor 2)
-#define REAR_LEFT_PWR_CW 17
-#define REAR_LEFT_PWR_CCW 18
+#define REAR_LEFT_PWR_CW 14
+#define REAR_LEFT_PWR_CCW 15
 #define REAR_LEFT_ROTENC_A 10
 #define REAR_LEFT_ROTENV_B 11
 
 // Rear Right Motor (Motor 3)
-#define REAR_RIGHT_PWR_CW 19
-#define REAR_RIGHT_PWR_CCW 20
+#define REAR_RIGHT_PWR_CW 22
+#define REAR_RIGHT_PWR_CCW 28
 #define REAR_RIGHT_ROTENC_A 12
 #define REAR_RIGHT_ROTENV_B 13
 
@@ -284,17 +284,19 @@ extern "C" {
 #define KI 0.019
 #define KD 0.24
 
-// IMU (SPI) Pins
+// IMU (SPI) Pins DONT CHANGE IT
 #define IMU_SPI_PORT spi0
 #define IMU_CS_PIN 17
 #define IMU_SCK_PIN 18
 #define IMU_MOSI_PIN 19
 #define IMU_MISO_PIN 16
 
-// VL6180X (I2C) Pins
+// VL6180X (I2C) Pins DONT CHANGE IT
 #define VL6180X_I2C_PORT i2c1
 #define VL6180X_SDA_PIN 2
 #define VL6180X_SCL_PIN 3
+
+
 
 char ROBOT_NAME[] = "robot_xl";
 

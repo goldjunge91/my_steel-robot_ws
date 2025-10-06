@@ -17,37 +17,55 @@ Pflege diese Datei im Firmware‑Repo (robot_firmware/docs/PINMAP.md) und halte 
 
 | MCU_PIN | SIGNAL                | CONNECTOR | NOTES (timer/interrupt/alt)                          |
 | ------- | --------------------- | --------- | ---------------------------------------------------- |
-| GP2     | MOTOR_FL_PWM (FL_PWM) | PICO GP2  | PWM output (motor A PWM)                             |
-| GP18    | MOTOR_FL_DIR_IN1      | PICO GP18 | Motor direction input (IN1)                          |
-| GP19    | MOTOR_FL_DIR_IN2      | PICO GP19 | Motor direction input (IN2)                          |
-| GP8     | MOTOR_FL_ENCODER_A    | PICO GP8  | Encoder A (ext interrupt)                            |
-| GP9     | MOTOR_FL_ENCODER_B    | PICO GP9  | Encoder B                                            |
-| GP3     | MOTOR_FR_PWM (FR_PWM) | PICO GP3  | PWM output (motor B PWM)                             |
-| GP17    | MOTOR_FR_DIR_IN1      | PICO GP17 | Motor direction input (IN1)                          |
-| GP20    | MOTOR_FR_DIR_IN2      | PICO GP20 | Motor direction input (IN2)                          |
-| GP10    | MOTOR_FR_ENCODER_A    | PICO GP10 | Encoder A                                            |
-| GP11    | MOTOR_FR_ENCODER_B    | PICO GP11 | Encoder B                                            |
-| GP4     | MOTOR_RL_PWM (RL_PWM) | PICO GP4  | PWM output (motor C PWM)                             |
-| GP21    | MOTOR_RL_DIR_IN1      | PICO GP21 | Motor direction input (IN1)                          |
-| GP22    | MOTOR_RL_DIR_IN2      | PICO GP22 | Motor direction input (IN2)                          |
-| GP12    | MOTOR_RL_ENCODER_A    | PICO GP12 | Encoder A                                            |
-| GP13    | MOTOR_RL_ENCODER_B    | PICO GP13 | Encoder B                                            |
-| GP5     | MOTOR_RR_PWM (RR_PWM) | PICO GP5  | PWM output (motor D PWM)                             |
-| GP26    | MOTOR_RR_DIR_IN1      | PICO GP26 | Motor direction input (IN1)                          |
-| GP27    | MOTOR_RR_DIR_IN2      | PICO GP27 | Motor direction input (IN2)                          |
-| GP6     | MOTOR_RR_ENCODER_A    | PICO GP6  | Encoder A                                            |
-| GP7     | MOTOR_RR_ENCODER_B    | PICO GP7  | Encoder B                                            |
-| GP28    | TB6612_STBY (STBY)    | PICO GP28 | Shared TB6612 standby pin                            |
-| GP14    | ESC1_PWM (ESC1_PIN)   | PICO GP14 | ESC / servo PWM                                      |
-| GP15    | ESC2_PWM (ESC2_PIN)   | PICO GP15 | ESC / servo PWM                                      |
-| GP16    | GEAR_PIN              | PICO GP16 | Gear / digital output                                |
-| GP12    | I2C_SDA               | I2C1      | ICM20948 SDA (shared with RL encoder pin assignment) |
-| GP13    | I2C_SCL               | I2C1      | ICM20948 SCL                                         |
+| GP0     | UART0_TX              | UART0     | Debug UART TX (reserved)                             |
+| GP1     | UART0_RX              | UART0     | Debug UART RX (reserved)                             |
+| GP2     | VL6180X_SDA           | I2C1      | VL6180X ToF Sensor SDA (FIXED - DO NOT CHANGE)       |
+| GP3     | VL6180X_SCL           | I2C1      | VL6180X ToF Sensor SCL (FIXED - DO NOT CHANGE)       |
+| GP4     | MOTOR_FR_PWM_CW       | PICO GP4  | Front Right Motor PWM CW                             |
+| GP5     | MOTOR_FR_PWM_CCW      | PICO GP5  | Front Right Motor PWM CCW                            |
+| GP6     | MOTOR_FL_ENCODER_A    | PICO GP6  | Front Left Encoder A (ext interrupt)                 |
+| GP7     | MOTOR_FL_ENCODER_B    | PICO GP7  | Front Left Encoder B                                 |
+| GP8     | MOTOR_FR_ENCODER_A    | PICO GP8  | Front Right Encoder A                                |
+| GP9     | MOTOR_FR_ENCODER_B    | PICO GP9  | Front Right Encoder B                                |
+| GP10    | MOTOR_RL_ENCODER_A    | PICO GP10 | Rear Left Encoder A                                  |
+| GP11    | MOTOR_RL_ENCODER_B    | PICO GP11 | Rear Left Encoder B                                  |
+| GP12    | MOTOR_RR_ENCODER_A    | PICO GP12 | Rear Right Encoder A                                 |
+| GP13    | MOTOR_RR_ENCODER_B    | PICO GP13 | Rear Right Encoder B                                 |
+| GP14    | MOTOR_RL_PWM_CW       | PICO GP14 | Rear Left Motor PWM CW                               |
+| GP15    | MOTOR_RL_PWM_CCW      | PICO GP15 | Rear Left Motor PWM CCW                              |
+| GP16    | IMU_MISO              | SPI0      | ICM20948 MISO (FIXED - DO NOT CHANGE)                |
+| GP17    | IMU_CS                | SPI0      | ICM20948 CS (FIXED - DO NOT CHANGE)                  |
+| GP18    | IMU_SCK               | SPI0      | ICM20948 SCK (FIXED - DO NOT CHANGE)                 |
+| GP19    | IMU_MOSI              | SPI0      | ICM20948 MOSI (FIXED - DO NOT CHANGE)                |
+| GP20    | MOTOR_FL_PWM_CW       | PICO GP20 | Front Left Motor PWM CW                              |
+| GP21    | MOTOR_FL_PWM_CCW      | PICO GP21 | Front Left Motor PWM CCW                             |
+| GP22    | MOTOR_RR_PWM_CW       | PICO GP22 | Rear Right Motor PWM CW                              |
+| GP26    | LED_STATUS            | PICO GP26 | Status LED / Blink LED                               |
+| GP28    | MOTOR_RR_PWM_CCW      | PICO GP28 | Rear Right Motor PWM CCW                             |
 
 ## Notes and important conflicts
 
-- The table above was updated to reflect the pin assignments used in `firmware/mecabridge_pico/src/config.h` (the mapping you provided).
-- ADC / battery measurement: the previous template used `ADC0` for battery voltage; in the current pinmap many ADC-capable pins (GP26..GP29) are already used (e.g. GP26 is assigned to RR direction pin in `config.h`). The firmware does not currently assign a dedicated ADC pin for battery measurement in `config.h`. Recommendation: choose an unused ADC-capable pin (GP26..GP29) and update `config.h` accordingly, or remap the RR motor pins to free GP26 if battery monitor is required.
+**FINAL PIN ASSIGNMENTS (NO CONFLICTS):**
+- UART0 Debug: GP0/GP1 (TX/RX) - RESERVED for debugging
+- IMU (ICM20948): SPI0 on GP16(MISO)/GP17(CS)/GP18(SCK)/GP19(MOSI) - **FIXED - DO NOT CHANGE**
+- VL6180X ToF: I2C1 on GP2(SDA)/GP3(SCL) - **FIXED - DO NOT CHANGE**
+- Motors: 4x motors with PWM (CW/CCW) + Encoders
+  - Front Left: PWM=GP20/GP21, Encoders=GP6/GP7
+  - Front Right: PWM=GP4/GP5, Encoders=GP8/GP9
+  - Rear Left: PWM=GP14/GP15, Encoders=GP10/GP11
+  - Rear Right: PWM=GP22/GP28, Encoders=GP12/GP13
+- Status LED: GP26
+
+**NERF LAUNCHER - SEPARATE CONTROLLER:**
+- Controller: Arduino Nano OR Raspberry Pi Pico (separate firmware)
+- Communication: Serial/UART or I2C to main Pico
+- Components:
+  - 2x Brushless Motors (RS2205) with ESCs
+  - 2x Servos (Pan/Tilt)
+  - Trigger mechanism
+- Firmware: Separate repository/folder (not part of main robot firmware)
+- ROS2 Interface: Via main Pico or direct USB connection
+
 - USB console / micro-ROS transport: use TinyUSB / USB CDC (recommended). The Pico will enumerate as a serial device on the host (e.g. `/dev/ttyACM0`).
 - Keep `PINMAP.md` and `firmware/.../config.h` synchronized. Update this file first, then `config.h` when changing wiring.
 

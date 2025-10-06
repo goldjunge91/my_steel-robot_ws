@@ -7,9 +7,9 @@
 ### Schritt 0: Kritische Fixes
 
 ```bash
-# 1. micro-ROS Agent installieren
+# 1. Fehlende Pakete installieren
 sudo apt update
-sudo apt install ros-humble-micro-ros-agent -y
+sudo apt install ros-humble-micro-ros-agent ros-humble-usb-cam -y
 
 # 2. CycloneDDS Konfiguration deaktivieren (temporär)
 unset CYCLONEDDS_URI
