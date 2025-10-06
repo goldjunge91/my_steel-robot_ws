@@ -276,10 +276,10 @@ void DDD::createEntities(rcl_node_t *node, rclc_support_t *support) {
         pVl6180xAgent->createEntities(node, support);
     }
     rclc_publisher_init_default(
-        &xPubOdom, node, ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry), "/ddd/odom");
+        &xPubOdom, node, ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry), "odom");
 
     rclc_subscription_init_default(
-        &xSubTwist, node, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "/ddd/cmd_vel");
+        &xSubTwist, node, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "cmd_vel");
 }
 
 /***

@@ -103,7 +103,7 @@ void HCSR04Agent::run(){
 	 			&xPubRange,
 	 			node,
 	 			ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
-	 			"/ddd/range");
+	 			"range");
 	 xCount = 1;
  }
 

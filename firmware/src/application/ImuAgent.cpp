@@ -211,9 +211,9 @@ void ImuAgent::createEntities(rcl_node_t* node, rclc_support_t* support)
 {
   (void)support;
   printf("[ImuAgent] Creating entities...\n");
-  rclc_publisher_init_default(&imu_publisher_, node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), "/ddd/imu");
+  rclc_publisher_init_default(&imu_publisher_, node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), "imu/data_raw");
   entities_active_ = 1;
-  printf("[ImuAgent]   ✅ Publisher: /ddd/imu (sensor_msgs/Imu)\n");
+  printf("[ImuAgent]   ✅ Publisher: imu/data_raw (sensor_msgs/Imu)\n");
 }
 
 void ImuAgent::destroyEntities(rcl_node_t* node, rclc_support_t* support)
