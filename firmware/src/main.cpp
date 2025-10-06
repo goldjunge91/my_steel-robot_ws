@@ -286,10 +286,10 @@ extern "C" {
 
 // IMU (SPI) Pins DONT CHANGE IT
 #define IMU_SPI_PORT spi0
-#define IMU_CS_PIN 17
-#define IMU_SCK_PIN 18
-#define IMU_MOSI_PIN 19
-#define IMU_MISO_PIN 16
+#define IMU_CS_PIN 17 // NCS
+#define IMU_SCK_PIN 18 // SCLK 
+#define IMU_MOSI_PIN 19 //  SDI
+#define IMU_MISO_PIN 16  // AD0
 
 // VL6180X (I2C) Pins DONT CHANGE IT
 #define VL6180X_I2C_PORT i2c1
