@@ -252,20 +252,32 @@ extern "C" {
 #define TASK_PRIORITY (tskIDLE_PRIORITY + 1UL)
 
 // LED PAD to use
-#define BLINK_LED_PAD 2
-#define CONN_LED_PAD 3
+#define BLINK_LED_PAD 26
+#define CONN_LED_PAD 26
 
-// Left Motor
-#define LEFT_PWR_CW 9
-#define LEFT_PWR_CCW 8
-#define LEFT_ROTENC_A 14
-#define LEFT_ROTENV_B 15
+// Front Left Motor (Motor 0)
+#define FRONT_LEFT_PWR_CW 2
+#define FRONT_LEFT_PWR_CCW 3
+#define FRONT_LEFT_ROTENC_A 6
+#define FRONT_LEFT_ROTENV_B 7
 
-// Right Motor
-#define RIGHT_PWR_CW 6
-#define RIGHT_PWR_CCW 7
-#define RIGHT_ROTENC_A 12
-#define RIGHT_ROTENV_B 13
+// Front Right Motor (Motor 1)
+#define FRONT_RIGHT_PWR_CW 4
+#define FRONT_RIGHT_PWR_CCW 5
+#define FRONT_RIGHT_ROTENC_A 8
+#define FRONT_RIGHT_ROTENV_B 9
+
+// Rear Left Motor (Motor 2)
+#define REAR_LEFT_PWR_CW 17
+#define REAR_LEFT_PWR_CCW 18
+#define REAR_LEFT_ROTENC_A 10
+#define REAR_LEFT_ROTENV_B 11
+
+// Rear Right Motor (Motor 3)
+#define REAR_RIGHT_PWR_CW 19
+#define REAR_RIGHT_PWR_CCW 20
+#define REAR_RIGHT_ROTENC_A 12
+#define REAR_RIGHT_ROTENV_B 13
 
 // PID
 #define KP 0.55
@@ -284,7 +296,7 @@ extern "C" {
 #define VL6180X_SDA_PIN 2
 #define VL6180X_SCL_PIN 3
 
-char ROBOT_NAME[] = "ddd";
+char ROBOT_NAME[] = "robot_xl";
 
 #if ENABLE_DEBUG_HEARTBEAT
 static void debugHeartbeatTask(void *params) {
@@ -308,8 +320,10 @@ void mainTask(void *params) {
     static BlinkAgent blink(BLINK_LED_PAD);
 
     static MotorsAgent motors;
-    motors.addMotor(0, LEFT_PWR_CW, LEFT_PWR_CCW, LEFT_ROTENC_A, LEFT_ROTENV_B);
-    motors.addMotor(1, RIGHT_PWR_CW, RIGHT_PWR_CCW, RIGHT_ROTENC_A, RIGHT_ROTENV_B);
+    motors.addMotor(0, FRONT_LEFT_PWR_CW, FRONT_LEFT_PWR_CCW, FRONT_LEFT_ROTENC_A, FRONT_LEFT_ROTENV_B);
+    motors.addMotor(1, FRONT_RIGHT_PWR_CW, FRONT_RIGHT_PWR_CCW, FRONT_RIGHT_ROTENC_A, FRONT_RIGHT_ROTENV_B);
+    motors.addMotor(2, REAR_LEFT_PWR_CW, REAR_LEFT_PWR_CCW, REAR_LEFT_ROTENC_A, REAR_LEFT_ROTENV_B);
+    motors.addMotor(3, REAR_RIGHT_PWR_CW, REAR_RIGHT_PWR_CCW, REAR_RIGHT_ROTENC_A, REAR_RIGHT_ROTENV_B);
     motors.configAllPID(KP, KI, KD);
 
     static HCSR04Agent range;

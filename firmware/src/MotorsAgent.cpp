@@ -12,6 +12,12 @@
 #include <inttypes.h>
 #include <cmath>
 
+const char* joint_names[NUM_MOTORS] = {
+    "front_left_wheel_joint",    // Motor 0
+    "front_right_wheel_joint",   // Motor 1  
+    "rear_left_wheel_joint",     // Motor 2
+    "rear_right_wheel_joint"     // Motor 3
+};
 
 MotorsAgent::MotorsAgent() {
 	for (uint i=0; i < NUM_MOTORS; i++){
@@ -223,14 +229,22 @@ void MotorsAgent::initJointState(){
 	xJointStateMsg.velocity.size = NUM_MOTORS;
 	xJointStateMsg.velocity.capacity = NUM_MOTORS;
 
-	//Name
+	//Name - Korrekte Mecanum Joint-Namen
 	rosidl_runtime_c__String__Sequence__init(
 			&xJointStateMsg.name, NUM_MOTORS);
+	
+	// Korrekte Mecanum Joint-Namen
+	const char* joint_names[NUM_MOTORS] = {
+		"front_left_wheel_joint",    // Motor 0
+		"front_right_wheel_joint",   // Motor 1  
+		"rear_left_wheel_joint",     // Motor 2
+		"rear_right_wheel_joint"     // Motor 3
+	};
+	
 	for (uint i=0; i < NUM_MOTORS; i++){
-		sprintf(name, "motor_%u", i);
 		if (!rosidl_runtime_c__String__assign(
-				&xJointStateMsg.name.data[i], name)){
-			printf("ERROR: Joined assignment failed\n");
+				&xJointStateMsg.name.data[i], joint_names[i])){
+			printf("ERROR: Joint name assignment failed\n");
 		}
 	}
 	xJointStateMsg.name.size=NUM_MOTORS;
@@ -273,5 +287,3 @@ MotorPID * MotorsAgent::getMotor(uint index){
 	}
 	return pMotors[index];
 }
-
-

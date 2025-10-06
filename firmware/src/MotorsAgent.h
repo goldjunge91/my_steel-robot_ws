@@ -22,9 +22,9 @@ extern"C"{
 #include "rosidl_runtime_c/string_functions.h"
 #include "rosidl_runtime_c/primitives_sequence_functions.h"
 }
-
+// TODO: Move magic number to an config gile.
 #ifndef NUM_MOTORS
-#define NUM_MOTORS 2
+#define NUM_MOTORS 4
 #endif
 
 class MotorsAgent : public Agent, public uRosEntities {
