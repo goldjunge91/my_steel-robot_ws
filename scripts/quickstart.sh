@@ -1,5 +1,5 @@
 #!/bin/bash
-# QUICK REFERENCE - Robot Hardware Control
+# Kompletter Robot Setup auf Raspberry Pi
 
 cat << 'EOF'
 ╔══════════════════════════════════════════════════════════════════╗

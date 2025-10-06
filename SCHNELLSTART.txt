@@ -1,0 +1,176 @@
+╔══════════════════════════════════════════════════════════════════╗
+║          ROBOT HARDWARE SCHNELLSTART - CHEAT SHEET               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📍 AUF RASPBERRY PI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 1. Robot starten:
+cd ~/workspace/ros2_dev_ws/my_steel-robot_ws
+source install/setup.bash
+./scripts/start_robot.sh
+
+# 2. Checken ob alles läuft:
+ros2 node list
+ros2 topic list
+
+# 3. Test einzelne Sensoren:
+ros2 topic hz /camera/image_raw      # Kamera FPS
+ros2 topic echo /imu/data_raw        # IMU Daten
+ros2 topic echo /range               # ToF Sensor
+ros2 topic echo /joint_states        # Motor Encoder
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💻 AUF REMOTE PC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 1. Environment setzen (WICHTIG: ROS_DOMAIN_ID muss gleich sein!):
+export ROS_DOMAIN_ID=42
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+source /opt/ros/humble/setup.bash
+
+# 2. Nodes vom Pi sehen:
+ros2 node list
+ros2 topic list
+
+# 3. Controller starten (Xbox/PS4):
+ros2 run teleop_twist_joy teleop_node
+
+# 4. RViz2 starten:
+rviz2
+
+# In RViz2:
+# - Add → RobotModel (Topic: /robot_description)
+# - Add → TF
+# - Add → Image (Topic: /camera/image_raw)
+# - Add → Imu (Topic: /imu/data_raw)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 FOXGLOVE STUDIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Desktop App oder Web: https://app.foxglove.dev
+
+1. "Open connection"
+2. "Foxglove WebSocket"
+3. URL: ws://<RASPBERRY_PI_IP>:8765
+4. Connect
+
+⚠️  NICHT im Browser öffnen: http://...
+✅  RICHTIG in Foxglove: ws://...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎮 ROBOT STEUERN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Mit Tastatur (auf Remote PC):
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+
+# Mit Joystick/Gamepad:
+ros2 run teleop_twist_joy teleop_node
+
+# Direkt per Command (Testfahrt):
+ros2 topic pub --once /diff_drive_controller/cmd_vel_unstamped \
+  geometry_msgs/msg/Twist "{linear: {x: 0.2}, angular: {z: 0.0}}"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Problem: Remote PC sieht keine Nodes
+
+  # Check ROS_DOMAIN_ID (muss auf beiden 42 sein):
+  echo $ROS_DOMAIN_ID
+  
+  # ROS2 Daemon neu starten:
+  ros2 daemon stop
+  ros2 daemon start
+  
+  # Firewall check (Pi):
+  sudo ufw status
+  sudo ufw allow from <REMOTE_PC_IP>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Problem: Pico nicht verbunden
+
+  # Check USB:
+  ls -l /dev/ttyACM*
+  
+  # Firmware flashen:
+  cd firmware
+  make flash
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Problem: Kamera nicht gefunden
+
+  # Check devices:
+  ls -l /dev/v4l/by-id/
+  v4l2-ctl --list-devices
+  
+  # Adjust in launch file:
+  # src/robot_bringup/launch/hardware_bringup.launch.py
+  # → camera_device parameter
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Problem: IMU Daten falsch
+
+  # Kalibrierung:
+  ros2 run robot_utils calibrate_imu.py
+  
+  # Config anpassen:
+  # src/robot_hardware_interfaces/config/imu_sensor_broadcaster.yaml
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 WICHTIGE DATEIEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Start Script:
+  scripts/start_robot.sh
+
+Launch Files:
+  src/robot_bringup/launch/hardware_bringup.launch.py
+  src/robot_controller/launch/controller.launch.py
+  src/robot_bringup/launch/microros_agent.launch.py
+
+Controller Config:
+  src/robot_controller/config/
+
+Hardware Interfaces:
+  src/robot_hardware_interfaces/
+
+Firmware:
+  firmware/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 KOMPLETTER WORKFLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RASPBERRY PI:
+  ./scripts/start_robot.sh
+
+REMOTE PC (Terminal 1):
+  export ROS_DOMAIN_ID=42
+  export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+  source /opt/ros/humble/setup.bash
+  ros2 topic list    # Check connection
+
+REMOTE PC (Terminal 2 - Steuerung):
+  ros2 run teleop_twist_joy teleop_node
+
+REMOTE PC (Terminal 3 - Visualisierung):
+  rviz2
+
+BROWSER:
+  https://app.foxglove.dev
+  → ws://<PI_IP>:8765
+
+╚══════════════════════════════════════════════════════════════════╝

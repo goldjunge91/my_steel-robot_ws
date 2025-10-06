@@ -1,0 +1,107 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                    FOXGLOVE VERBINDUNG                           ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Der HTTP 426 Fehler ist NORMAL wenn du mit dem Browser zugreifst!
+Foxglove Bridge nutzt WebSockets, nicht HTTP.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ RICHTIGE VERBINDUNG - Option 1: Foxglove Studio Desktop App
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Download Foxglove Studio:
+   https://foxglove.dev/download
+
+2. Installieren und starten
+
+3. In Foxglove Studio:
+   - "Open connection"
+   - "Foxglove WebSocket"
+   - URL: ws://<ROBOT_IP>:8765
+   - Connect
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ RICHTIGE VERBINDUNG - Option 2: Foxglove Studio Web
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Browser öffnen: https://app.foxglove.dev
+
+2. In Foxglove Web:
+   - "Open connection"
+   - "Foxglove WebSocket"
+   - URL: ws://<ROBOT_IP>:8765
+   - Connect
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 ÜBERPRÜFEN OB BRIDGE LÄUFT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Auf Raspberry Pi:
+
+  ros2 node list | grep foxglove
+  # Sollte zeigen: /foxglove_bridge
+
+  ros2 node info /foxglove_bridge
+  # Zeigt alle Subscriptions
+
+  netstat -tuln | grep 8765
+  # Sollte zeigen: 0.0.0.0:8765 LISTEN
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ HÄUFIGE FEHLER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ FALSCH: http://<IP>:8765 im Browser
+   → HTTP 426 Fehler ist normal!
+
+✅ RICHTIG: ws://<IP>:8765 in Foxglove Studio
+
+❌ FALSCH: Firewall blockiert Port
+   → sudo ufw allow 8765/tcp
+
+❌ FALSCH: Falsches ROS_DOMAIN_ID
+   → Beide Rechner: export ROS_DOMAIN_ID=42
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 TOPICS IN FOXGLOVE VISUALISIEREN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Nach Verbindung:
+
+1. Klick auf "+" für neues Panel
+2. Wähle Panel-Typ:
+   - "Image" für /camera/image_raw
+   - "3D" für Robot Model + TF
+   - "Plot" für /imu/data_raw
+   - "Raw Messages" für /joint_states
+
+3. Wähle Topic aus Dropdown
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎨 EMPFOHLENES LAYOUT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Links oben:    3D Panel (Robot + TF + LaserScan)
+Rechts oben:   Image Panel (/camera/image_raw)
+Links unten:   Plot Panel (IMU, Velocity)
+Rechts unten:  Raw Messages (joint_states, range)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 ALTERNATIVE: RViz2 auf Remote PC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Wenn Foxglove nicht funktioniert:
+
+  export ROS_DOMAIN_ID=42
+  export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+  source /opt/ros/humble/setup.bash
+  ros2 launch robot_description rviz.launch.py
+
+╚══════════════════════════════════════════════════════════════════╝
