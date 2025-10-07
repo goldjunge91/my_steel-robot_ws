@@ -19,6 +19,7 @@ add_executable(firmware_tests
     test_odometry.cpp
     test_basic_math.cpp
     test_hal_mocks.cpp
+    test_topic_names.cpp
 )
 
 # Link against googletest, gtest_main, and HAL mocks

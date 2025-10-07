@@ -43,12 +43,12 @@ void Vl6180xAgent::createEntities(rcl_node_t *node, rclc_support_t *support) {
     rclc_publisher_init_default(&range_publisher_,
                                 node,
                                 ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
-                                "range_tof");
+                                "sensors/range_tof");
 
     rclc_publisher_init_default(&illuminance_publisher_,
                                 node,
                                 ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Illuminance),
-                                "illuminance");
+                                "sensors/illuminance");
     entities_active_ = 2;
 }
 

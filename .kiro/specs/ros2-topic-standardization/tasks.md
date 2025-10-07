@@ -1,37 +1,39 @@
 # Implementation Plan
 
-- [ ] 1. Update Pico Firmware Topic Names
+- [-] 1. Update Pico Firmware Topic Names
   - Update all topic publishers and subscribers to use standard ROS2 names
+  - add tests save it to firmware/tests
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7_
 
-- [ ] 1.1 Update DDD.cpp topic names
+- [x] 1.1 Update DDD.cpp topic names
   - Change odometry publisher from `/ddd/odom` to `/odom`
   - Change cmd_vel subscriber from `/ddd/cmd_vel` to `/cmd_vel` (remove alternative)
   - Update frame_id assignments if needed
+  - add tests save it to firmware/tests
   - _Requirements: 1.3, 1.6_
 
-- [ ] 1.2 Update ImuAgent.cpp topic name
+- [x] 1.2 Update ImuAgent.cpp topic name
   - Change IMU publisher from `/ddd/imu` to `/imu/data_raw`
   - Verify frame_id is set to `imu_link`
   - _Requirements: 1.3_
 
-- [ ] 1.3 Update vl6180xAgent.cpp topic names
+- [x] 1.3 Update vl6180xAgent.cpp topic names
   - Change range publisher from `/ddd/range_tof` to `/sensors/range_tof`
   - Change illuminance publisher from `/ddd/illuminance` to `/sensors/illuminance`
   - _Requirements: 1.5_
 
-- [ ] 1.4 Update HCSR04Agent.cpp topic name
+- [x] 1.4 Update HCSR04Agent.cpp topic name
   - Change range publisher from `/ddd/range` to `/sensors/range_ultrasonic`
   - Update frame_id for each sensor (range_front, range_back)
   - _Requirements: 1.5_
 
-- [ ] 1.5 Rebuild and flash firmware to Pico
+- [x] 1.5 Rebuild and flash firmware to Pico
   - Run `make build` in firmware directory
   - Flash firmware to Pico via USB
   - Verify firmware boots correctly via serial monitor
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
 
-- [ ] 1.6 Test firmware topics with micro-ROS agent
+- [-] 1.6 Test firmware topics with micro-ROS agent
   - Start micro-ROS agent
   - Run `ros2 topic list` and verify new topic names appear with `/rt/` prefix
   - Echo each topic to verify data is being published
