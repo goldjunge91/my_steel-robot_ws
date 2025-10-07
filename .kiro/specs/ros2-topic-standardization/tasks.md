@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Update Pico Firmware Topic Names
+- [x] 1. Update Pico Firmware Topic Names
   - Update all topic publishers and subscribers to use standard ROS2 names
   - add tests save it to firmware/tests
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7_
@@ -39,79 +39,79 @@
   - Echo each topic to verify data is being published
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 2. Implement Hardware Interface Velocity Command Publishing
+- [x] 2. Implement Hardware Interface Velocity Command Publishing
   - Add Twist publisher to RobotSystem hardware interface
   - Implement inverse kinematics to convert wheel velocities to twist
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
 
-- [ ] 2.1 Add Twist publisher member variables to robot_system.hpp
+- [x] 2.1 Add Twist publisher member variables to robot_system.hpp
   - Add `cmd_vel_publisher_` (rclcpp::Publisher<geometry_msgs::msg::Twist>)
   - Add `realtime_cmd_vel_publisher_` (RealtimePublisher)
   - Add wheel parameters (wheel_radius, wheel_base) as member variables
   - Remove obsolete motor_command_publisher_ declarations
   - _Requirements: 2.1, 7.1, 7.2, 7.3_
 
-- [ ] 2.2 Initialize Twist publisher in on_activate()
+- [x] 2.2 Initialize Twist publisher in on_activate()
   - Create publisher for `/cmd_vel` topic with SystemDefaultsQoS
   - Create realtime publisher wrapper
   - Read wheel parameters from hardware_info
   - _Requirements: 2.1, 2.6_
 
-- [ ] 2.3 Implement write() method with inverse kinematics
+- [x] 2.3 Implement write() method with inverse kinematics
   - Calculate robot velocity (vx, vy, omega) from wheel velocities
   - Apply mecanum drive forward kinematics formula
   - Populate Twist message with calculated velocities
   - Publish Twist message using realtime publisher
   - _Requirements: 2.2, 2.3_
 
-- [ ] 2.4 Add safety timeout for velocity commands
+- [x] 2.4 Add safety timeout for velocity commands
   - Track last command timestamp
   - Publish zero velocity if no commands received for 500ms
   - Log warning when timeout occurs
   - _Requirements: 2.4_
 
-- [ ] 2.5 Update cleanup_node() to reset Twist publisher
+- [x] 2.5 Update cleanup_node() to reset Twist publisher
   - Reset realtime_cmd_vel_publisher_
   - Reset cmd_vel_publisher_
   - Remove obsolete motor_command_publisher_ cleanup
   - _Requirements: 2.5, 7.3_
 
-- [ ] 2.6 Update on_deactivate() to stop publishing
+- [x] 2.6 Update on_deactivate() to stop publishing
   - Publish final zero velocity command
   - Call cleanup_node()
   - _Requirements: 2.5_
 
-- [ ] 3. Implement Hardware Interface State Reading
+- [x] 3. Implement Hardware Interface State Reading
   - Update RobotSystem to properly read joint states from firmware
   - Remove mock mode fallback behavior
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-- [ ] 3.1 Update motor_state_subscriber_ topic in on_activate()
+- [x] 3.1 Update motor_state_subscriber_ topic in on_activate()
   - Subscribe to `/joint_states` directly (no remapping needed)
   - Use SensorDataQoS for real-time performance
   - _Requirements: 3.1_
 
-- [ ] 3.2 Update read() method to handle missing data correctly
+- [x] 3.2 Update read() method to handle missing data correctly
   - Check if motor_state is null
   - Return ERROR status instead of using mock values
   - Log throttled error message when no data received
   - Remove mock mode integration code
   - _Requirements: 3.2, 3.4, 3.5_
 
-- [ ] 3.3 Verify joint name mapping in read() method
+- [x] 3.3 Verify joint name mapping in read() method
   - Ensure joint names match firmware: front_left_wheel_joint, front_right_wheel_joint, rear_left_wheel_joint, rear_right_wheel_joint
   - Log error if joint names don't match
   - Update position and velocity state interfaces
   - _Requirements: 3.3_
 
-- [ ] 3.4 Implement activation wait for first joint state
+- [x] 3.4 Implement activation wait for first joint state
   - Wait up to 5 seconds for first joint state message in on_activate()
   - Return ERROR if timeout occurs
   - Log success message when real hardware feedback is received
   - Remove "mock mode enabled" warning
   - _Requirements: 3.6_
 
-- [ ] 3.5 Add connection timeout parameter to URDF
+- [x] 3.5 Add connection timeout parameter to URDF
   - Verify connection_timeout_ms parameter exists in ros2_control.urdf.xacro
   - Set reasonable default (5000ms)
   - _Requirements: 3.4_
