@@ -16,7 +16,7 @@ target_include_directories(freertos_config SYSTEM INTERFACE
 target_compile_definitions(freertos_config INTERFACE
     projCOVERAGE_TEST=0
     # configNUMBER_OF_CORES=2
-    configNUM_CORES=2
+    configNUMBER_OF_CORES=2
 )
 
 # 2) Eigene Port-Objekte separat bauen
@@ -68,6 +68,7 @@ target_compile_definitions(freertos_config_headers INTERFACE
     projCOVERAGE_TEST=0
     configNUMBER_OF_CORES=2
 )
+ 
 
 # Link implementation target against libraries required to build the sources.
 # Link the INTERFACE headers target publicly so dependents that link
