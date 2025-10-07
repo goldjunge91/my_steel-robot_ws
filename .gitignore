@@ -1,10 +1,17 @@
-build/*
-install/*
-log/*
+# ### ROS 2 & Colcon Build-Artefakte ###
+# Ignoriere Build-, Install- und Log-Verzeichnisse überall im Projekt.
+build/
+install/
+log/
+build_*/
 build
 log
 install
 site/*
+# ### Python-Artefakte ###
+__pycache__/
+*.pyc
+.pytest_cache/
 .pytest_cache
 /__pycache__/
 /__pycache__/*
@@ -25,23 +32,52 @@ debug
 release
 debug/*
 release/*
-# Prerequisites
-*.d
 
-# Compiled Object files
-*.slo
-*.lo
+# ### Kompilierte C/C++ Artefakte ###
+# Objektdateien, Bibliotheken und ausführbare Dateien
 *.o
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
+*.slo
+*.lo
 *.so
 *.dylib
 *.dll
+*.a
+*.la
+*.lai
+*.lib
+*.exe
+*.out
+*.app
+*.d
+
+# Vorkompilierte Header
+*.gch
+*.pch
+
+# ### IDE & Editor-Konfiguration ###
+.cproject
+.project
+.pydevproject
+.settings/
+
+# ### Logs & Datenbanken ###
+*.log
+*.db
+*.sqlite3
+
+# ### Generierte Dokumentation & Web-Artefakte ###
+/site/
+# Wenn dies automatisch generiert und groß ist, sonst die Zeile entfernen.
+/.docs/ROS2_Humble_docs/
+
+# ### OS-spezifische Dateien ###
+# macOS, Windows, etc.
+.DS_Store
+@eaDir
+
+# ### Node.js ###
+/node_modules/
 
 # Fortran module files
 *.mod
@@ -76,3 +112,11 @@ build
 .settings
 __pycache__
 */install
+
+# ### ROS 2 & Colcon Build-Artefakte ###
+# Ignoriere Build-, Install- und Log-Verzeichnisse überall im Projekt.
+build/
+install/
+log/
+build_*/
+build*/
