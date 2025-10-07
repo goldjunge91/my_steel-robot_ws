@@ -4,7 +4,7 @@
 
 # Clean: Entferne Build-Verzeichnis
 clean:
-	rm -rf build
+	rm -rf build/ releases log 
 
 # Clean tests
 clean-tests:

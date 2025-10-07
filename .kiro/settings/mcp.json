@@ -7,7 +7,10 @@
       ],
       "env": {},
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [],
+      "disabledTools": [
+        "fetch"
+      ]
     },
     "sequential-thinking": {
       "command": "npx",
@@ -20,9 +23,7 @@
         "sequentialthinking",
         "sequentialthinking"
       ],
-      "disabledTools": [
-        "sequentialthinking"
-      ]
+      "disabledTools": []
     },
     "memory": {
       "command": "npx",
