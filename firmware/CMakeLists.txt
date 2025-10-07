@@ -12,6 +12,16 @@ set(CMAKE_CXX_STANDARD 17)
 # Initialize the SDK
 pico_sdk_init()
 
+# Workaround: some host-side test dependencies (googletest) expect
+# _POSIX_PATH_MAX to be defined. Define a generous fallback so
+# gtest builds successfully in this environment.
+# add_compile_definitions(_POSIX_PATH_MAX=4096)
+# Ensure external projects and subdirectories also receive the define
+# (some FetchContent/ExternalProject builds do not inherit modern
+# compile definitions). add_definitions is an older CMake mechanism
+# that sets the preprocessor flag globally for all targets.
+# add_definitions(-D_POSIX_PATH_MAX=4096)
+
 set (FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_LIST_DIR}/../lib/FreeRTOS-Kernel" CACHE STRING "Common Lib" FORCE)
 
 # Erstelle "INTERFACE"-Target nur für die Konfiguration.
@@ -28,13 +38,14 @@ target_include_directories(freertos_config SYSTEM INTERFACE
 # )
 target_compile_definitions(freertos_config INTERFACE
     projCOVERAGE_TEST=0
-    configNUM_CORES=2
+    configNUMBER_OF_CORES=2
     configUSE_CORE_AFFINITY=1
     # configRUN_MULTIPLE_PRIORITIES=0
     # configTICK_CORE=0
     # Undefine SMP flag to prevent SMP-specific code
     # FREE_RTOS_KERNEL_SMP=0
 )
+
 # === ENDE DER FREERTOS-KORREKTUR ===
 include(FreeRTOS_Kernel_import.cmake)
 
@@ -48,6 +59,13 @@ set(DISTANCE_SENSOR_PATH "${CMAKE_CURRENT_LIST_DIR}/../lib/pico-distance-sensor/
 include(distance_sensor.cmake)
 
 add_subdirectory(src)
+
+# Add tests only when building for host (not for Pico)
+if(NOT PICO_PLATFORM)
+    # Add locally cloned GoogleTest
+    add_subdirectory("googletest" "googletest/make_googletest_output")
+    add_subdirectory(tests)
+endif()
 
 #set up files for the release packages
 install(CODE "execute_process(COMMAND $ENV{HOME}/bin/picoDeploy.sh ${CMAKE_CURRENT_BINARY_DIR}/src/${NAME}.elf)")
