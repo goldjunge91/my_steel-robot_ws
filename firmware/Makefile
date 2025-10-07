@@ -1,8 +1,16 @@
-.PHONY: clean build compile flash
+.PHONY: clean build compile flash test test-verbose test-coverage
 
 # Clean: Entferne Build-Verzeichnis
 clean:
 	rm -rf build
+
+# Clean tests
+clean-tests:
+	rm -rf tests/build
+
+# Clean all
+clean-all: clean clean-tests
+	rm -rf build_release
 
 # Build: CMake konfigurieren und kompilieren
 build:
@@ -17,6 +25,43 @@ build_release: clean
 
 # Compile: Alias für build (kompiliert alles)
 compile: clean build
+
+# Test: Build and run unit tests
+test:
+	@echo "Building and running unit tests..."
+	@mkdir -p tests/build
+	@cd tests/build && cmake .. && make -j$(nproc)
+	@echo "\n========================================"
+	@echo "  Running Firmware Unit Tests"
+	@echo "========================================"
+	@cd tests/build && ./firmware_tests
+
+# Test with verbose output
+test-verbose:
+	@echo "Building and running unit tests (verbose)..."
+	@mkdir -p tests/build
+	@cd tests/build && cmake .. && make -j$(nproc)
+	@echo "\n========================================"
+	@echo "  Running Firmware Unit Tests (Verbose)"
+	@echo "========================================"
+	@cd tests/build && ./firmware_tests --gtest_color=yes --gtest_print_time=1
+
+# Test with CTest
+test-ctest:
+	@echo "Building and running unit tests with CTest..."
+	@mkdir -p tests/build
+	@cd tests/build && cmake .. && make -j$(nproc)
+	@cd tests/build && ctest --output-on-failure --verbose
+
+# Run specific test suite
+test-pid:
+	@cd tests/build && ./firmware_tests --gtest_filter=MotorPIDTest.*
+
+test-odometry:
+	@cd tests/build && ./firmware_tests --gtest_filter=OdometryTest.*
+
+test-math:
+	@cd tests/build && ./firmware_tests --gtest_filter=MathUtilsTest.*
 
 # Flash: UF2-Datei auf Raspberry Pi Pico laden
 flash: build

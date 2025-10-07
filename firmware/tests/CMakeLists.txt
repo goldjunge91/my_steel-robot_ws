@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.22)
 # Test suite for my_firmware
 project(my_firmware_tests)
 

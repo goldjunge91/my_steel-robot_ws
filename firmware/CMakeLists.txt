@@ -12,16 +12,6 @@ set(CMAKE_CXX_STANDARD 17)
 # Initialize the SDK
 pico_sdk_init()
 
-# Workaround: some host-side test dependencies (googletest) expect
-# _POSIX_PATH_MAX to be defined. Define a generous fallback so
-# gtest builds successfully in this environment.
-# add_compile_definitions(_POSIX_PATH_MAX=4096)
-# Ensure external projects and subdirectories also receive the define
-# (some FetchContent/ExternalProject builds do not inherit modern
-# compile definitions). add_definitions is an older CMake mechanism
-# that sets the preprocessor flag globally for all targets.
-# add_definitions(-D_POSIX_PATH_MAX=4096)
-
 set (FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_LIST_DIR}/../lib/FreeRTOS-Kernel" CACHE STRING "Common Lib" FORCE)
 
 # Erstelle "INTERFACE"-Target nur für die Konfiguration.
