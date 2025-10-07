@@ -1,5 +1,5 @@
 #!/bin/bash
-# Einfacher Motor-Test ohne IMU
+# Einfacher Motor-Test
 
 set -e
 
@@ -9,16 +9,37 @@ colcon build --merge-install --packages-select robot_hardware_interfaces
 source install/setup.bash
 
 echo ""
-echo "=== Starting Controller Manager (without IMU) ==="
-echo "Press Ctrl+C to stop"
+echo "=== Testing Motors ==="
 echo ""
 
-# Starte nur mit drive_controller, ohne imu_broadcaster
-ros2 launch robot_controller controller.launch.py \
-  use_sim_time:=false \
-  --ros-args \
-  -p controller_manager.imu_broadcaster.type:='' \
-  || true
+# Zeige aktuelle Joint States
+echo "Current joint states:"
+timeout 2 ros2 topic echo /joint_states --once || echo "No joint states yet"
 
 echo ""
-echo "Test beendet"
+echo "Sending forward velocity command (0.1 m/s)..."
+echo "Watch the joint states change!"
+echo ""
+
+# Sende Bewegungsbefehl und zeige Joint States
+ros2 topic pub /cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 0.1, y: 0.0, z: 0.0}, angular: {z: 0.0}}" \
+  --rate 10 &
+
+CMD_PID=$!
+
+# Zeige Joint States für 5 Sekunden
+echo "Watching joint states for 5 seconds..."
+timeout 5 ros2 topic echo /joint_states || true
+
+# Stoppe Bewegung
+kill $CMD_PID 2>/dev/null || true
+
+echo ""
+echo "Sending STOP command..."
+ros2 topic pub /cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {z: 0.0}}" \
+  --once
+
+echo ""
+echo "Test complete!"
