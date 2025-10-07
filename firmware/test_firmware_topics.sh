@@ -95,32 +95,32 @@ echo ""
 echo "Step 3: Checking standard topic names exist..."
 echo "----------------------------------------------"
 # Check odometry topic (Requirement 1.4)
-check_topic_exists "/rt/odom" "1.4"
+check_topic_exists "/odom" "1.4"
 
 # Check cmd_vel topic (Requirement 1.6)
-check_topic_exists "/rt/cmd_vel" "1.6"
+check_topic_exists "/cmd_vel" "1.6"
 
 # Check IMU topic (Requirement 1.3)
-check_topic_exists "/rt/imu/data_raw" "1.3"
+check_topic_exists "/imu/data_raw" "1.3"
 
 # Check sensor topics (Requirement 1.5)
-check_topic_exists "/rt/sensors/range_tof" "1.5"
-check_topic_exists "/rt/sensors/illuminance" "1.5"
-check_topic_exists "/rt/sensors/range_ultrasonic" "1.5"
+check_topic_exists "/sensors/range_tof" "1.5"
+check_topic_exists "/sensors/illuminance" "1.5"
+check_topic_exists "/sensors/range_ultrasonic" "1.5"
 
 # Check joint states topic (Requirement 1.2)
-check_topic_exists "/rt/joint_states" "1.2"
+check_topic_exists "/joint_states" "1.2"
 echo ""
 
 echo "Step 4: Checking deprecated topic names are removed..."
 echo "----------------------------------------------"
 # Check that old /ddd/ prefixed topics don't exist (Requirement 1.7)
-check_topic_not_exists "/rt/ddd/odom" "1.7"
-check_topic_not_exists "/rt/ddd/imu" "1.7"
-check_topic_not_exists "/rt/ddd/range_tof" "1.7"
-check_topic_not_exists "/rt/ddd/range" "1.7"
-check_topic_not_exists "/rt/ddd/illuminance" "1.7"
-check_topic_not_exists "/rt/ddd/cmd_vel" "1.7"
+check_topic_not_exists "/ddd/odom" "1.7"
+check_topic_not_exists "/ddd/imu" "1.7"
+check_topic_not_exists "/ddd/range_tof" "1.7"
+check_topic_not_exists "/ddd/range" "1.7"
+check_topic_not_exists "/ddd/illuminance" "1.7"
+check_topic_not_exists "/ddd/cmd_vel" "1.7"
 echo ""
 
 echo "Step 5: Verifying topics are publishing data..."
@@ -129,33 +129,33 @@ echo "This step will wait up to 5 seconds for each topic to publish data."
 echo ""
 
 # Check that topics are actually publishing data
-check_topic_data "/rt/odom" "1.4"
-check_topic_data "/rt/imu/data_raw" "1.3"
-check_topic_data "/rt/joint_states" "1.2"
-check_topic_data "/rt/sensors/range_tof" "1.5"
-check_topic_data "/rt/sensors/illuminance" "1.5"
-check_topic_data "/rt/sensors/range_ultrasonic" "1.5"
+check_topic_data "/odom" "1.4"
+check_topic_data "/imu/data_raw" "1.3"
+check_topic_data "/joint_states" "1.2"
+check_topic_data "/sensors/range_tof" "1.5"
+check_topic_data "/sensors/illuminance" "1.5"
+check_topic_data "/sensors/range_ultrasonic" "1.5"
 echo ""
 
 echo "Step 6: Checking topic message types..."
 echo "----------------------------------------------"
 echo "Odometry topic type:"
-ros2 topic info /rt/odom | grep "Type:"
+ros2 topic info /odom | grep "Type:"
 
 echo "IMU topic type:"
-ros2 topic info /rt/imu/data_raw | grep "Type:"
+ros2 topic info /imu/data_raw | grep "Type:"
 
 echo "Joint states topic type:"
-ros2 topic info /rt/joint_states | grep "Type:"
+ros2 topic info /joint_states | grep "Type:"
 
 echo "Range ToF topic type:"
-ros2 topic info /rt/sensors/range_tof | grep "Type:"
+ros2 topic info /sensors/range_tof | grep "Type:"
 
 echo "Illuminance topic type:"
-ros2 topic info /rt/sensors/illuminance | grep "Type:"
+ros2 topic info /sensors/illuminance | grep "Type:"
 
 echo "Range ultrasonic topic type:"
-ros2 topic info /rt/sensors/range_ultrasonic | grep "Type:"
+ros2 topic info /sensors/range_ultrasonic | grep "Type:"
 echo ""
 
 echo "=========================================="

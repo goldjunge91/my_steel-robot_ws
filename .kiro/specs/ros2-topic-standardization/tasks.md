@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [-] 1. Update Pico Firmware Topic Names
+- [ ] 1. Update Pico Firmware Topic Names
   - Update all topic publishers and subscribers to use standard ROS2 names
   - add tests save it to firmware/tests
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7_
@@ -33,7 +33,7 @@
   - Verify firmware boots correctly via serial monitor
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
 
-- [-] 1.6 Test firmware topics with micro-ROS agent
+- [x] 1.6 Test firmware topics with micro-ROS agent
   - Start micro-ROS agent
   - Run `ros2 topic list` and verify new topic names appear with `/rt/` prefix
   - Echo each topic to verify data is being published
