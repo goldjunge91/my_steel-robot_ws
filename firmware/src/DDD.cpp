@@ -390,85 +390,48 @@ void DDD::handleSubscriptionMsg(const void *msg, uRosSubContext_t *context) {
 
     if (context == &xSubTwistContext) {
         geometry_msgs__msg__Twist *pTwistMsg = (geometry_msgs__msg__Twist *)msg;
-        double circum = WHEEL_RADIUS * 2.0 * M_PI;
 
 #ifdef TWIST_DEBUG
-        printf("TWIST x: %.3f  rz: %.3f\n", pTwistMsg->linear.x, pTwistMsg->angular.z);
+        printf("TWIST x: %.3f y: %.3f rz: %.3f\n", pTwistMsg->linear.x, pTwistMsg->linear.y, pTwistMsg->angular.z);
 #endif  // TWIST_DEBUG
 
         xLastTwistTimestamp = to_ms_since_boot(get_absolute_time());
 
-        // Stop
-        if (pTwistMsg->linear.x == 0.0) {
-            // Have not move linearly to turn
-            pMotorsAgent->setSpeedRadPS(0, 0.0, true);
-            pMotorsAgent->setSpeedRadPS(1, 0.0, false);
-            return;
-        }
-
-        // FWD and Backwards
-        if (pTwistMsg->angular.z == 0.0) {
-            double rps = (pTwistMsg->linear.x / circum) * (2 * M_PI);
-            bool cw = true;
-            if (rps < 0.0) {
-                cw = false;
-                rps = rps * -1;
-            }
-            pMotorsAgent->setSpeedRadPS(0, rps, !cw);
-            pMotorsAgent->setSpeedRadPS(1, rps, cw);
-
-#ifdef TWIST_DEBUG
-            printf("LINEAR TWIST %.3f mps becomes %.3f Rad ps\n", pTwistMsg->linear.x, rps);
-#endif  // TWIST_DEBUG
-        } else {
-            // ARC
-            bool fwd = (pTwistMsg->linear.x > 0.0);
-            bool cw = (pTwistMsg->angular.z > 0.0);
-            double a = fabs(pTwistMsg->angular.z);
-            double arc = a / (M_PI * 2);
-            double fullCircleCircum = (pTwistMsg->linear.x / arc);
-            double radius = fullCircleCircum / (2.0 * M_PI);
-
-            double speedA = (radius + WHEELS_SEP / 4) * (2 * M_PI) * arc;
-            double speedB = (radius - WHEELS_SEP / 4) * (2 * M_PI) * arc;
-
-            double rpsA = (speedA / circum) * (2 * M_PI);
-            double rpsB = (speedB / circum) * (2 * M_PI);
-
-            if (fwd) {
-                if (!cw) {
-                    pMotorsAgent->setSpeedRadPS(0, rpsA, !fwd);
-                    pMotorsAgent->setSpeedRadPS(1, rpsB, fwd);
-                } else {
-                    pMotorsAgent->setSpeedRadPS(0, rpsB, !fwd);
-                    pMotorsAgent->setSpeedRadPS(1, rpsA, fwd);
-                }
-            } else {
-                if (cw) {
-                    pMotorsAgent->setSpeedRadPS(0, rpsA, fwd);
-                    pMotorsAgent->setSpeedRadPS(1, rpsB, !fwd);
-                } else {
-                    pMotorsAgent->setSpeedRadPS(0, rpsB, fwd);
-                    pMotorsAgent->setSpeedRadPS(1, rpsA, !fwd);
-                }
-            }
+        // Mecanum drive inverse kinematics
+        // vfl = (vx - vy - omega*L) / r
+        // vfr = (vx + vy + omega*L) / r
+        // vrl = (vx + vy - omega*L) / r
+        // vrr = (vx - vy + omega*L) / r
+        
+        double vx = pTwistMsg->linear.x;
+        double vy = pTwistMsg->linear.y;
+        double omega = pTwistMsg->angular.z;
+        
+        // Wheel base for mecanum (distance from center to wheel)
+        // For robot_xl: wheel_separation_x=0.170m, wheel_separation_y=0.270m
+        // L = sqrt((x/2)^2 + (y/2)^2) = sqrt(0.085^2 + 0.135^2) = 0.159m
+        double L = 0.159;
+        
+        // Calculate wheel velocities in rad/s
+        double vfl = (vx - vy - omega * L) / WHEEL_RADIUS;
+        double vfr = (vx + vy + omega * L) / WHEEL_RADIUS;
+        double vrl = (vx + vy - omega * L) / WHEEL_RADIUS;
+        double vrr = (vx - vy + omega * L) / WHEEL_RADIUS;
 
 #ifdef TWIST_DEBUG
-            printf(
-                "ROTATE TWIST %.3f mps at %.3f rad ps "
-                "becomes %.3f and %.3f Rad ps\n",
-                pTwistMsg->linear.x,
-                pTwistMsg->angular.z,
-                rpsA,
-                rpsB);
-            printf("ROTATE Detail: Radius %.3f Full Circum %.3f Arc %.3f speed A %.3f B %.3f\n",
-                   radius,
-                   fullCircleCircum,
-                   arc,
-                   speedA,
-                   speedB);
+        printf("MECANUM TWIST vx: %.3f vy: %.3f omega: %.3f rad/s\n", vx, vy, omega);
+        printf("MECANUM Wheel Base L: %.3f m, Wheel Radius: %.3f m\n", L, WHEEL_RADIUS);
+        printf("MECANUM Wheel Velocities: FL=%.3f FR=%.3f RL=%.3f RR=%.3f rad/s\n", 
+               vfl, vfr, vrl, vrr);
+        printf("MECANUM Detail: vx: %.3f vy: %.3f omega: %.3f becomes FL: %.3f FR: %.3f RL: %.3f RR: %.3f rad/s\n",
+               vx, vy, omega, vfl, vfr, vrl, vrr);
 #endif  // TWIST_DEBUG
-        }
+
+        // Set all 4 motor speeds
+        pMotorsAgent->setSpeedRadPS(0, fabs(vfl), vfl >= 0);  // Front Left
+        pMotorsAgent->setSpeedRadPS(1, fabs(vfr), vfr >= 0);  // Front Right
+        pMotorsAgent->setSpeedRadPS(2, fabs(vrl), vrl >= 0);  // Rear Left
+        pMotorsAgent->setSpeedRadPS(3, fabs(vrr), vrr >= 0);  // Rear Right
     }
 }
 
@@ -476,8 +439,11 @@ void DDD::robotStop() {
     xLastTwistTimestamp = to_ms_since_boot(get_absolute_time());
 
     if (pMotorsAgent != NULL) {
+        // Stop all 4 motors for mecanum drive
         pMotorsAgent->setSpeedRadPS(0, 0.0, true);
         pMotorsAgent->setSpeedRadPS(1, 0.0, false);
+        pMotorsAgent->setSpeedRadPS(2, 0.0, true);
+        pMotorsAgent->setSpeedRadPS(3, 0.0, false);
     }
 }
 
