@@ -1,35 +1,35 @@
 # Product Overview
+## Code Implementation Rules
 
-> **TODO: This steering document needs approval before being considered final**
+- **Always write code directly to the correct files** - Never create dummy or pseudo code without permission
+- **Write production-ready code** - All code should be complete, functional, and ready to use
+- **No placeholder implementations** - Avoid stub functions, TODOs, or incomplete logic unless explicitly requested
+- **Never create READMEs, summaries, documentation, or other additional artifacts** (such as README.md files, project overviews, or automatic reports) without explicit request
+- **Always wait for direct instruction** from the user before generating or adding such content
 
-## my_steel Robot - Omnidirectional ROS2 Robot Platform
+> **Note**: See `coding-conventions.md` for important rules about code implementation and documentation.
 
-An autonomous mobile robot platform built on ROS2 with omnidirectional movement capabilities and interactive features. The robot combines advanced navigation (SLAM) with computer vision for an entertaining Nerf dart launcher that can detect and target faces.
+## my_steel Robot
 
-### Core Features
-- **Omnidirectional mobility** via Mecanum wheel drive system
-- **Autonomous navigation** using LiDAR SLAM and sensor fusion
-- **Interactive Nerf launcher** with computer vision-based face detection
-- **Dual-controller architecture** (Raspberry Pi 4B + Pico) for optimal performance
-- **Manual control** via Xbox 360 Wireless Controller from Remote-PC or web dashboard
-- **Web dashboard** for telemetry, remote monitoring, and manual Nerf launcher control
-- **Real-time computer vision** with OpenCV and YOLOv5 for face detection and targeting
-- **Real-time SLAM visualization** with RViz2 for navigation and mapping
-- **Precise motor control** with Raspberry Pi Pico for real-time movement execution
-- **Multi-modal operation** supporting autonomous, manual, and mixed control modes
+An omnidirectional mobile robot platform built on ROS2, featuring mecanum wheel drive and an interactive Nerf dart launcher with computer vision capabilities.
 
-### Target Use Cases
-- Student Project for educational robotics
-- Interactive entertainment robot
-- Research platform for navigation and computer vision
+## Core Capabilities
 
-### Hardware Architecture
-- **Remote control station**: Development PC for teleoperation and monitoring
-- **High-level control**: Raspberry Pi 4B (8GB) running ROS2 Humble on Ubuntu 22.04
-- **Low-level control**: Raspberry Pi Pico for real-time motor control, IMU, and ToF sensor
-- **Sensors**: LiDAR (LDS01RR), 9-DOF IMU (ICM-20948), ToF distance sensor (VL53L0X), USB camera (1080p)
-- **Mobility**: 4x Mecanum wheels (80mm) with DC gearmotors (GM3865-520) and Hall encoders
-- **Nerf launcher**: 2x brushless motors (RS2205) with ESCs, pan/tilt servos for targeting
-- **Power**: 3S Li-Ion battery pack (18650 cells) with BMS protection and INA3221 monitoring
+- **Omnidirectional mobility** via 4-wheel mecanum drive system
+- **Autonomous navigation** using LiDAR SLAM and sensor fusion (9-DOF IMU)
+- **Computer vision** for face detection and tracking
+- **Interactive Nerf launcher** with pan/tilt servos and brushless dart acceleration
+- **Real-time telemetry** via web dashboard and Foxglove
 
-The project emphasizes modularity, cost-effectiveness, and educational value while maintaining professional-grade capabilities.
+## Hardware Architecture
+
+Two-tier control system:
+- **High-level (Raspberry Pi 4B)**: ROS2 framework, navigation, SLAM, computer vision, web dashboard
+- **Low-level (Raspberry Pi Pico)**: Real-time motor control, sensor interfacing via micro-ROS over USB
+
+## Target Use Cases
+
+- Educational robotics platform
+- Alternative to commercial systems like TurtleBot
+- Interactive demonstration of autonomous navigation + computer vision
+- Modular base for mecanum or differential drive configurations
