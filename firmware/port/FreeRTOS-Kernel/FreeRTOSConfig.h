@@ -30,19 +30,19 @@
 
 #include "rp2040_config.h"
 
-/*-----------------------------------------------------------
- * Application specific definitions.
- *
- * These definitions should be adjusted for your particular hardware and
- * application requirements.
- *
- * THESE PARAMETERS ARE DESCRIBED WITHIN THE 'CONFIGURATION' SECTION OF THE
- * FreeRTOS API DOCUMENTATION AVAILABLE ON THE FreeRTOS.org WEB SITE.
- *
- * See http://www.freertos.org/a00110.html
- *----------------------------------------------------------*/
+ /*-----------------------------------------------------------
+  * Application specific definitions.
+  *
+  * These definitions should be adjusted for your particular hardware and
+  * application requirements.
+  *
+  * THESE PARAMETERS ARE DESCRIBED WITHIN THE 'CONFIGURATION' SECTION OF THE
+  * FreeRTOS API DOCUMENTATION AVAILABLE ON THE FreeRTOS.org WEB SITE.
+  *
+  * See http://www.freertos.org/a00110.html
+  *----------------------------------------------------------*/
 
-/* Scheduler Related */
+  /* Scheduler Related */
 #define configUSE_PREEMPTION                    1
 #define configUSE_TICKLESS_IDLE                 0
 #define configUSE_IDLE_HOOK                     0
@@ -109,7 +109,7 @@
 
 #if FREE_RTOS_KERNEL_SMP // set by the RP2040 SMP port of FreeRTOS
 /* SMP port only */
-#define configNUM_CORES                         2
+#define configNUMBER_OF_CORES                   2
 #define configTICK_CORE                         0
 #define configRUN_MULTIPLE_PRIORITIES           1
 #define configUSE_CORE_AFFINITY                 1
@@ -129,7 +129,7 @@
 #endif
 
 #include <assert.h>
-/* Define to trap errors during development. */
+ /* Define to trap errors during development. */
 #define configASSERT(x)                         assert(x)
 
 /* Set the following definitions to 1 to include the API function, or zero
@@ -154,4 +154,3 @@ to exclude the API function. */
 /* A header file that defines trace macro can be included here. */
 
 #endif /* FREERTOS_CONFIG_H */
-
