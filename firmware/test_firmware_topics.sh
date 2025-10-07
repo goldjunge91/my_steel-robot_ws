@@ -3,7 +3,7 @@
 # This script checks that all topics use standard ROS2 naming conventions
 # Requirements: 1.1, 1.2, 1.3, 1.4, 1.5
 
-set -e
+set +e  # Don't exit on errors, we want to count them
 
 echo "=========================================="
 echo "  Firmware Topic Standardization Test"
