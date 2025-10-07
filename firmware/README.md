@@ -17,24 +17,24 @@ The firmware uses a modular agent-based architecture built on FreeRTOS:
 
 ### Pin Mapping
 
-| Component | Pin | Function |
-|-----------|-----|----------|
-| Left Motor PWM CW | GP9 | Motor control |
-| Left Motor PWM CCW | GP8 | Motor control |
-| Left Encoder A | GP14 | Encoder feedback |
-| Left Encoder B | GP15 | Encoder feedback |
-| Right Motor PWM CW | GP6 | Motor control |
-| Right Motor PWM CCW | GP7 | Motor control |
-| Right Encoder A | GP12 | Encoder feedback |
-| Right Encoder B | GP13 | Encoder feedback |
-| IMU CS | GP17 | SPI chip select |
-| IMU SCK | GP18 | SPI clock |
-| IMU MOSI | GP19 | SPI data out |
-| IMU MISO | GP16 | SPI data in |
-| VL6180X SDA | GP2 | I2C data |
-| VL6180X SCL | GP3 | I2C clock |
-| Status LED | GP2 | Connection indicator |
-| Debug LED | GP3 | Activity indicator |
+| Component           | Pin  | Function             |
+| ------------------- | ---- | -------------------- |
+| Left Motor PWM CW   | GP9  | Motor control        |
+| Left Motor PWM CCW  | GP8  | Motor control        |
+| Left Encoder A      | GP14 | Encoder feedback     |
+| Left Encoder B      | GP15 | Encoder feedback     |
+| Right Motor PWM CW  | GP6  | Motor control        |
+| Right Motor PWM CCW | GP7  | Motor control        |
+| Right Encoder A     | GP12 | Encoder feedback     |
+| Right Encoder B     | GP13 | Encoder feedback     |
+| IMU CS              | GP17 | SPI chip select      |
+| IMU SCK             | GP18 | SPI clock            |
+| IMU MOSI            | GP19 | SPI data out         |
+| IMU MISO            | GP16 | SPI data in          |
+| VL6180X SDA         | GP2  | I2C data             |
+| VL6180X SCL         | GP3  | I2C clock            |
+| Status LED          | GP2  | Connection indicator |
+| Debug LED           | GP3  | Activity indicator   |
 
 ### Communication
 
@@ -229,3 +229,88 @@ The firmware provides extensive UART logging:
 - **micro-ROS**: ROS2 communication over USB
 - **Pico SDK**: Hardware abstraction
 - **Eigen**: Linear algebra for odometry calculations
+
+
+
+
+
+
+
+
+
+# Firmware Release Process
+
+## 🚀 Schneller Release
+
+```bash
+./create_release.sh v1.0.0
+```
+
+Das Script macht automatisch:
+1. ✅ Build Release-Version
+2. ✅ Erstellt `.uf2` in `releases/`
+3. ✅ Erstellt Git Tag
+4. ✅ Pusht Tag zu GitHub
+5. ✅ Erstellt GitHub Release (mit `gh` CLI)
+
+---
+
+## 📦 Manueller Release
+
+### 1. Build Release
+```bash
+make release VERSION=v1.0.0
+```
+
+### 2. Git Tag erstellen
+```bash
+git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0
+```
+
+### 3. GitHub Release erstellen
+- Gehe zu: https://github.com/goldjunge91/my_steel-robot_ws/releases/new
+- Tag: `v1.0.0`
+- Upload: `releases/my_firmware_v1.0.0.uf2`
+
+---
+
+## 📋 Versioning
+
+**Format:** `vMAJOR.MINOR.PATCH`
+
+- `v1.0.0` - Erster stabiler Release
+- `v1.1.0` - Neue Features
+- `v1.1.1` - Bugfixes
+
+---
+
+## 🛠️ GitHub CLI installieren (optional)
+
+```bash
+# Ubuntu/Debian
+sudo apt install gh
+
+# Login
+gh auth login
+```
+
+Mit `gh` CLI wird der Release automatisch hochgeladen!
+
+---
+
+## 📁 Warum nicht in Git?
+
+**Binaries (.uf2) gehören NICHT ins Repository!**
+
+✅ Vorteile von GitHub Releases:
+- Keine Repo-Bloat
+- Schnellere Clones
+- Offizielle Release-Artefakte
+- Download-Statistiken
+- Release Notes
+
+❌ Nachteile von Git-versioned Binaries:
+- Repository wird riesig
+- Langsame Clones
+- Verschmutzt Git-Historie
