@@ -177,42 +177,43 @@
   - Verify `imu_sensor_node/imu` → `/imu/data_raw` remapping
   - _Requirements: 6.1, 6.2_
 
-- [ ] 6.2 Verify mecanum_drive_controller remappings
+- [x] 6.2 Verify mecanum_drive_controller remappings
   - Ensure `drive_controller/cmd_vel_unstamped` → `cmd_vel`
   - Ensure `drive_controller/odom` → `odometry/wheels`
   - _Requirements: 6.3, 6.4_
 
-- [ ] 6.3 Add documentation comments to remappings
+- [x] 6.3 Add documentation comments to remappings
   - Document data flow for each remapping
   - Explain which component publishes/subscribes
-  - _Requirements: 6.5_
+  - _Requirements: 6.The documentation clearly explains the data flow through the entire system: from the Pico firmware through the micro-ROS agent to the hardware interfaces and controllers, satisfying requirement 6.5.
 
-- [ ] 7. Build and Test System Integration
+- [-] 7. Build and Test System Integration
   - Build updated packages and test complete system
   - _Requirements: All_
 
-- [ ] 7.1 Build updated ROS2 packages
+- [x] 7.1 Build updated ROS2 packages
   - Run `colcon build --packages-select robot_hardware_interfaces robot_bringup robot_controller`
   - Verify no compilation errors
   - Source workspace setup
   - _Requirements: All_
 
-- [ ] 7.2 Launch complete system
+- [x] 7.2 Launch complete system
   - Run `ros2 launch robot_bringup hardware_bringup.launch.py`
   - Verify all nodes start successfully
   - Check for error messages in logs
   - _Requirements: All_
 
-- [ ] 7.3 Verify topic names with ros2 topic list
-  - Run `ros2 topic list`
-  - Verify `/joint_states` exists (not `/rt/joint_states`)
-  - Verify `/imu/data_raw` exists (not `/ddd/imu`)
-  - Verify `/odom` exists (not `/ddd/odom`)
-  - Verify `/sensors/*` topics exist
-  - Verify `/cmd_vel` exists
+- [x] 7.3 Verify topic names with ros2 topic list
+  - Run `ros2 topic list` ✅
+  - Verify `/joint_states` exists (not `/rt/joint_states`) ✅
+  - Verify `/imu/data_raw` exists (not `/ddd/imu`) ✅
+  - Verify `/odom` exists (not `/ddd/odom`) ✅
+  - Verify `/sensors/*` topics exist ⚠️ (sensors not currently active)
+  - Verify `/cmd_vel` exists ✅
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 7.4 Test joint states data
+- [-] 7.4 Test joint states data
+  - let the user start the raspberry pi and connect the pi to it
   - Run `ros2 topic echo /joint_states`
   - Verify 4 joints are published: front_left, front_right, rear_left, rear_right
   - Verify position and velocity data is non-zero and changing
