@@ -116,34 +116,42 @@
   - Set reasonable default (5000ms)
   - _Requirements: 3.4_
 
-- [ ] 4. Update IMU Hardware Interface
+- [x] 4. Update IMU Hardware Interface
+  - Anlyse first the workspace
   - Update RobotImuSensor to read from standardized IMU topic
   - Remove mock mode fallback behavior
+  - add tests save it in a test folder close to the changes
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 4.1 Update IMU subscriber topic in on_activate()
+- [x] 4.1 Update IMU subscriber topic in on_activate()
+  - Anlyse first the workspace
   - Subscribe to `/imu/data_raw` directly
   - Use SensorDataQoS for real-time performance
+  - add tests save it in a test folder close to the changes
   - _Requirements: 4.1_
 
-- [ ] 4.2 Update read() method error handling
+- [x] 4.2 Update read() method error handling
   - Keep ERROR return when no IMU data received
   - Add throttled error logging
   - Ensure all 10 state interfaces are updated correctly
+  - add tests save it in a test folder close to the changes
   - _Requirements: 4.2, 4.3_
 
-- [ ] 4.3 Implement activation wait for first IMU message
+- [x] 4.3 Implement activation wait for first IMU message
   - Wait up to 5 seconds for first IMU message in on_activate()
   - Return ERROR if timeout occurs
   - Log success message when real IMU feedback is received
   - Remove "mock mode enabled" warning
+  - add tests save it in a test folder close to the changes
   - _Requirements: 4.5_
 
 - [ ] 5. Configure micro-ROS Agent Topic Remapping
+  - Make a script or test that provides an log fill from the Pico firmware that we know the correct topics
   - Update micro-ROS agent launch file with correct topic remappings
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 
 - [ ] 5.1 Update microros_agent.launch.py with topic remappings
+  - Anlyse first the workspace
   - Map `/rt/joint_states` → `/joint_states`
   - Map `/rt/imu/data_raw` → `/imu/data_raw`
   - Map `/rt/odom` → `/odom`
