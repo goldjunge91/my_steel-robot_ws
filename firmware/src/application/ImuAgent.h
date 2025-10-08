@@ -44,7 +44,7 @@ private:
     rcl_publisher_t imu_publisher_;
 
     bool initialized_ = false;
-    uint32_t publish_period_ms_ = 100;  // 10Hz
+    uint32_t publish_period_ms_ = 10;  // 100Hz
     uint entities_active_ = 0;
 };
 

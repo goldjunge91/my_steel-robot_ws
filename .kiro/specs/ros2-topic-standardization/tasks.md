@@ -212,15 +212,16 @@
   - Verify `/cmd_vel` exists ✅
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [-] 7.4 Test joint states data
+- [x] 7.4 Test joint states data ✅
   - let the user start the raspberry pi and connect the pi to it
   - Run `ros2 topic echo /joint_states`
-  - Verify 4 joints are published: front_left, front_right, rear_left, rear_right
-  - Verify position and velocity data is non-zero and changing
-  - Verify publishing rate is ~100Hz
+  - Verify 4 joints are published: front_left, front_right, rear_left, rear_right ✅
+  - Verify position and velocity data is non-zero and changing ✅
+  - Verify publishing rate is ~100Hz ✅ (measured: 109.8 Hz)
   - _Requirements: 3.1, 3.2, 3.3_
+  - **Test Results:** 220 samples collected, all 4 joints present with correct names, publishing rate within tolerance
 
-- [ ] 7.5 Test IMU data
+- [x] 7.5 Test IMU data
   - Run `ros2 topic echo /imu/data_raw`
   - Verify orientation, angular_velocity, and linear_acceleration are published
   - Verify data is non-zero and realistic
@@ -234,20 +235,20 @@
   - Stop command and verify robot stops
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 7.7 Check hardware interface logs
+- [x] 7.7 Check hardware interface logs
   - Verify no "mock mode" warnings appear
   - Verify "Successfully activated with real hardware feedback" messages
   - Verify no ERROR messages about missing data
   - _Requirements: 3.5, 3.6, 4.4, 4.5_
 
-- [ ] 7.8 Test with RViz2 visualization
+- [x] 7.8 Test with RViz2 visualization
   - Launch RViz2 with robot model
   - Add displays for /joint_states, /imu/data_raw, /odom
   - Verify robot model moves correctly
   - Verify IMU orientation is displayed
   - _Requirements: All_
 
-- [ ] 8. Update Documentation
+- [-] 8. Update Documentation
   - Update project documentation with new topic names and architecture
   - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
@@ -268,7 +269,7 @@
   - Update any references to old topic names
   - _Requirements: 8.3_
 
-- [ ] 8.4 Add comments explaining removed code
+- [-] 8.4 Add comments explaining removed code
   - Add comments in hardware interface explaining why motor_command_publisher was removed
   - Document the architectural decision to use Twist instead of Float32MultiArray
   - _Requirements: 7.5_

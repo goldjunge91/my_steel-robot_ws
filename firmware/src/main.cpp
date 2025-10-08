@@ -201,12 +201,14 @@ int main(void)
   // Stellt sicher, dass die grundlegende Hardware initialisiert ist
   stdio_init_all();
 
-  // USB manuell für micro-ROS initialisieren, UART für printf
-  stdio_usb_init();                           // Macht USB für den Transport verfügbar
-  stdio_uart_init_full(uart0, 115200, 0, 1);  // Leitet printf auf UART um
+  // USB manuell für micro-ROS initialisieren
+  stdio_usb_init();  // Macht USB für den Transport verfügbar
+  
+  // UART0 debugging disabled for performance optimization (uncomment to enable)
+  // stdio_uart_init_full(uart0, 115200, 0, 1);  // Leitet printf auf UART um
 
   sleep_ms(2000);
-  printf("\n\n-- Booting %s firmware (Debug on UART0) --\n", ROBOT_NAME);
+  printf("\n\n-- Booting %s firmware (UART0 debug disabled for performance) --\n", ROBOT_NAME);
 
   // Start tasks and scheduler
   const char* rtos_name = "FreeRTOS";

@@ -211,7 +211,8 @@ void ImuAgent::createEntities(rcl_node_t* node, rclc_support_t* support)
 {
   (void)support;
   printf("[ImuAgent] Creating entities...\n");
-  rclc_publisher_init_default(&imu_publisher_, node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), "imu/data_raw");
+  rclc_publisher_init_default(&imu_publisher_, node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
+                              "imu/data_raw");
   entities_active_ = 1;
   printf("[ImuAgent]   ✅ Publisher: imu/data_raw (sensor_msgs/Imu)\n");
 }
@@ -243,13 +244,20 @@ void ImuAgent::addToExecutor(rclc_executor_t* executor)
 
 void ImuAgent::run()
 {
-  printf("[ImuAgent] ✅ Task started\n");
+  printf("[ImuAgent] ✅ Task started (target rate: %u Hz)\n", 1000 / publish_period_ms_);
   static uint32_t sample_count = 0;
   static uint32_t publish_count = 0;
   static uint32_t error_count = 0;
 
+  // Performance profiling variables
+  static uint32_t total_cycle_time_us = 0;
+  static uint32_t max_cycle_time_us = 0;
+  static uint32_t profile_count = 0;
+
   for (;;)
   {
+    uint32_t cycle_start_us = to_us_since_boot(get_absolute_time());
+
     if (!ensureInitialized())
     {
       vTaskDelay(pdMS_TO_TICKS(1000));
@@ -268,8 +276,8 @@ void ImuAgent::run()
       bool all_zero =
           (accel.x == 0.0f && accel.y == 0.0f && accel.z == 0.0f && gyro.x == 0.0f && gyro.y == 0.0f && gyro.z == 0.0f);
 
-      // Only log every 50th sample to reduce spam, OR if all values are zero (error condition)
-      if ((sample_count % 50) == 0 || all_zero)
+      // Only log every 100th sample to reduce spam, OR if all values are zero (error condition)
+      if ((sample_count % 100) == 0 || all_zero)
       {
         printf("[ImuAgent] Sample #%u: Accel(g): x=%.2f, y=%.2f, z=%.2f | Gyro(dps): x=%.2f, y=%.2f, z=%.2f\n",
                (unsigned)sample_count, accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z);
@@ -287,7 +295,7 @@ void ImuAgent::run()
         if (uRosBridge::getInstance()->publish(&imu_publisher_, &imu_msg_, this, nullptr))
         {
           publish_count++;
-          if ((publish_count % 100) == 0)
+          if ((publish_count % 500) == 0)
           {
             printf("[ImuAgent] ✅ Published %u messages\n", (unsigned)publish_count);
           }
@@ -300,6 +308,30 @@ void ImuAgent::run()
       printf("[ImuAgent] ❌ Error #%u: Sensor read failed (accel=%d, gyro=%d)\n", (unsigned)error_count, accel_ok,
              gyro_ok);
       initialized_ = false;  // Force re-initialization
+    }
+
+    // Performance profiling
+    uint32_t cycle_end_us = to_us_since_boot(get_absolute_time());
+    uint32_t cycle_time_us = cycle_end_us - cycle_start_us;
+
+    total_cycle_time_us += cycle_time_us;
+    profile_count++;
+    if (cycle_time_us > max_cycle_time_us)
+    {
+      max_cycle_time_us = cycle_time_us;
+    }
+
+    // Report performance every 1000 cycles
+    if (profile_count >= 1000)
+    {
+      uint32_t avg_cycle_time_us = total_cycle_time_us / profile_count;
+      printf("[ImuAgent] Performance: avg=%u us, max=%u us, target=%u us (%u Hz)\n", (unsigned)avg_cycle_time_us,
+             (unsigned)max_cycle_time_us, (unsigned)(publish_period_ms_ * 1000), (unsigned)(1000 / publish_period_ms_));
+
+      // Reset profiling counters
+      total_cycle_time_us = 0;
+      max_cycle_time_us = 0;
+      profile_count = 0;
     }
 
     vTaskDelay(pdMS_TO_TICKS(publish_period_ms_));
