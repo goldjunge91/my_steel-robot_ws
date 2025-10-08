@@ -145,12 +145,12 @@
   - add tests save it in a test folder close to the changes
   - _Requirements: 4.5_
 
-- [-] 5. Configure micro-ROS Agent Topic Remapping
+- [ ] 5. Configure micro-ROS Agent Topic Remapping
   - Make a script or test that provides an log fill from the Pico firmware that we know the correct topics
   - Update micro-ROS agent launch file with correct topic remappings
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 
-- [-] 5.1 Update microros_agent.launch.py with topic remappings
+- [x] 5.1 Update microros_agent.launch.py with topic remappings
   - Anlyse first the workspace
   - Map `/rt/joint_states` → `/joint_states`
   - Map `/rt/imu/data_raw` → `/imu/data_raw`
@@ -161,17 +161,17 @@
   - Map `/cmd_vel` → `/rt/cmd_vel` (bidirectional)
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 5.2 Add documentation comments to launch file
+- [x] 5.2 Add documentation comments to launch file
   - Document each topic remapping with inline comments
   - Explain the /rt/ prefix behavior
   - Reference firmware topic names
   - _Requirements: 5.6_
 
-- [ ] 6. Update Controller Launch Configuration
+- [x] 6. Update Controller Launch Configuration
   - Update controller.launch.py with correct topic remappings
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 6.1 Update ros2_control_node remappings in controller.launch.py
+- [x] 6.1 Update ros2_control_node remappings in controller.launch.py
   - Remove `~/motors_cmd` remapping (no longer used)
   - Verify `~/motors_response` → `/joint_states` remapping
   - Verify `imu_sensor_node/imu` → `/imu/data_raw` remapping

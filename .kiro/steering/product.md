@@ -11,25 +11,35 @@
 
 ## my_steel Robot
 
-An omnidirectional mobile robot platform built on ROS2, featuring mecanum wheel drive and an interactive Nerf dart launcher with computer vision capabilities.
+An omnidirectional mobile robot platform built on ROS2 Humble, featuring mecanum wheel drive and an interactive Nerf dart launcher with computer vision capabilities.
 
 ## Core Capabilities
 
-- **Omnidirectional mobility** via 4-wheel mecanum drive system
-- **Autonomous navigation** using LiDAR SLAM and sensor fusion (9-DOF IMU)
+- **Omnidirectional mobility** via 4-wheel mecanum drive system with custom controller
+- **Autonomous navigation** using RPLiDAR and sensor fusion (ICM20948 9-DOF IMU)
 - **Computer vision** for face detection and tracking
-- **Interactive Nerf launcher** with pan/tilt servos and brushless dart acceleration
-- **Real-time telemetry** via web dashboard and Foxglove
+- **Interactive Nerf launcher** with pan/tilt servos and brushless dart acceleration (separate controller)
+- **Real-time telemetry** via Foxglove and RViz
+- **Optional manipulator arm** support (Open Manipulator X with Dynamixel servos)
 
 ## Hardware Architecture
 
 Two-tier control system:
-- **High-level (Raspberry Pi 4B)**: ROS2 framework, navigation, SLAM, computer vision, web dashboard
-- **Low-level (Raspberry Pi Pico)**: Real-time motor control, sensor interfacing via micro-ROS over USB
+- **High-level (Raspberry Pi 4B)**: ROS2 Humble framework, navigation, SLAM, computer vision, web dashboard
+- **Low-level (Raspberry Pi Pico)**: Real-time motor control (4x DC motors with encoders), IMU (ICM20948), ToF sensor (VL6180X), micro-ROS over USB serial
+
+## Current Status
+
+- **Supported robot model**: robot_xl only
+- **Supported drive type**: mecanum (primary), differential (legacy support)
+- **Firmware**: FreeRTOS-based with micro-ROS client on Raspberry Pi Pico
+- **Simulation**: Gazebo Classic with ros2_control integration
+- **Development**: Active development with CI/CD via GitHub Actions
 
 ## Target Use Cases
 
 - Educational robotics platform
-- Alternative to commercial systems like TurtleBot
+- Alternative to commercial systems like TurtleBot and Husarion ROSbot
 - Interactive demonstration of autonomous navigation + computer vision
 - Modular base for mecanum or differential drive configurations
+- Research platform for mobile manipulation

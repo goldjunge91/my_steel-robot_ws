@@ -22,6 +22,8 @@ When asked to "add a feature" or "implement X":
 - ❌ Don't create a README explaining what you did
 - ❌ Don't write a summary document
 - ❌ Don't generate project overviews or reports
+- ❌ Don't create dummy or pseudo code
+- ❌ Don't write any .md file without permission
 
 The user will ask for documentation when they need it.
 
