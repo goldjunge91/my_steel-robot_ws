@@ -4,8 +4,8 @@ teleop_twist_joy_node:
     # Buttons: A=0, B=1, X=2, Y=3, LB=4, RB=5, Back=6, Start=7
     # Axes: LeftStickX=0, LeftStickY=1, RightStickX=2, RightStickY=3, LT=4, RT=5
     
-    # Enable button (LB = Button 4)
-    enable_button: 4
+    # Enable button (disabled - no button needed)
+    enable_button: -1  # -1 = always enabled, no button needed
     enable_turbo_button: 5  # RB for turbo mode
     
     # Axis mapping for mecanum drive
@@ -21,12 +21,12 @@ teleop_twist_joy_node:
     
     # Speed scaling (normal mode)
     scale_linear:
-      x: 0.5   # Forward/backward speed
-      y: 0.5   # Strafe speed
+      x: 0.8   # Forward/backward speed (erhöht)
+      y: 0.8   # Strafe speed (erhöht)
       z: 0.0
     
     scale_angular:
-      yaw: 1.0   # Rotation speed
+      yaw: 1.5   # Rotation speed (erhöht)
       pitch: 0.0
       roll: 0.0
     
@@ -42,6 +42,6 @@ teleop_twist_joy_node:
       roll: 0.0
     
     # Other settings
-    require_enable_button: true
+    require_enable_button: false  # No button needed to drive
     publish_stamped_twist: false
     inverted_reverse: false

@@ -31,7 +31,19 @@ echo ""
 cleanup() {
     echo ""
     echo "Shutting down robot system..."
+    
+    # Kill all child processes
     pkill -P $$
+    
+    # Kill specific ROS2 processes
+    pkill -f "micro_ros_agent" 2>/dev/null || true
+    pkill -f "foxglove_bridge" 2>/dev/null || true
+    pkill -f "ros2_control_node" 2>/dev/null || true
+    pkill -f "robot_state_publisher" 2>/dev/null || true
+    pkill -f "usb_cam" 2>/dev/null || true
+    pkill -f "spawner" 2>/dev/null || true
+    
+    echo "All processes stopped."
     exit 0
 }
 
