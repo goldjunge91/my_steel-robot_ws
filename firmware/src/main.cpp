@@ -61,9 +61,9 @@ extern "C" {
 #define REAR_RIGHT_ROTENV_B 13
 
 // PID
-#define KP 0.55
-#define KI 0.019
-#define KD 0.24
+#define KP 2.0   // war 0.55
+#define KI 0.1   // war 0.019
+#define KD 0.5   // war 0.24
 
 // IMU (SPI) Pins DONT CHANGE IT
 #define IMU_SPI_PORT spi0
@@ -201,7 +201,7 @@ int main(void)
   // Stellt sicher, dass die grundlegende Hardware initialisiert ist
   stdio_init_all();
 
-  // *** KORRIGIERT: USB manuell für micro-ROS initialisieren, UART für printf ***
+  // USB manuell für micro-ROS initialisieren, UART für printf
   stdio_usb_init();                           // Macht USB für den Transport verfügbar
   stdio_uart_init_full(uart0, 115200, 0, 1);  // Leitet printf auf UART um
 

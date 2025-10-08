@@ -28,7 +28,7 @@ extern "C" {
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-//#define TWIST_DEBUG
+#define TWIST_DEBUG
 
 #define WHEEL_RADIUS 0.065
 #define WHEEL_DEPTH 0.055
