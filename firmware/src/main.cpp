@@ -61,9 +61,9 @@ extern "C" {
 #define REAR_RIGHT_ROTENV_B 13
 
 // PID
-#define KP 2.0   // war 0.55
-#define KI 0.1   // war 0.019
-#define KD 0.5   // war 0.24
+#define KP 2.0  // war 0.55
+#define KI 0.1  // war 0.019
+#define KD 0.5  // war 0.24
 
 // IMU (SPI) Pins DONT CHANGE IT
 #define IMU_SPI_PORT spi0
