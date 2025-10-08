@@ -120,3 +120,4 @@ install/
 log/
 build_*/
 build*/
+_obsolet/
