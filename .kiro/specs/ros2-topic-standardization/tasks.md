@@ -145,12 +145,12 @@
   - add tests save it in a test folder close to the changes
   - _Requirements: 4.5_
 
-- [ ] 5. Configure micro-ROS Agent Topic Remapping
+- [-] 5. Configure micro-ROS Agent Topic Remapping
   - Make a script or test that provides an log fill from the Pico firmware that we know the correct topics
   - Update micro-ROS agent launch file with correct topic remappings
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 
-- [ ] 5.1 Update microros_agent.launch.py with topic remappings
+- [-] 5.1 Update microros_agent.launch.py with topic remappings
   - Anlyse first the workspace
   - Map `/rt/joint_states` → `/joint_states`
   - Map `/rt/imu/data_raw` → `/imu/data_raw`

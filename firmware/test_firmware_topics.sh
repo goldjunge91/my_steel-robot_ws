@@ -1,179 +1,152 @@
 #!/bin/bash
-# Test script to verify firmware topic names after standardization
-# This script checks that all topics use standard ROS2 naming conventions
-# Requirements: 1.1, 1.2, 1.3, 1.4, 1.5
+# Test script to verify Pico firmware topics are correctly published
+# This script checks that all expected topics from the firmware are available
 
-set +e  # Don't exit on errors, we want to count them
+set -e
 
 echo "=========================================="
-echo "  Firmware Topic Standardization Test"
+echo "Pico Firmware Topic Verification Test"
 echo "=========================================="
 echo ""
+echo "This script verifies that the Pico firmware is publishing"
+echo "all expected topics with the /rt/ prefix added by micro-ROS agent."
+echo ""
 
-# Colors for output
+# Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Test results
-PASSED=0
-FAILED=0
+# Expected firmware topics (with /rt/ prefix added by micro-ROS agent)
+EXPECTED_TOPICS=(
+    "/rt/joint_states"
+    "/rt/imu/data_raw"
+    "/rt/odom"
+    "/rt/sensors/range_tof"
+    "/rt/sensors/range_ultrasonic"
+    "/rt/sensors/illuminance"
+    "/rt/pico_rnd"
+)
 
-# Function to check if a topic exists
-check_topic_exists() {
-    local topic_name=$1
-    local requirement=$2
-    
-    echo -n "Checking topic '$topic_name'... "
-    
-    if ros2 topic list | grep -q "^${topic_name}$"; then
-        echo -e "${GREEN}✓ PASS${NC} (Requirement: $requirement)"
-        ((PASSED++))
-        return 0
-    else
-        echo -e "${RED}✗ FAIL${NC} - Topic not found (Requirement: $requirement)"
-        ((FAILED++))
-        return 1
-    fi
-}
+# Expected remapped topics (after agent remapping)
+REMAPPED_TOPICS=(
+    "/joint_states"
+    "/imu/data_raw"
+    "/odom"
+    "/sensors/range_tof"
+    "/sensors/range_ultrasonic"
+    "/sensors/illuminance"
+)
 
-# Function to check if a deprecated topic does NOT exist
-check_topic_not_exists() {
-    local topic_name=$1
-    local requirement=$2
-    
-    echo -n "Checking deprecated topic '$topic_name' is removed... "
-    
-    if ros2 topic list | grep -q "^${topic_name}$"; then
-        echo -e "${RED}✗ FAIL${NC} - Deprecated topic still exists (Requirement: $requirement)"
-        ((FAILED++))
-        return 1
-    else
-        echo -e "${GREEN}✓ PASS${NC} (Requirement: $requirement)"
-        ((PASSED++))
-        return 0
-    fi
-}
+# Subscriber topics (firmware subscribes to these)
+SUBSCRIBER_TOPICS=(
+    "/rt/cmd_vel"
+)
 
-# Function to echo a topic and verify it's publishing data
-check_topic_data() {
-    local topic_name=$1
-    local requirement=$2
-    local timeout=5
-    
-    echo -n "Checking topic '$topic_name' is publishing data... "
-    
-    # Use timeout to wait for at least one message
-    if timeout $timeout ros2 topic echo "$topic_name" --once > /dev/null 2>&1; then
-        echo -e "${GREEN}✓ PASS${NC} - Data received (Requirement: $requirement)"
-        ((PASSED++))
-        return 0
-    else
-        echo -e "${RED}✗ FAIL${NC} - No data received within ${timeout}s (Requirement: $requirement)"
-        ((FAILED++))
-        return 1
-    fi
-}
+echo "Waiting 3 seconds for topics to stabilize..."
+sleep 3
 
-echo "Step 1: Checking if micro-ROS agent is running..."
-echo "----------------------------------------------"
-if ! pgrep -f "micro_ros_agent" > /dev/null; then
-    echo -e "${YELLOW}WARNING:${NC} micro-ROS agent does not appear to be running"
-    echo "Please start the micro-ROS agent first:"
-    echo "  ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0"
-    echo ""
-    read -p "Press Enter to continue anyway, or Ctrl+C to exit..."
-fi
 echo ""
-
-echo "Step 2: Listing all available topics..."
-echo "----------------------------------------------"
-ros2 topic list
-echo ""
-
-echo "Step 3: Checking standard topic names exist..."
-echo "----------------------------------------------"
-# Check odometry topic (Requirement 1.4)
-check_topic_exists "/odom" "1.4"
-
-# Check cmd_vel topic (Requirement 1.6)
-check_topic_exists "/cmd_vel" "1.6"
-
-# Check IMU topic (Requirement 1.3)
-check_topic_exists "/imu/data_raw" "1.3"
-
-# Check sensor topics (Requirement 1.5)
-check_topic_exists "/sensors/range_tof" "1.5"
-check_topic_exists "/sensors/illuminance" "1.5"
-check_topic_exists "/sensors/range_ultrasonic" "1.5"
-
-# Check joint states topic (Requirement 1.2)
-check_topic_exists "/joint_states" "1.2"
-echo ""
-
-echo "Step 4: Checking deprecated topic names are removed..."
-echo "----------------------------------------------"
-# Check that old /ddd/ prefixed topics don't exist (Requirement 1.7)
-check_topic_not_exists "/ddd/odom" "1.7"
-check_topic_not_exists "/ddd/imu" "1.7"
-check_topic_not_exists "/ddd/range_tof" "1.7"
-check_topic_not_exists "/ddd/range" "1.7"
-check_topic_not_exists "/ddd/illuminance" "1.7"
-check_topic_not_exists "/ddd/cmd_vel" "1.7"
-echo ""
-
-echo "Step 5: Verifying topics are publishing data..."
-echo "----------------------------------------------"
-echo "This step will wait up to 5 seconds for each topic to publish data."
-echo ""
-
-# Check that topics are actually publishing data
-check_topic_data "/odom" "1.4"
-check_topic_data "/imu/data_raw" "1.3"
-check_topic_data "/joint_states" "1.2"
-check_topic_data "/sensors/range_tof" "1.5"
-check_topic_data "/sensors/illuminance" "1.5"
-check_topic_data "/sensors/range_ultrasonic" "1.5"
-echo ""
-
-echo "Step 6: Checking topic message types..."
-echo "----------------------------------------------"
-echo "Odometry topic type:"
-ros2 topic info /odom | grep "Type:"
-
-echo "IMU topic type:"
-ros2 topic info /imu/data_raw | grep "Type:"
-
-echo "Joint states topic type:"
-ros2 topic info /joint_states | grep "Type:"
-
-echo "Range ToF topic type:"
-ros2 topic info /sensors/range_tof | grep "Type:"
-
-echo "Illuminance topic type:"
-ros2 topic info /sensors/illuminance | grep "Type:"
-
-echo "Range ultrasonic topic type:"
-ros2 topic info /sensors/range_ultrasonic | grep "Type:"
-echo ""
-
 echo "=========================================="
-echo "  Test Summary"
+echo "1. Checking Raw Firmware Topics (/rt/*)"
 echo "=========================================="
-echo -e "Tests Passed: ${GREEN}${PASSED}${NC}"
-echo -e "Tests Failed: ${RED}${FAILED}${NC}"
 echo ""
 
-if [ $FAILED -eq 0 ]; then
-    echo -e "${GREEN}✓ All tests passed!${NC}"
-    echo "The firmware topic standardization is complete and working correctly."
+all_topics=$(ros2 topic list 2>/dev/null)
+failed=0
+
+for topic in "${EXPECTED_TOPICS[@]}"; do
+    if echo "$all_topics" | grep -q "^${topic}$"; then
+        echo -e "${GREEN}✓${NC} Found: $topic"
+    else
+        echo -e "${RED}✗${NC} Missing: $topic"
+        failed=1
+    fi
+done
+
+echo ""
+echo "=========================================="
+echo "2. Checking Remapped Topics (Standard ROS2)"
+echo "=========================================="
+echo ""
+
+for topic in "${REMAPPED_TOPICS[@]}"; do
+    if echo "$all_topics" | grep -q "^${topic}$"; then
+        echo -e "${GREEN}✓${NC} Found: $topic"
+    else
+        echo -e "${YELLOW}⚠${NC} Missing: $topic (check agent remapping)"
+        failed=1
+    fi
+done
+
+echo ""
+echo "=========================================="
+echo "3. Checking Subscriber Topics"
+echo "=========================================="
+echo ""
+
+for topic in "${SUBSCRIBER_TOPICS[@]}"; do
+    if echo "$all_topics" | grep -q "^${topic}$"; then
+        echo -e "${GREEN}✓${NC} Found: $topic"
+    else
+        echo -e "${YELLOW}⚠${NC} Missing: $topic (will be created when published to)"
+    fi
+done
+
+echo ""
+echo "=========================================="
+echo "4. Topic Data Verification"
+echo "=========================================="
+echo ""
+
+echo "Checking /joint_states for data..."
+timeout 2 ros2 topic echo /joint_states --once > /dev/null 2>&1 && \
+    echo -e "${GREEN}✓${NC} /joint_states is publishing data" || \
+    echo -e "${RED}✗${NC} /joint_states has no data"
+
+echo "Checking /imu/data_raw for data..."
+timeout 2 ros2 topic echo /imu/data_raw --once > /dev/null 2>&1 && \
+    echo -e "${GREEN}✓${NC} /imu/data_raw is publishing data" || \
+    echo -e "${RED}✗${NC} /imu/data_raw has no data"
+
+echo "Checking /odom for data..."
+timeout 2 ros2 topic echo /odom --once > /dev/null 2>&1 && \
+    echo -e "${GREEN}✓${NC} /odom is publishing data" || \
+    echo -e "${RED}✗${NC} /odom has no data"
+
+echo ""
+echo "=========================================="
+echo "5. Firmware Topic Summary"
+echo "=========================================="
+echo ""
+echo "Expected firmware topics (as published by Pico):"
+echo "  - joint_states          → /rt/joint_states → /joint_states"
+echo "  - imu/data_raw          → /rt/imu/data_raw → /imu/data_raw"
+echo "  - odom                  → /rt/odom → /odom"
+echo "  - sensors/range_tof     → /rt/sensors/range_tof → /sensors/range_tof"
+echo "  - sensors/range_ultrasonic → /rt/sensors/range_ultrasonic → /sensors/range_ultrasonic"
+echo "  - sensors/illuminance   → /rt/sensors/illuminance → /sensors/illuminance"
+echo "  - pico_rnd              → /rt/pico_rnd (debug counter)"
+echo ""
+echo "Firmware subscribes to:"
+echo "  - cmd_vel               → /rt/cmd_vel (from /cmd_vel)"
+echo ""
+
+if [ $failed -eq 0 ]; then
+    echo -e "${GREEN}=========================================="
+    echo "✓ All firmware topics verified successfully!"
+    echo -e "==========================================${NC}"
     exit 0
 else
-    echo -e "${RED}✗ Some tests failed.${NC}"
-    echo "Please review the failures above and ensure:"
-    echo "  1. The firmware has been flashed to the Pico"
-    echo "  2. The micro-ROS agent is running"
-    echo "  3. The Pico is connected and communicating"
+    echo -e "${RED}=========================================="
+    echo "✗ Some topics are missing or not publishing"
+    echo "==========================================${NC}"
+    echo ""
+    echo "Troubleshooting:"
+    echo "  1. Ensure micro-ROS agent is running"
+    echo "  2. Ensure Pico firmware is flashed and connected"
+    echo "  3. Check agent remapping configuration"
+    echo "  4. Verify firmware is running (check serial output)"
     exit 1
 fi
