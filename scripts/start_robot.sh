@@ -62,7 +62,6 @@ ros2 launch robot_bringup bringup.launch.py \
     robot_model:=robot_xl \
     mecanum:=True \
     camera:=True \
-    use_imu:=False \
     microros:=False \
     > "$LOG_DIR/robot_bringup.log" 2>&1 &
 BRINGUP_PID=$!
