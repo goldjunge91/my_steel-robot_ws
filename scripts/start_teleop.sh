@@ -43,9 +43,18 @@ JOY_PID=$!
 echo "  ✓ Joy node started (PID: $JOY_PID)"
 sleep 1
 
-# Start teleop_twist_joy
+# Get script directory to find config
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
+CONFIG_FILE="$WORKSPACE_DIR/config/xbox_teleop.yaml"
+
+# Start teleop_twist_joy with config
 echo "[2/2] Starting teleop_twist_joy..."
-ros2 run teleop_twist_joy teleop_node &
+if [ -f "$CONFIG_FILE" ]; then
+    ros2 run teleop_twist_joy teleop_node --ros-args --params-file "$CONFIG_FILE" &
+else
+    ros2 run teleop_twist_joy teleop_node &
+fi
 TELEOP_PID=$!
 echo "  ✓ Teleop node started (PID: $TELEOP_PID)"
 
