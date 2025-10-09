@@ -6,14 +6,16 @@ The Robot Control GUI is a desktop application built with Python and PyQt6 that 
 
 The application will be designed as a single-window GUI with a tabbed interface, where each tab represents a major functional area (Dashboard, Teleoperation, Robot Control, Simulation, Firmware, Monitoring). Process management will be handled through Python's subprocess module with real-time output streaming to the GUI.
 
-
+NEVER MAKE CODE FILES WITH MORE THEN 300 LINES OF CODE
 ## Path
+
 '/home/marco/ros2_steel_ws/my_steel-robot_ws/robot_control_gui'
+
 ## Architecture
 
 ### High-Level Architecture
 
-```
+```txt
 ┌─────────────────────────────────────────────────────────────┐
 │                     PyQt6 GUI Layer                         │
 │  ┌──────────┬──────────┬──────────┬──────────┬──────────┐  │

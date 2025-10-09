@@ -7,6 +7,9 @@ This document defines the requirements for a graphical user interface (GUI) appl
 
 ## Requirements
 
+### Requirement 0: CODING
+NEVER MAKE CODE FILES WITH MORE THEN 300 LINES OF CODE
+
 ### Requirement 1: Teleoperation Control
 
 **User Story:** As a robot operator, I want to start and stop teleoperation from the GUI, so that I can control the robot without manually running shell scripts.

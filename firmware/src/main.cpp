@@ -33,20 +33,20 @@ extern "C" {
 #define TASK_PRIORITY (tskIDLE_PRIORITY + 1UL)
 
 // LED PAD to use
-#define BLINK_LED_PAD 26
-#define CONN_LED_PAD 26
+#define BLINK_LED_PAD 25
+#define CONN_LED_PAD 25
 
 // Front Left Motor (Motor 0)
 #define FRONT_LEFT_PWR_CW 20
 #define FRONT_LEFT_PWR_CCW 21
-#define FRONT_LEFT_ROTENC_A 6
+#define FRONT_LEFT_ROTENC_A 8
 #define FRONT_LEFT_ROTENV_B 7
 
 // Front Right Motor (Motor 1)
-#define FRONT_RIGHT_PWR_CW 4
-#define FRONT_RIGHT_PWR_CCW 5
-#define FRONT_RIGHT_ROTENC_A 8
-#define FRONT_RIGHT_ROTENV_B 9
+#define FRONT_RIGHT_PWR_CW 2
+#define FRONT_RIGHT_PWR_CCW 3
+#define FRONT_RIGHT_ROTENC_A 5
+#define FRONT_RIGHT_ROTENV_B 6
 
 // Rear Left Motor (Motor 2)
 #define REAR_LEFT_PWR_CW 14
@@ -73,9 +73,9 @@ extern "C" {
 #define IMU_MISO_PIN 16  // AD0
 
 // VL6180X (I2C) Pins DONT CHANGE IT
-#define VL6180X_I2C_PORT i2c1
-#define VL6180X_SDA_PIN 2
-#define VL6180X_SCL_PIN 3
+// #define VL6180X_I2C_PORT i2c1
+// #define VL6180X_SDA_PIN 2
+// #define VL6180X_SCL_PIN 3
 
 char ROBOT_NAME[] = "robot_xl";
 
@@ -203,7 +203,7 @@ int main(void)
 
   // USB manuell für micro-ROS initialisieren
   stdio_usb_init();  // Macht USB für den Transport verfügbar
-  
+
   // UART0 debugging disabled for performance optimization (uncomment to enable)
   // stdio_uart_init_full(uart0, 115200, 0, 1);  // Leitet printf auf UART um
 

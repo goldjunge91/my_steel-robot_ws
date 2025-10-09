@@ -46,7 +46,7 @@ sleep 1
 # Get script directory to find config
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
-CONFIG_FILE="$WORKSPACE_DIR/config/xbox_teleop.yaml"
+CONFIG_FILE="$WORKSPACE_DIR/src/robot_description/config/xbox_teleop.yaml"
 
 # Start teleop_twist_joy with config
 echo "[2/2] Starting teleop_twist_joy..."
