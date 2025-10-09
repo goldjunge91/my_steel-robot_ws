@@ -392,5 +392,10 @@
         "**/log": true,
         "**/node_modules": true
     },
-    "todo-tree.regex.enableMultiLine": true
+    "todo-tree.regex.enableMultiLine": true,
+    "python.testing.pytestArgs": [
+        "scripts"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

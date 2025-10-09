@@ -1,0 +1,37 @@
+preserve:
+- src/
+- firmware/src/
+- docs/
+- scripts/
+- config/
+- .git/
+- .kiro/
+always_clean:
+- build/
+- install/
+- log/
+- firmware/build/
+- firmware/build_release/
+- .pytest_cache/
+obsolete_patterns:
+- _obsolet*
+- deprecated*
+- old_*
+- backup_*
+temp_patterns:
+- '*.pyc'
+- __pycache__
+- .DS_Store
+- '*.swp'
+- '*~'
+log_retention:
+  keep_recent: 5
+backup:
+  enabled: true
+  location: .kiro/backups/
+  compress: true
+  max_backups: 10
+verification:
+  check_ros2_build: true
+  check_firmware_build: true
+  check_dependencies: true
