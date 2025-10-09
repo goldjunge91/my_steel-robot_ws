@@ -1,28 +1,57 @@
-# # List of repositories to use within your workspace
-# # See https://github.com/dirk-thomas/vcstool
-# ############ 
-# # Example:
-# ############
-# repositories:
-#   examples:
-#     type: git
-#     url: https://github.com/ros2/examples.git
-#     version: humble
-# # List of repositories to use within your workspace
-# # See https://github.com/dirk-thomas/vcstool
-# ############ 
-# # Example:
-# ############
 repositories:
-  robot:
+  # robot:
+    # type: git
+    # url: https://github.com/goldjunge91/robot.git
+    # version: humble
+  open_manipulator_x:
     type: git
-    url: git@github.com:goldjunge91/robot.git
+    url: https://github.com/goldjunge91/open_manipulator_x.git
     version: humble
-  drive_arduino:
+  robot_bringup:
     type: git
-    url: git@github.com:goldjunge91/drive_arduino.git
+    url: https://github.com/goldjunge91/robot_bringup.git
+    version: humble
+  robot_controller:
+    type: git
+    url: https://github.com/goldjunge91/robot_controller.git
+    version: humble
+  robot_description:
+    type: git
+    url: https://github.com/goldjunge91/robot_description.git
+    version: humble
+  robot_gazebo:
+    type: git
+    url: https://github.com/goldjunge91/robot_gazebo.git
+    version: humble
+  robot_localization_tool:
+    type: git
+    url: https://github.com/goldjunge91/robot_localization.git
+    version: humble
+  robot_nerf_launcher:
+    type: git
+    url: https://github.com/goldjunge91/robot_nerf_launcher.git
+    version: humble
+  robot_utils:
+    type: git
+    url: https://github.com/goldjunge91/robot_utils.git
+    version: humble
+  robot_vision:
+    type: git
+    url: https://github.com/goldjunge91/robot_vision.git
+    version: humble
+  robot_controllers:
+    type: git
+    url: https://github.com/goldjunge91/robot_controllers.git
+    version: humble
+  robot_hardware_interfaces:
+    type: git
+    url: https://github.com/goldjunge91/robot_hardware_interfaces.git
+    version: humble
+  micro-ROS-Agent:
+    type: git
+    url: https://github.com/goldjunge91/robot-micro-ROS-Agent.git
+    version: humble
+  robot_gz_worlds:
+    type: git
+    url: https://github.com/goldjunge91/robot_gz_worlds.git
     version: main
-  serial:
-    type: git
-    url: https://github.com/joshnewans/serial
-    version: newans_ros2
