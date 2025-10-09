@@ -48,12 +48,22 @@ Pflege diese Datei im Firmware‑Repo (robot_firmware/docs/PINMAP.md) und halte 
 **FINAL PIN ASSIGNMENTS (NO CONFLICTS):**
 - UART0 Debug: GP0/GP1 (TX/RX) - RESERVED for debugging
 - IMU (ICM20948): SPI0 on GP16(MISO)/GP17(CS)/GP18(SCK)/GP19(MOSI) - **FIXED - DO NOT CHANGE**
+  - ROS2 Topic: `/imu/data_raw` (sensor_msgs/Imu)
+  - Publishing Rate: ~50 Hz
 - VL6180X ToF: I2C1 on GP2(SDA)/GP3(SCL) - **FIXED - DO NOT CHANGE**
+  - ROS2 Topics:
+    - `/sensors/range_tof` (sensor_msgs/Range) - Time-of-Flight distance
+    - `/sensors/illuminance` (sensor_msgs/Illuminance) - Ambient light
 - Motors: 4x motors with PWM (CW/CCW) + Encoders
   - Front Left: PWM=GP20/GP21, Encoders=GP6/GP7
   - Front Right: PWM=GP4/GP5, Encoders=GP8/GP9
   - Rear Left: PWM=GP14/GP15, Encoders=GP10/GP11
   - Rear Right: PWM=GP22/GP28, Encoders=GP12/GP13
+  - ROS2 Topics:
+    - `/joint_states` (sensor_msgs/JointState) - Encoder feedback (publish)
+    - `/cmd_vel` (geometry_msgs/Twist) - Velocity commands (subscribe)
+    - `/odom` (nav_msgs/Odometry) - Wheel odometry (publish)
+  - Publishing Rate: ~100 Hz
 - Status LED: GP26
 
 **NERF LAUNCHER - SEPARATE CONTROLLER:**
@@ -68,6 +78,24 @@ Pflege diese Datei im Firmware‑Repo (robot_firmware/docs/PINMAP.md) und halte 
 
 - USB console / micro-ROS transport: use TinyUSB / USB CDC (recommended). The Pico will enumerate as a serial device on the host (e.g. `/dev/ttyACM0`).
 - Keep `PINMAP.md` and `firmware/.../config.h` synchronized. Update this file first, then `config.h` when changing wiring.
+
+## ROS2 Topic Naming Convention
+
+All firmware topics follow ROS2 best practices (REP-105):
+
+| Sensor/Component | ROS2 Topic | Message Type | Rate | Direction |
+|------------------|------------|--------------|------|-----------|
+| ICM20948 IMU | `/imu/data_raw` | sensor_msgs/Imu | 50 Hz | Publish |
+| VL6180X ToF | `/sensors/range_tof` | sensor_msgs/Range | Variable | Publish |
+| VL6180X Light | `/sensors/illuminance` | sensor_msgs/Illuminance | Variable | Publish |
+| HC-SR04 Ultrasonic | `/sensors/range_ultrasonic` | sensor_msgs/Range | Variable | Publish |
+| Motor Encoders | `/joint_states` | sensor_msgs/JointState | 100 Hz | Publish |
+| Wheel Odometry | `/odom` | nav_msgs/Odometry | 50 Hz | Publish |
+| Velocity Commands | `/cmd_vel` | geometry_msgs/Twist | 100 Hz | Subscribe |
+
+**Note**: The micro-ROS agent automatically adds `/rt/` prefix to firmware topics. The agent configuration includes remappings to remove this prefix for standard ROS2 compatibility.
+
+**Migration**: Previous topic names using `/ddd/` prefix (e.g., `/ddd/imu`, `/ddd/odom`) have been replaced with standard names. See `docs/ROS2_TOPIC_MIGRATION_GUIDE.md` for details.
 
 ## Version / Change
 - Board name: robot_digital_v1
@@ -93,4 +121,5 @@ Pflege diese Datei im Firmware‑Repo (robot_firmware/docs/PINMAP.md) und halte 
 - Implementiere Watchdog in Firmware: sichere Motorabschaltung bei fehlender Host‑Kommunikation.
 
 ## Changelog
+- 2025-10-09: Added ROS2 topic naming documentation, updated sensor topic names to follow REP-105
 - 2025-09-21: Template erstellt / initial pinmap
