@@ -7,3 +7,6 @@ ros2 run foxglove_bridge foxglove_bridge --port 8765
  ros2 control list_hardware_interfaces
  ros2 control list_hardware_interfaces 2>&1 | head -30
  ros2 node list
+
+
+https://turtlebot.github.io/turtlebot4-user-manual/

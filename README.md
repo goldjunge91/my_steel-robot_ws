@@ -10,7 +10,8 @@ The my_steel robot is an educational and research platform built on ROS2 Humble,
 - **Real-time control** using Raspberry Pi Pico with micro-ROS
 - **Autonomous navigation** with RPLiDAR and sensor fusion
 - **Computer vision** for face detection and tracking
-- **Interactive Nerf launcher** (separate controller)
+- **Interactive Nerf launcher** with dedicated controller (Arduino Nano/Pro Micro)
+- **Remote operation** via Tailscale VPN over 4G/5G networks
 - **Optional manipulator arm** support (Open Manipulator X)
 
 ## Quick Start
@@ -122,22 +123,26 @@ The robot uses standard ROS2 topic names following REP-105:
 
 ### Hardware Components
 
-- **Raspberry Pi 4B**: Main SBC running ROS2 Humble
-- **Raspberry Pi Pico**: Real-time motor control and sensor interfacing
+- **Raspberry Pi 4B**: Main SBC running ROS2 Humble with Tailscale VPN
+- **Raspberry Pi Pico**: Real-time motor control and sensor interfacing (base platform)
+- **Arduino Nano / Pro Micro**: Dedicated Nerf launcher controller
 - **ICM20948**: 9-DOF IMU (SPI)
 - **VL6180X**: Time-of-Flight distance sensor (I2C)
-- **RPLiDAR**: 2D LiDAR scanner
-- **4x DC Motors**: Mecanum wheels with encoders
-- **USB Camera**: Computer vision
+- **YDLIDAR LDS01RR**: 2D LiDAR scanner (360°, 8m range)
+- **4x DC Motors (GM3865-520)**: Mecanum wheels with Hall encoders
+- **USB Camera**: Computer vision (1080p)
+- **Nerf Launcher**: 2x RS2205 brushless motors (flywheel), 2x servos (pan/tilt), trigger mechanism
 
 ### Software Stack
 
 - **ROS2 Humble**: Primary robotics middleware
 - **ros2_control**: Hardware abstraction framework
 - **mecanum_drive_controller**: Custom mecanum drive controller
-- **micro-ROS**: ROS2 client library for Pico
+- **micro-ROS**: ROS2 client library for microcontrollers (Pico, Arduino)
 - **FreeRTOS**: Real-time OS on Pico
+- **Tailscale**: Zero-config VPN for secure remote access over 4G/5G
 - **Nav2**: Navigation stack (optional)
+- **SLAM Toolbox**: Karto-based SLAM implementation
 - **Gazebo**: Simulation environment
 
 ### Package Structure
@@ -359,6 +364,24 @@ The simulation includes:
    cd firmware && ./monitor_firmware.sh
    ```
 
+### Remote connection issues (Tailscale)
+
+1. Check Tailscale status:
+   ```bash
+   sudo tailscale status
+   ```
+
+2. Verify connectivity:
+   ```bash
+   ping <robot-tailscale-ip>
+   ```
+
+3. Check ROS2 domain over Tailscale:
+   ```bash
+   export ROS_DOMAIN_ID=0
+   ros2 topic list
+   ```
+
 ### Hardware interface fails to activate
 
 1. Verify firmware is publishing:
@@ -412,11 +435,12 @@ If you're upgrading from a previous version that used `/ddd/*` topic prefixes, s
 ## Documentation
 
 - [PINMAP.md](docs/PINMAP.md) - Pin assignments and hardware connections
+- [Projekt.md](Projekt.md) - Comprehensive project description (German)
+- [SYSTEM_ARCHITECTURE.md](docs/SYSTEM_ARCHITECTURE.md) - Detailed system architecture
 - [ROS2_TOPIC_MIGRATION_GUIDE.md](docs/ROS2_TOPIC_MIGRATION_GUIDE.md) - Migration guide for topic standardization
 - [architecture_and_packages.md](docs/architecture_and_packages.md) - Package responsibilities
 - [hardware_setup.md](docs/hardware_setup.md) - Hardware assembly guide
 - [firmware.README.md](docs/firmware.README.md) - Firmware documentation
-- [TESTING_AND_MOCKING_STRATEGY.md](docs/TESTING_AND_MOCKING_STRATEGY.md) - Testing approach
 
 ## Contributing
 
