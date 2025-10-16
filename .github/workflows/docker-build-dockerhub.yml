@@ -25,6 +25,17 @@ jobs:
     runs-on: ubuntu-22.04
     
     steps:
+      - name: Check Docker Hub credentials
+        run: |
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "❌ Docker Hub credentials not configured"
+            echo "Please add DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets to your repository"
+            echo "Go to: Settings → Secrets and variables → Actions"
+            exit 1
+          else
+            echo "✅ Docker Hub credentials found"
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:

@@ -1,6 +1,10 @@
 ---
 name: Build Robot Pi Docker Image (GHCR)
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches:
@@ -77,7 +81,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/robot
+          images: ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=humble-arm64
             type=raw,value=humble-arm64-${{ steps.version.outputs.version }}
@@ -99,8 +103,8 @@ jobs:
             org.opencontainers.image.created=${{ steps.version.outputs.build_date }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.repositoryUrl }}
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/robot:buildcache-arm64
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/robot:buildcache-arm64,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-arm64
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-arm64,mode=max
           build-args: |
             BUILD_DATE=${{ steps.version.outputs.build_date }}
             VCS_REF=${{ steps.version.outputs.short_sha }}
@@ -109,7 +113,7 @@ jobs:
         run: |
           echo "## Docker Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** ghcr.io/${{ github.repository_owner }}/robot" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** ghcr.io/${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
           echo "**Platform:** linux/arm64" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ steps.version.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
@@ -122,15 +126,15 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Pull Command" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "docker pull ghcr.io/${{ github.repository_owner }}/robot:humble-arm64" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ghcr.io/${{ github.repository }}:humble-arm64" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Test image (basic validation)
         run: |
           echo "Pulling built image for validation..."
-          docker pull ghcr.io/${{ github.repository_owner }}/robot:humble-arm64-${{ steps.version.outputs.version }}
+          docker pull ghcr.io/${{ github.repository }}:humble-arm64-${{ steps.version.outputs.version }}
           
           echo "Inspecting image..."
-          docker inspect ghcr.io/${{ github.repository_owner }}/robot:humble-arm64-${{ steps.version.outputs.version }}
+          docker inspect ghcr.io/${{ github.repository }}:humble-arm64-${{ steps.version.outputs.version }}
           
           echo "Image built successfully and available on GitHub Container Registry"
