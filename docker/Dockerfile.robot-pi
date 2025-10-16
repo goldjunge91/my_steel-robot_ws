@@ -20,7 +20,14 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /ros2_ws
 
 # Copy source code
+# Note: micro-ROS-Agent is a meta-package, actual package is in subdirectory
 COPY src/ src/
+
+# Flatten micro-ROS-Agent structure for colcon
+RUN if [ -d "src/micro-ROS-Agent/micro_ros_agent" ]; then \
+    mv src/micro-ROS-Agent/micro_ros_agent src/ && \
+    rm -rf src/micro-ROS-Agent; \
+    fi
 
 # Initialize rosdep if not already done
 RUN rosdep update || true
