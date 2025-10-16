@@ -1,5 +1,74 @@
 # my_steel Robot - Einfacher Start Guide
 
+## Deployment-Optionen
+
+Es gibt zwei Möglichkeiten, den Roboter auf dem Raspberry Pi zu betreiben:
+
+1. **Docker Deployment (Empfohlen)**: Containerisierte Lösung mit allen Abhängigkeiten vorinstalliert
+2. **Manuelle Installation**: Traditionelle Installation direkt auf dem System
+
+### Option 1: Docker Deployment (Empfohlen)
+
+**Vorteile:**
+- Alle Abhängigkeiten vorinstalliert
+- Einfache Updates durch neue Images
+- Automatische Service-Orchestrierung
+- Integrierte Tailscale VPN-Unterstützung
+- Persistente Logs und Konfiguration
+
+**Schnellstart:**
+```bash
+# Docker und Docker Compose installieren (falls nicht vorhanden)
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+# Neu einloggen für Gruppenänderung
+
+# Docker Compose Konfiguration kopieren
+cd ~/my_steel-robot_ws
+cp docker/compose.robot-pi.yaml ~/compose.robot-pi.yaml
+
+# Tailscale konfigurieren (optional, für Remote-Zugriff)
+cp docker/.env.robot-pi.example ~/.env
+# ~/.env bearbeiten und TAILSCALE_AUTHKEY hinzufügen
+
+# Verzeichnisse für Logs und Konfiguration erstellen
+sudo mkdir -p /var/log/robot /etc/robot /var/lib/tailscale
+sudo chown -R $USER:$USER /var/log/robot /etc/robot /var/lib/tailscale
+
+# Image herunterladen
+docker pull mysteel/robot:humble-arm64
+
+# Roboter starten
+docker compose -f ~/compose.robot-pi.yaml up -d
+
+# Status prüfen
+docker compose -f ~/compose.robot-pi.yaml ps
+
+# Logs anzeigen
+docker compose -f ~/compose.robot-pi.yaml logs -f
+```
+
+**Systemd Integration (Autostart):**
+```bash
+# Service-Datei kopieren
+sudo cp docker/robot-docker.service /etc/systemd/system/
+
+# Service aktivieren
+sudo systemctl daemon-reload
+sudo systemctl enable robot-docker.service
+sudo systemctl start robot-docker.service
+
+# Status prüfen
+sudo systemctl status robot-docker.service
+```
+
+**Weitere Informationen:**
+- Siehe [docker/README.md](../docker/README.md) für vollständige Dokumentation
+- Build-Anleitung, Konfigurationsoptionen und erweiterte Troubleshooting
+
+### Option 2: Manuelle Installation
+
 ## Schnellstart - Alles ist installiert
 
 **WICHTIG: Probleme beheben vor dem Start!**
@@ -132,7 +201,94 @@ journalctl -u foxglove-bridge -f
 
 ## Troubleshooting
 
-### Häufige Probleme:
+### Docker-spezifische Probleme:
+
+#### Container startet nicht
+```bash
+# Container-Status prüfen
+docker compose -f ~/compose.robot-pi.yaml ps
+
+# Detaillierte Logs anzeigen
+docker compose -f ~/compose.robot-pi.yaml logs
+
+# Einzelne Services prüfen
+docker compose -f ~/compose.robot-pi.yaml logs microros-agent
+docker compose -f ~/compose.robot-pi.yaml logs robot-bringup
+```
+
+#### USB-Gerät nicht gefunden (/dev/ttyACM0)
+```bash
+# Pico-Verbindung prüfen
+ls -l /dev/ttyACM*
+
+# Container neu starten (erkennt Geräte neu)
+docker compose -f ~/compose.robot-pi.yaml restart
+
+# Berechtigungen prüfen
+sudo usermod -aG dialout $USER
+# Neu einloggen erforderlich
+```
+
+#### Health Checks schlagen fehl
+```bash
+# Health Check Status prüfen
+docker inspect microros-agent | grep -A 10 Health
+docker inspect robot-bringup | grep -A 10 Health
+
+# In Container einloggen für Debugging
+docker exec -it microros-agent bash
+docker exec -it robot-bringup bash
+
+# Innerhalb des Containers:
+source /opt/ros/humble/setup.bash
+ros2 topic list
+ros2 control list_controllers
+```
+
+#### Tailscale verbindet nicht
+```bash
+# Tailscale-Status im Container prüfen
+docker exec robot-bringup tailscale status
+
+# Auth Key prüfen
+cat ~/.env | grep TAILSCALE_AUTHKEY
+
+# Tailscale-Logs anzeigen
+docker compose -f ~/compose.robot-pi.yaml logs robot-bringup | grep tailscale
+
+# Tailscale-State zurücksetzen
+sudo rm -rf /var/lib/tailscale/*
+docker compose -f ~/compose.robot-pi.yaml restart robot-bringup
+```
+
+#### Container-Updates
+```bash
+# Neues Image herunterladen
+docker pull mysteel/robot:humble-arm64
+
+# Container mit neuem Image neu erstellen
+docker compose -f ~/compose.robot-pi.yaml up -d --force-recreate
+
+# Alte Images aufräumen
+docker image prune -a
+```
+
+#### Logs und Debugging
+```bash
+# Alle Logs anzeigen
+docker compose -f ~/compose.robot-pi.yaml logs -f
+
+# Logs eines bestimmten Services
+docker compose -f ~/compose.robot-pi.yaml logs -f microros-agent
+
+# Logs auf Host-System
+tail -f /var/log/robot/*.log
+
+# Container-Ressourcennutzung
+docker stats
+```
+
+### Manuelle Installation - Häufige Probleme:
 - **CycloneDDS Fehler**: `export RMW_IMPLEMENTATION=rmw_fastrtps_cpp` verwenden
 - **micro_ros_agent not found**: `sudo apt install ros-humble-micro-ros-agent`
 - **Socket buffer size**: CycloneDDS Config deaktivieren
@@ -147,3 +303,8 @@ ros2 node list
 ros2 topic echo /joy
 ros2 topic echo /cmd_vel
 ```
+
+### Weitere Dokumentation:
+- **Docker Deployment**: Siehe [docker/README.md](../docker/README.md)
+- **Allgemeine Architektur**: Siehe [SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md)
+- **Hardware Setup**: Siehe [hardware_setup.md](hardware_setup.md)

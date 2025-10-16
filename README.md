@@ -45,6 +45,41 @@ The my_steel robot is an educational and research platform built on ROS2 Humble,
 
 4. Flash firmware to Pico (see [Firmware](#firmware) section)
 
+### Docker Deployment (Alternative)
+
+For production deployment on Raspberry Pi, Docker provides a containerized solution with all dependencies pre-installed:
+
+**Features:**
+- Pre-built ROS2 Humble environment with all dependencies
+- Automatic service orchestration with Docker Compose
+- Integrated Tailscale VPN for secure remote access
+- Persistent logs and configuration
+- Automatic restart on failure
+
+**Quick Start:**
+```bash
+# Pull the pre-built image
+docker pull mysteel/robot:humble-arm64
+
+# Copy docker-compose configuration
+cp docker/compose.robot-pi.yaml ~/compose.robot-pi.yaml
+
+# Configure Tailscale (optional)
+cp docker/.env.robot-pi.example ~/.env
+# Edit ~/.env and add your TAILSCALE_AUTHKEY
+
+# Start the robot
+docker compose -f ~/compose.robot-pi.yaml up -d
+
+# View logs
+docker compose -f ~/compose.robot-pi.yaml logs -f
+```
+
+**Documentation:**
+- See [docker/README.md](docker/README.md) for complete deployment guide
+- Includes build instructions, configuration options, and troubleshooting
+- Supports Tailscale VPN for remote access over 4G/5G networks
+
 ### Running the Robot
 
 1. Start micro-ROS agent:
