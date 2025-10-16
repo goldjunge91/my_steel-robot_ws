@@ -1,6 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
+# Increase file descriptor limit FIRST to prevent "too many open files" errors
+ulimit -n 8192 2>/dev/null || ulimit -n 4096 2>/dev/null || echo "Warning: Could not increase file descriptor limit"
+
+# Clean up any existing problematic build artifacts immediately
+if [ -d "build" ]; then
+  echo "Cleaning up build artifacts to prevent file descriptor issues..."
+  rm -rf build/*/build/bdist.* build/*/*.egg-info build/*/__pycache__ 2>/dev/null || true
+fi
+
 # --- Color definitions for output ---
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -29,6 +38,19 @@ print_error() {
 git config --global --add safe.directory '*' 2>/dev/null || true
 
 print_info "Starting lint job for linter: ${LINTER:-<not set>}"
+
+# Run workspace validation if available
+if [ -f "./scripts/validate_workspace_structure.sh" ]; then
+  print_info "Running workspace validation..."
+  if ./scripts/validate_workspace_structure.sh; then
+    print_success "Workspace validation passed"
+  else
+    print_warning "Workspace validation failed, but continuing with linting..."
+    print_warning "Some linting issues may be related to workspace structure problems"
+  fi
+else
+  print_info "Workspace validation script not found, skipping validation"
+fi
 
 safe_source() {
   local file="$1"
@@ -62,7 +84,7 @@ print_info "Running setup.sh to prepare workspace..."
 if ./setup.sh; then
   print_success "setup.sh completed successfully"
 else
-  local exit_code=$?
+  exit_code=$?
   print_error "setup.sh failed with exit code $exit_code"
   print_error "Cannot proceed with linting without proper workspace setup"
   print_error "Check setup.sh output above for specific error details"
@@ -98,6 +120,13 @@ fi
 
 print_info "Running linter: $LINTER"
 
+# Clean up build artifacts that might cause "too many open files" errors
+if [ -d "build" ]; then
+  print_info "Cleaning up build artifacts to prevent file descriptor issues..."
+  find build/ -name "*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true
+  find build/ -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+fi
+
 LINTER_CMD="ament_${LINTER}"
 print_info "Checking for linter command: $LINTER_CMD"
 
@@ -127,7 +156,7 @@ if command -v "$LINTER_CMD" >/dev/null 2>&1; then
   if "$LINTER_CMD" src/; then
     print_success "$LINTER_CMD completed successfully - no issues found"
   else
-    local exit_code=$?
+    exit_code=$?
     print_warning "$LINTER_CMD found issues or failed (exit code: $exit_code)"
     print_warning "Check the output above for specific linting errors"
     # Don't exit with error to allow other linters to run (fail-fast: false)

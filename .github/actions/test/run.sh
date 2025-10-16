@@ -5,6 +5,9 @@ set -e
 # Fix git safe.directory issue in GitHub Actions (git 2.35.2+)
 git config --global --add safe.directory '*' 2>/dev/null || true
 
+# Increase file descriptor limit to prevent "too many open files" errors
+ulimit -n 4096 2>/dev/null || echo "Warning: Could not increase file descriptor limit"
+
 # --- Farbdefinitionen für die Ausgabe ---
 # Diese ANSI-Escape-Codes fügen den "echo"-Ausgaben Farben hinzu.
 GREEN='\033[0;32m'
@@ -55,6 +58,7 @@ main() {
 
   # Führe die einzelnen Schritte über die 'run_command' Funktion aus.
   # Dies sorgt für eine konsistente und informative Ausgabe.
+  run_command "Workspace-Validierung wird ausgeführt" ./scripts/validate_workspace_structure.sh
   run_command "Setup-Skript wird ausgeführt" ./setup.sh
   run_command "Build-Skript wird ausgeführt" ./build.sh
   run_command "Test-Skript wird ausgeführt"  ./test.sh
