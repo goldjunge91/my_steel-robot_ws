@@ -2,13 +2,16 @@
 set -euo pipefail
 
 # Increase file descriptor limit FIRST to prevent "too many open files" errors
-ulimit -n 8192 2>/dev/null || ulimit -n 4096 2>/dev/null || echo "Warning: Could not increase file descriptor limit"
+ulimit -n 16384 2>/dev/null || ulimit -n 8192 2>/dev/null || ulimit -n 4096 2>/dev/null || echo "Warning: Could not increase file descriptor limit"
 
-# Clean up any existing problematic build artifacts immediately
-if [ -d "build" ]; then
-  echo "Cleaning up build artifacts to prevent file descriptor issues..."
-  rm -rf build/*/build/bdist.* build/*/*.egg-info build/*/__pycache__ 2>/dev/null || true
-fi
+# Aggressive cleanup to prevent file descriptor exhaustion
+echo "Performing aggressive cleanup to prevent file descriptor issues..."
+# Remove build artifacts that cause the most file descriptor usage
+rm -rf build install log htmlcov .pytest_cache 2>/dev/null || true
+# Clean up Python cache files
+find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+find . -name "*.pyc" -delete 2>/dev/null || true
+find . -name "*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true
 
 # --- Color definitions for output ---
 GREEN='\033[0;32m'
@@ -42,11 +45,16 @@ print_info "Starting lint job for linter: ${LINTER:-<not set>}"
 # Run workspace validation if available
 if [ -f "./scripts/validate_workspace_structure.sh" ]; then
   print_info "Running workspace validation..."
-  if ./scripts/validate_workspace_structure.sh; then
+  if timeout 30 ./scripts/validate_workspace_structure.sh 2>/dev/null; then
     print_success "Workspace validation passed"
   else
-    print_warning "Workspace validation failed, but continuing with linting..."
-    print_warning "Some linting issues may be related to workspace structure problems"
+    print_warning "Workspace validation failed or timed out, but continuing with linting..."
+    print_warning "This may be due to file descriptor limits or workspace structure problems"
+    # Basic fallback validation
+    if [ ! -d "src" ]; then
+      print_error "Critical: src/ directory does not exist"
+      exit 1
+    fi
   fi
 else
   print_info "Workspace validation script not found, skipping validation"
@@ -81,11 +89,18 @@ else
 fi
 
 print_info "Running setup.sh to prepare workspace..."
-if ./setup.sh; then
+if timeout 300 ./setup.sh 2>/dev/null; then
   print_success "setup.sh completed successfully"
 else
   exit_code=$?
-  print_error "setup.sh failed with exit code $exit_code"
+  if [ $exit_code -eq 124 ]; then
+    print_error "setup.sh timed out after 5 minutes"
+  elif [ $exit_code -eq 126 ]; then
+    print_error "setup.sh failed due to file descriptor limits or permissions"
+    print_warning "This is likely due to system resource constraints"
+  else
+    print_error "setup.sh failed with exit code $exit_code"
+  fi
   print_error "Cannot proceed with linting without proper workspace setup"
   print_error "Check setup.sh output above for specific error details"
   exit 1

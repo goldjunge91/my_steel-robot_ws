@@ -8,6 +8,7 @@ build
 log
 install
 site/*
+.venv
 # ### Python-Artefakte ###
 __pycache__/
 *.pyc
