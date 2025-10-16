@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# Fix git safe.directory issue in GitHub Actions
+git config --global --add safe.directory '*' || true
+
 safe_source() {
   local file="$1"
   if [ -f "$file" ]; then
