@@ -45,7 +45,9 @@ RUN rosdep install --from-paths src \
 # Note: micro_ros_agent will be built from source in src/micro-ROS-Agent
 
 # Step 1: Build micro-ROS-Agent (required for microros-agent service)
+# Note: micro_ros_agent package is in src/micro-ROS-Agent/micro_ros_agent/
 RUN . /opt/ros/humble/setup.sh && \
+    colcon list --names-only && \
     colcon build \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
     --packages-select micro_ros_agent \
