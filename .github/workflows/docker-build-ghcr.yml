@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - humble
+      - 001-feature-hal-mit
     paths:
       - 'docker/Dockerfile.robot-pi'
       - 'docker/compose.robot-pi.yaml'
