@@ -2,12 +2,8 @@
 # set -e beendet das Skript sofort, wenn ein Befehl fehlschlägt.
 set -e
 
-# Change to workspace directory in GitHub Actions
-cd /github/workspace 2>/dev/null || cd "${GITHUB_WORKSPACE}" 2>/dev/null || true
-
-# Fix git safe.directory issue in GitHub Actions
+# Fix git safe.directory issue in GitHub Actions (git 2.35.2+)
 git config --global --add safe.directory '*' 2>/dev/null || true
-git config --global --add safe.directory /github/workspace 2>/dev/null || true
 
 # --- Farbdefinitionen für die Ausgabe ---
 # Diese ANSI-Escape-Codes fügen den "echo"-Ausgaben Farben hinzu.
