@@ -120,12 +120,13 @@
   - Verify ROS2 workspace is built correctly
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 6.2 Test image locally with Docker Compose
+- [x] 6.2 Test image locally with Docker Compose
   - Start containers using docker compose
   - Verify microros-agent health check passes
   - Verify robot-bringup health check passes
   - Check that controllers are active
   - Verify topics are publishing data
+  - Created test-deployment.sh script for automated testing on Raspberry Pi
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 4.1, 4.2, 4.3, 4.4, 10.1, 10.2_
 
 - [ ] 6.3 Test Tailscale integration

@@ -52,6 +52,18 @@ docker logs robot-bringup
 docker exec robot-bringup ros2 topic list
 docker exec robot-bringup ros2 control list_controllers
 ```
+## Testing Deployment
+Run automated test script on Raspberry Pi:
+```bash
+./docker/test-deployment.sh
+```
+This script verifies:
+- Containers start successfully
+- microros-agent health check passes
+- robot-bringup health check passes
+- Controllers are active
+- Essential topics are publishing data
+```
 ## Manage Deployment
 ```bash
 docker compose -f compose.robot-pi.yaml down
