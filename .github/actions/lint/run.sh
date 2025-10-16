@@ -99,57 +99,96 @@ fi
 print_info "Running linter: $LINTER"
 
 LINTER_CMD="ament_${LINTER}"
+print_info "Checking for linter command: $LINTER_CMD"
+
 if command -v "$LINTER_CMD" >/dev/null 2>&1; then
-  echo "[INFO] Found $LINTER_CMD, executing..."
+  print_success "Found $LINTER_CMD, executing on src/ directory..."
+  
+  # Count files to be linted for better user feedback
+  case "$LINTER" in
+    "flake8"|"pep257")
+      file_count=$(find src/ -name "*.py" | wc -l)
+      print_info "Found $file_count Python files to lint"
+      ;;
+    "cppcheck"|"cpplint"|"uncrustify")
+      file_count=$(find src/ \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.c" \) | wc -l)
+      print_info "Found $file_count C/C++ files to lint"
+      ;;
+    "lint_cmake")
+      file_count=$(find src/ -name "CMakeLists.txt" | wc -l)
+      print_info "Found $file_count CMakeLists.txt files to lint"
+      ;;
+    "xmllint")
+      file_count=$(find src/ \( -name "*.xml" -o -name "*.launch" -o -name "*.xacro" \) | wc -l)
+      print_info "Found $file_count XML files to lint"
+      ;;
+  esac
+  
   if "$LINTER_CMD" src/; then
-    echo "[SUCCESS] $LINTER_CMD completed successfully"
+    print_success "$LINTER_CMD completed successfully - no issues found"
   else
-    echo "[WARNING] $LINTER_CMD found issues or failed"
+    local exit_code=$?
+    print_warning "$LINTER_CMD found issues or failed (exit code: $exit_code)"
+    print_warning "Check the output above for specific linting errors"
     # Don't exit with error to allow other linters to run (fail-fast: false)
   fi
 else
-  echo "[WARNING] $LINTER_CMD is not available in PATH" >&2
+  print_warning "$LINTER_CMD is not available in PATH"
+  print_info "Attempting fallback checks for linter type: $LINTER"
   
   # Provide better fallback based on linter type
   case "$LINTER" in
     "flake8"|"pep257")
-      echo "[INFO] Running Python fallback check with compileall..." >&2
-      if python3 -m compileall src/ -q; then
-        echo "[SUCCESS] Python syntax check passed"
+      print_info "Running Python fallback check with compileall..."
+      file_count=$(find src/ -name "*.py" | wc -l)
+      if [ "$file_count" -gt 0 ]; then
+        print_info "Checking syntax of $file_count Python files..."
+        if python3 -m compileall src/ -q; then
+          print_success "Python syntax check passed"
+        else
+          print_warning "Python syntax check found issues"
+        fi
       else
-        echo "[WARNING] Python syntax check found issues"
+        print_info "No Python files found to check"
       fi
       ;;
     "cppcheck"|"cpplint"|"uncrustify")
-      echo "[INFO] Running C++ fallback check..." >&2
-      # Check for basic C++ syntax by trying to find and validate C++ files
-      if find src/ -name "*.cpp" -o -name "*.hpp" -o -name "*.h" | head -1 | grep -q .; then
-        echo "[INFO] Found C++ files, but no C++ linter available"
-        echo "[WARNING] Skipping C++ linting - install $LINTER_CMD for proper checking"
+      print_info "Running C++ fallback check..."
+      file_count=$(find src/ \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.c" \) | wc -l)
+      if [ "$file_count" -gt 0 ]; then
+        print_info "Found $file_count C/C++ files, but no C++ linter available"
+        print_warning "Skipping C++ linting - install $LINTER_CMD for proper checking"
+        print_info "To install: sudo apt-get install $LINTER"
       else
-        echo "[INFO] No C++ files found to lint"
+        print_info "No C/C++ files found to lint"
       fi
       ;;
     "lint_cmake")
-      echo "[INFO] Running CMake fallback check..." >&2
-      if find src/ -name "CMakeLists.txt" | head -1 | grep -q .; then
-        echo "[INFO] Found CMake files, but cmake linter not available"
-        echo "[WARNING] Skipping CMake linting - install $LINTER_CMD for proper checking"
+      print_info "Running CMake fallback check..."
+      file_count=$(find src/ -name "CMakeLists.txt" | wc -l)
+      if [ "$file_count" -gt 0 ]; then
+        print_info "Found $file_count CMakeLists.txt files, but cmake linter not available"
+        print_warning "Skipping CMake linting - install $LINTER_CMD for proper checking"
       else
-        echo "[INFO] No CMakeLists.txt files found to lint"
+        print_info "No CMakeLists.txt files found to lint"
       fi
       ;;
     "xmllint")
-      echo "[INFO] Running XML fallback check..." >&2
-      if find src/ -name "*.xml" -o -name "*.launch" -o -name "*.xacro" | head -1 | grep -q .; then
-        echo "[INFO] Found XML files, but xmllint not available"
-        echo "[WARNING] Skipping XML linting - install xmllint for proper checking"
+      print_info "Running XML fallback check..."
+      file_count=$(find src/ \( -name "*.xml" -o -name "*.launch" -o -name "*.xacro" \) | wc -l)
+      if [ "$file_count" -gt 0 ]; then
+        print_info "Found $file_count XML files, but xmllint not available"
+        print_warning "Skipping XML linting - install xmllint for proper checking"
+        print_info "To install: sudo apt-get install libxml2-utils"
       else
-        echo "[INFO] No XML files found to lint"
+        print_info "No XML files found to lint"
       fi
       ;;
     *)
-      echo "[WARNING] No fallback available for linter: $LINTER" >&2
+      print_warning "No fallback available for linter: $LINTER"
+      print_error "Unknown linter type - this should not happen if validation passed"
       ;;
   esac
 fi
+
+print_info "Lint job for $LINTER completed"

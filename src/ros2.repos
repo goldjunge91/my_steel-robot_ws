@@ -55,10 +55,10 @@ repositories:
     type: git
     url: https://github.com/goldjunge91/robot_gz_worlds.git
     version: main
-  robot_control_gui:
-    type: git
-    url: https://github.com/goldjunge91/robot_control_gui.git
-    version: main
+  # robot_control_gui:
+  #   type: git
+  #   url: https://github.com/goldjunge91/robot_control_gui.git
+  #   version: main
   robot_firmware:
     type: git
     url: https://github.com/goldjunge91/robot_firmware.git

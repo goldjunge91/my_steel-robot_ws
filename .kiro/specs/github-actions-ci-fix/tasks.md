@@ -64,7 +64,7 @@
     - Ensure workspace is sourced before running tests
     - _Requirements: 2.4, 2.5_
 
-- [-] 5. Fix lint job execution
+- [x] 5. Fix lint job execution
   - [x] 5.1 Improve linter availability checking
     - Add better fallback when specific linter is not available
     - Ensure LINTER environment variable is validated
@@ -75,18 +75,18 @@
     - Source workspace if it exists
     - _Requirements: 3.3, 1.1_
   
-  - [-] 5.3 Improve error messages
+  - [x] 5.3 Improve error messages
     - Add clear indication of which linter is running
     - Report linter-specific errors clearly
     - _Requirements: 3.4, 5.1_
 
-- [ ] 6. Validate and fix workspace structure
-  - [ ] 6.1 Verify COLCON_IGNORE files are in place
+- [-] 6. Validate and fix workspace structure
+  - [x] 6.1 Verify COLCON_IGNORE files are in place
     - Check firmware/, robot_firmware/, robot_control_gui/, lib/ have COLCON_IGNORE
     - Add any missing COLCON_IGNORE files
     - _Requirements: 7.1, 7.3_
   
-  - [ ] 6.2 Validate package.xml files
+  - [-] 6.2 Validate package.xml files
     - Check all packages in src/ have valid package.xml
     - Identify packages with missing dependencies
     - _Requirements: 7.2, 7.5_
