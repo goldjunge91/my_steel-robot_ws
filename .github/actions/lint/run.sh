@@ -51,32 +51,34 @@ if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
 fi
 export AMENT_TRACE_SETUP_FILES
 
-echo "[INFO] Sourcing ROS environment..."
+print_info "Sourcing ROS environment..."
 if safe_source "$ROS_SETUP"; then
-  echo "[SUCCESS] ROS setup script loaded from $ROS_SETUP"
+  print_success "ROS setup script loaded from $ROS_SETUP"
 else
-  echo "[WARNING] ROS setup script not found at $ROS_SETUP — continuing without sourcing ROS." >&2
+  print_warning "ROS setup script not found at $ROS_SETUP — continuing without sourcing ROS."
 fi
 
-echo "[INFO] Running setup.sh to prepare workspace..."
+print_info "Running setup.sh to prepare workspace..."
 if ./setup.sh; then
-  echo "[SUCCESS] setup.sh completed successfully"
+  print_success "setup.sh completed successfully"
 else
-  echo "[ERROR] setup.sh failed with exit code $?" >&2
-  echo "[ERROR] Cannot proceed with linting without proper workspace setup" >&2
+  local exit_code=$?
+  print_error "setup.sh failed with exit code $exit_code"
+  print_error "Cannot proceed with linting without proper workspace setup"
+  print_error "Check setup.sh output above for specific error details"
   exit 1
 fi
 
-echo "[INFO] Checking for workspace setup..."
+print_info "Checking for workspace setup..."
 if [ -f "install/setup.bash" ]; then
-  echo "[INFO] Found workspace setup, sourcing install/setup.bash..."
+  print_info "Found workspace setup, sourcing install/setup.bash..."
   if safe_source "install/setup.bash"; then
-    echo "[SUCCESS] Workspace environment loaded"
+    print_success "Workspace environment loaded"
   else
-    echo "[WARNING] Failed to source workspace setup, continuing anyway..." >&2
+    print_warning "Failed to source workspace setup, continuing anyway..."
   fi
 else
-  echo "[INFO] No install/setup.bash found, workspace may not be built yet"
+  print_info "No install/setup.bash found, workspace may not be built yet"
 fi
 
 # Validate LINTER environment variable
