@@ -139,3 +139,60 @@ NEVER MAKE CODE FILES WITH MORE THEN 300 LINES OF CODE
 3. WHEN the application accesses file paths THEN the system SHALL use POSIX-style paths
 4. WHEN the application is packaged THEN the system SHALL provide installation instructions for Ubuntu 22.04
 5. IF the application requires dependencies THEN the system SHALL document all required packages and installation steps
+
+### Requirement 11: Extended ROS2 Command Support
+
+**User Story:** As a robot developer, I want access to more ROS2 commands through the GUI, so that I can perform comprehensive system diagnostics and management without using the command line.
+
+#### Acceptance Criteria
+
+1. WHEN the user opens the ROS2 commands panel THEN the system SHALL provide buttons for common ROS2 commands (ros2 node info, ros2 service list, ros2 param list, ros2 bag record/play)
+2. WHEN the user clicks "Node Info" THEN the system SHALL display detailed node information including publishers, subscribers, and services
+3. WHEN the user clicks "Service List" THEN the system SHALL display all available ROS2 services with their types
+4. WHEN the user clicks "Parameter List" THEN the system SHALL display all ROS2 parameters with their current values
+5. WHEN the user clicks "Record Bag" THEN the system SHALL start recording ROS2 topics to a bag file with timestamp
+6. WHEN the user clicks "Play Bag" THEN the system SHALL allow selection and playback of recorded bag files
+7. WHEN the user executes any ROS2 command THEN the system SHALL display the output in a dedicated command output viewer
+
+### Requirement 12: Enhanced Error Handling and Recovery
+
+**User Story:** As a robot operator, I want the GUI to be more robust against errors and provide recovery options, so that I can continue working even when individual components fail.
+
+#### Acceptance Criteria
+
+1. WHEN any process fails THEN the system SHALL display a detailed error message with suggested recovery actions
+2. WHEN a network connection is lost THEN the system SHALL attempt automatic reconnection with exponential backoff
+3. WHEN a process crashes THEN the system SHALL offer to restart the process automatically
+4. WHEN multiple errors occur THEN the system SHALL queue error notifications and display them in order of priority
+5. WHEN an error occurs THEN the system SHALL log detailed error information including stack traces to a log file
+6. WHEN the user clicks "Retry" on an error dialog THEN the system SHALL attempt the failed operation again
+7. WHEN critical errors occur THEN the system SHALL prevent further actions that could cause system instability
+
+### Requirement 13: Advanced Worker and Process Management
+
+**User Story:** As a robot operator, I want better visibility and control over all running processes, so that I can manage system resources effectively and troubleshoot issues.
+
+#### Acceptance Criteria
+
+1. WHEN the user opens the process manager THEN the system SHALL display all running processes with CPU and memory usage
+2. WHEN a process is selected THEN the system SHALL show detailed process information (PID, command line, working directory, environment variables)
+3. WHEN the user clicks "Kill Process" THEN the system SHALL terminate the selected process with confirmation dialog
+4. WHEN processes are running THEN the system SHALL update resource usage statistics every 2 seconds
+5. WHEN the user clicks "Process Tree" THEN the system SHALL display parent-child relationships between processes
+6. WHEN a process becomes unresponsive THEN the system SHALL detect and highlight zombie or hung processes
+7. WHEN the user clicks "Export Process Info" THEN the system SHALL save process information to a CSV file
+
+### Requirement 14: Automatic Launch Configuration Detection
+
+**User Story:** As a robot developer, I want the GUI to automatically detect available launch files and configurations, so that I can easily launch different robot configurations without manual setup.
+
+#### Acceptance Criteria
+
+1. WHEN the application starts THEN the system SHALL scan the workspace for available launch files (.launch.py, .launch.xml)
+2. WHEN launch files are detected THEN the system SHALL display them in a new "Launch Configurations" widget
+3. WHEN the user selects a launch file THEN the system SHALL automatically detect available parameters and their default values
+4. WHEN the user modifies launch parameters THEN the system SHALL validate parameter types and ranges
+5. WHEN the user clicks "Launch" THEN the system SHALL execute the launch file with the specified parameters
+6. WHEN launch files change THEN the system SHALL automatically refresh the available configurations
+7. WHEN the user creates a custom launch configuration THEN the system SHALL save it for future use
+8. WHEN multiple launch files are selected THEN the system SHALL allow launching them in sequence or parallel
