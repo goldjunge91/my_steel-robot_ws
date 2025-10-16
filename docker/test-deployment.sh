@@ -39,8 +39,17 @@ echo ""
 # Check if .env file exists
 if [ ! -f "$SCRIPT_DIR/.env" ]; then
     echo -e "${RED}ERROR: .env file not found in $SCRIPT_DIR${NC}"
-    echo "Please create .env file from .env.robot-pi.example"
-    exit 1
+    echo "Creating .env file from .env.robot-pi.example..."
+    if [ -f "$SCRIPT_DIR/.env.robot-pi.example" ]; then
+        cp "$SCRIPT_DIR/.env.robot-pi.example" "$SCRIPT_DIR/.env"
+        echo -e "${GREEN}✓${NC} Created .env file"
+        echo -e "${YELLOW}Please edit $SCRIPT_DIR/.env and configure your settings${NC}"
+        echo "Press Enter to continue or Ctrl+C to exit and edit the file..."
+        read
+    else
+        echo -e "${RED}ERROR: .env.robot-pi.example not found${NC}"
+        exit 1
+    fi
 fi
 
 echo -e "${GREEN}✓${NC} Found .env file"
