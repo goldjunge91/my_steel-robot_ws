@@ -1,5 +1,6 @@
 # Multi-stage Dockerfile for my_steel robot deployment on Raspberry Pi 4B
 # Optimized for ARM64 architecture with ROS2 Humble
+# Build version: 2025-10-16 (includes micro_ros_agent from source)
 
 # ============================================================================
 # Stage 1: Builder - Compile ROS2 workspace
