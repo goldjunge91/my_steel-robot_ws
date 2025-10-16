@@ -1,8 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
+# Change to workspace directory in GitHub Actions
+cd /github/workspace 2>/dev/null || cd "${GITHUB_WORKSPACE}" 2>/dev/null || true
+
 # Fix git safe.directory issue in GitHub Actions
-git config --global --add safe.directory '*' || true
+git config --global --add safe.directory '*' 2>/dev/null || true
+git config --global --add safe.directory /github/workspace 2>/dev/null || true
 
 safe_source() {
   local file="$1"
