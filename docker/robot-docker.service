@@ -1,0 +1,38 @@
+[Unit]
+Description=my_steel Robot Docker Containers
+Documentation=https://github.com/your-org/my_steel-robot_ws
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/pi
+User=pi
+Group=pi
+
+# Environment file (optional)
+EnvironmentFile=-/home/pi/.env
+
+# Start containers
+ExecStart=/usr/bin/docker compose -f compose.robot-pi.yaml up -d
+
+# Stop containers
+ExecStop=/usr/bin/docker compose -f compose.robot-pi.yaml down
+
+# Restart policy
+Restart=on-failure
+RestartSec=10s
+
+# Security settings
+NoNewPrivileges=false
+PrivateTmp=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=robot-docker
+
+[Install]
+WantedBy=multi-user.target
