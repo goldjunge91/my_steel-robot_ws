@@ -20,14 +20,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /ros2_ws
 
 # Copy source code
-# Note: micro-ROS-Agent is a meta-package, actual package is in subdirectory
 COPY src/ src/
-
-# Flatten micro-ROS-Agent structure for colcon
-RUN if [ -d "src/micro-ROS-Agent/micro_ros_agent" ]; then \
-    mv src/micro-ROS-Agent/micro_ros_agent src/ && \
-    rm -rf src/micro-ROS-Agent; \
-    fi
 
 # Initialize rosdep if not already done
 RUN rosdep update || true
@@ -54,10 +47,12 @@ RUN rosdep install --from-paths src \
 # Step 1: Build micro-ROS-Agent (required for microros-agent service)
 # Note: micro_ros_agent package is in src/micro-ROS-Agent/micro_ros_agent/
 RUN . /opt/ros/humble/setup.sh && \
-    colcon list --names-only && \
+    echo "=== Listing all packages ===" && \
+    colcon list --base-paths src && \
+    echo "=== Building micro_ros_agent ===" && \
     colcon build \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
-    --packages-select micro_ros_agent \
+    --base-paths src/micro-ROS-Agent \
     --merge-install
 
 # Step 2: Build husarion components (base dependency)
