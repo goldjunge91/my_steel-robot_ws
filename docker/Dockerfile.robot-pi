@@ -38,13 +38,19 @@ RUN rosdep install --from-paths src \
     --ignore-src \
     --rosdistro humble \
     -y \
-    --skip-keys "micro_ros_agent" \
     || true
 
 # Build packages in multiple steps to handle dependencies correctly
-# Note: micro_ros_agent is skipped as it will be installed from apt in runtime stage
+# Note: micro_ros_agent will be built from source in src/micro-ROS-Agent
 
-# Step 1: Build husarion components (base dependency)
+# Step 1: Build micro-ROS-Agent (required for microros-agent service)
+RUN . /opt/ros/humble/setup.sh && \
+    colcon build \
+    --cmake-args -DCMAKE_BUILD_TYPE=Release \
+    --packages-select micro_ros_agent \
+    --merge-install
+
+# Step 2: Build husarion components (base dependency)
 RUN . /opt/ros/humble/setup.sh && \
     colcon build \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
@@ -52,26 +58,26 @@ RUN . /opt/ros/humble/setup.sh && \
     --merge-install \
     --continue-on-error
 
-# Step 2: Build open_manipulator_x packages (dependency for robot_description)
+# Step 3: Build open_manipulator_x packages (dependency for robot_description)
 RUN . /opt/ros/humble/setup.sh && \
     colcon build \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
     --packages-select \
-        open_manipulator_x_description \
-        dynamixel_hardware_interface \
+    open_manipulator_x_description \
+    dynamixel_hardware_interface \
     --merge-install \
     --continue-on-error
 
-# Step 3: Build robot core packages
+# Step 4: Build robot core packages
 RUN . /opt/ros/humble/setup.sh && \
     colcon build \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
     --packages-select \
-        robot_description \
-        robot_hardware_interfaces \
+    robot_description \
+    robot_hardware_interfaces \
     --merge-install
 
-# Step 4: Build robot_utils (dependency for robot_controller)
+# Step 5: Build robot_utils (dependency for robot_controller)
 RUN . /opt/ros/humble/setup.sh && \
     colcon build \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
@@ -79,24 +85,21 @@ RUN . /opt/ros/humble/setup.sh && \
     --merge-install \
     --continue-on-error
 
-# Step 5: Build controller and localization packages
+# Step 6: Build controller and localization packages
 RUN . /opt/ros/humble/setup.sh && \
     colcon build \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
     --packages-select \
-        robot_controller \
-        robot_localization_tool \
+    robot_controller \
+    robot_localization_tool \
     --merge-install
 
-# Step 6: Build bringup package (depends on everything else)
-# Note: robot_bringup may fail due to micro_ros_agent dependency, but it's just launch files
-# so we can continue - the package will still be usable
+# Step 7: Build bringup package (depends on everything else)
 RUN . /opt/ros/humble/setup.sh && \
     colcon build \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
     --packages-select robot_bringup \
-    --merge-install \
-    --continue-on-error || true
+    --merge-install
 
 # ============================================================================
 # Stage 2: Runtime - Production image
@@ -104,7 +107,7 @@ RUN . /opt/ros/humble/setup.sh && \
 FROM ros:humble-ros-base
 
 # Install runtime dependencies and system tools
-# Note: micro-ros-agent is not available in apt, will use separate container or build on device
+# Note: micro_ros_agent is built from source in src/micro-ROS-Agent
 RUN apt-get update && apt-get install -y \
     ros-humble-usb-cam \
     ros-humble-foxglove-bridge \
@@ -138,24 +141,24 @@ RUN mkdir -p /usr/local/bin && \
 # Connects to Tailscale VPN if TAILSCALE_AUTHKEY is provided
 
 if [ -n "$TAILSCALE_AUTHKEY" ]; then
-    echo "Starting Tailscale daemon..."
-    mkdir -p /var/lib/tailscale
-    tailscaled --state=/var/lib/tailscale/tailscaled.state &
-    
-    # Wait for daemon to be ready
-    sleep 2
-    
-    echo "Connecting to Tailscale network..."
-    tailscale up \
-        --authkey="$TAILSCALE_AUTHKEY" \
-        --hostname="${TAILSCALE_HOSTNAME:-robot-xl}" \
-        --accept-routes \
-        --advertise-tags=tag:robot
-    
-    echo "Tailscale connected successfully"
-    tailscale status
+echo "Starting Tailscale daemon..."
+mkdir -p /var/lib/tailscale
+tailscaled --state=/var/lib/tailscale/tailscaled.state &
+
+# Wait for daemon to be ready
+sleep 2
+
+echo "Connecting to Tailscale network..."
+tailscale up \
+    --authkey="$TAILSCALE_AUTHKEY" \
+    --hostname="${TAILSCALE_HOSTNAME:-robot-xl}" \
+    --accept-routes \
+    --advertise-tags=tag:robot
+
+echo "Tailscale connected successfully"
+tailscale status
 else
-    echo "TAILSCALE_AUTHKEY not set, skipping Tailscale setup"
+echo "TAILSCALE_AUTHKEY not set, skipping Tailscale setup"
 fi
 EOF
 
@@ -172,33 +175,33 @@ set -e
 
 # Trap SIGTERM for graceful shutdown
 shutdown_handler() {
-    echo "Received SIGTERM, initiating graceful shutdown..."
-    
-    # Send SIGINT to child process (ROS2 launch)
-    if [ -n "$CHILD_PID" ]; then
-        kill -INT "$CHILD_PID" 2>/dev/null || true
-        
-        # Wait up to 30 seconds for clean shutdown
-        for i in {1..30}; do
-            if ! kill -0 "$CHILD_PID" 2>/dev/null; then
-                echo "Process shutdown complete"
-                break
-            fi
-            sleep 1
-        done
-        
-        # Force kill if still running
-        if kill -0 "$CHILD_PID" 2>/dev/null; then
-            echo "Timeout reached, forcing shutdown"
-            kill -9 "$CHILD_PID" 2>/dev/null || true
-        fi
-    fi
-    
-    # Flush logs
-    sync
-    
-    echo "Shutdown complete"
-    exit 0
+echo "Received SIGTERM, initiating graceful shutdown..."
+
+# Send SIGINT to child process (ROS2 launch)
+if [ -n "$CHILD_PID" ]; then
+kill -INT "$CHILD_PID" 2>/dev/null || true
+
+# Wait up to 30 seconds for clean shutdown
+for i in {1..30}; do
+if ! kill -0 "$CHILD_PID" 2>/dev/null; then
+echo "Process shutdown complete"
+break
+fi
+sleep 1
+done
+
+# Force kill if still running
+if kill -0 "$CHILD_PID" 2>/dev/null; then
+echo "Timeout reached, forcing shutdown"
+kill -9 "$CHILD_PID" 2>/dev/null || true
+fi
+fi
+
+# Flush logs
+sync
+
+echo "Shutdown complete"
+exit 0
 }
 
 trap shutdown_handler SIGTERM SIGINT
