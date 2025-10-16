@@ -96,3 +96,11 @@
         url = https://github.com/micro-ROS/micro_ros_raspberrypi_pico_sdk
         branch = humble
 	ignore = dirty
+[submodule "robot_control_gui"]
+	path = robot_control_gui
+	url = https://github.com/goldjunge91/robot_control_gui.git
+	branch = main
+[submodule "robot_firmware"]
+	path = robot_firmware
+	url = https://github.com/goldjunge91/robot_firmware.git
+	branch = main
