@@ -127,8 +127,8 @@ jobs:
             org.opencontainers.image.created=${{ steps.version.outputs.build_date }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.repositoryUrl }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/robot:buildcache-arm64
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/robot:buildcache-arm64,mode=max
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/robot:buildcache-arm64-v2
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/robot:buildcache-arm64-v2,mode=max
           build-args: |
             BUILD_DATE=${{ steps.version.outputs.build_date }}
             VCS_REF=${{ steps.version.outputs.short_sha }}
