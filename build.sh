@@ -111,6 +111,7 @@ CMAKE_ARGS=(
   "-DCMAKE_BUILD_TYPE=$BUILD_TYPE"
   "-DCMAKE_EXPORT_COMPILE_COMMANDS=On"
   "-DCMAKE_VERBOSE_MAKEFILE=ON"  # Enable verbose output for better error diagnosis
+  "-DCMAKE_CXX_FLAGS=-Wall -Wextra -Wpedantic"  # Add compiler warnings as CMake flags
 )
 
 # Add CI-specific optimizations
@@ -147,9 +148,55 @@ else
   )
 fi
 
+# Install missing MoveIt packages if needed
+log_info "Checking for MoveIt dependencies..."
+MOVEIT_PACKAGES_NEEDED=true
+
+# Check if any packages require MoveIt
+if find src -name "package.xml" -exec grep -l "moveit" {} \; 2>/dev/null | grep -q .; then
+  log_info "Found packages requiring MoveIt dependencies"
+  MOVEIT_PACKAGES_NEEDED=true
+fi
+
+if [ "$MOVEIT_PACKAGES_NEEDED" = true ]; then
+  log_info "Installing MoveIt packages..."
+  
+  # Install MoveIt packages that are commonly needed
+  MOVEIT_PACKAGES=(
+    "ros-${ROS_DISTRO}-moveit"
+    "ros-${ROS_DISTRO}-moveit-msgs"
+    "ros-${ROS_DISTRO}-moveit-ros-planning"
+    "ros-${ROS_DISTRO}-moveit-ros-planning-interface"
+    "ros-${ROS_DISTRO}-moveit-servo"
+    "ros-${ROS_DISTRO}-moveit-core"
+    "ros-${ROS_DISTRO}-moveit-common"
+  )
+  
+  # Update package lists if not already done
+  if [ -z "${APT_UPDATED:-}" ] && command -v apt-get >/dev/null 2>&1; then
+    log_info "Updating package lists for MoveIt installation..."
+    if sudo apt-get update -y -qq; then
+      export APT_UPDATED=1
+    else
+      log_warning "Failed to update package lists"
+    fi
+  fi
+  
+  # Install MoveIt packages
+  for pkg in "${MOVEIT_PACKAGES[@]}"; do
+    if sudo apt-get install -y "$pkg" 2>/dev/null; then
+      log_success "Installed $pkg"
+    else
+      log_warning "Failed to install $pkg (may not be available)"
+    fi
+  done
+  
+  log_success "MoveIt package installation completed"
+fi
+
 # Run colcon build without || true to properly report failures
 set +e
-colcon build "${COLCON_ARGS[@]}" -Wall -Wextra -Wpedantic
+colcon build "${COLCON_ARGS[@]}"
 BUILD_EXIT_CODE=$?
 set -e
 
