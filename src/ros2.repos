@@ -1,8 +1,8 @@
 repositories:
-  # robot:
-    # type: git
-    # url: https://github.com/goldjunge91/robot.git
-    # version: humble
+  robot:
+    type: git
+    url: https://github.com/goldjunge91/robot.git
+    version: humble
   open_manipulator_x:
     type: git
     url: https://github.com/goldjunge91/open_manipulator_x.git
