@@ -10,3 +10,8 @@ ros2 run foxglove_bridge foxglove_bridge --port 8765
 
 
 https://turtlebot.github.io/turtlebot4-user-manual/
+
+docker run --rm -v "$(pwd)":/workspace -w /workspace ros:humble bash -c "bash setup.sh && bash build.sh"  
+docker run --rm -v "$(pwd)":/workspace -w /workspace ros:humble bash -c "bash setup.sh && bash build.sh && bash test.sh"  
+
+pipx run pytest src/robot_utils/test/ -v   
