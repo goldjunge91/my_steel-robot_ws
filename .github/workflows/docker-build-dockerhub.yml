@@ -1,6 +1,9 @@
 ---
 name: Build Robot Pi Docker Image (Docker Hub)
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
