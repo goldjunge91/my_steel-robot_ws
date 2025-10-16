@@ -18,8 +18,7 @@ RUN apt-get update && apt-get install -y \
     python3-rosdep \
     python3-pip \
     ros-dev-tools \
-    ros-${ROS_DISTRO}-teleop-twist-keyboard \
-    && rm -rf /var/lib/apt/lists/*
+    ros-${ROS_DISTRO}-teleop-twist-keyboard
 
 # Bring workspace sources into the container
 COPY src/ src/
@@ -31,6 +30,8 @@ RUN rosdep init 2>/dev/null || true && \
       --ignore-src \
       --rosdistro ${ROS_DISTRO} \
       -y
+
+RUN rm -rf /var/lib/apt/lists/*
 
 # Build the workspace once dependencies are resolved
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
