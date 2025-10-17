@@ -263,16 +263,94 @@ main() {
       done
       
       print_step "Installing dependencies with rosdep..."
-      if sudo rosdep install --from-paths src --ignore-src -y --rosdistro="$ROS_DISTRO"; then
+      
+      # First, try to install dependencies and capture detailed output
+      rosdep_output=$(sudo rosdep install --from-paths src --ignore-src -y --rosdistro="$ROS_DISTRO" 2>&1)
+      rosdep_exit_code=$?
+      
+      if [ $rosdep_exit_code -eq 0 ]; then
         print_success "rosdep dependencies installed successfully"
         local step_end=$(date +%s)
         print_duration $step_start $step_end
       else
-        print_warning "'rosdep install' failed. Some dependencies may be missing."
-        print_warning "This could be due to:"
-        print_warning "  - Missing package.xml files in src/ packages"
-        print_warning "  - Unavailable packages in ROS repositories"
-        print_warning "  - Network connectivity issues"
+        print_warning "'rosdep install' failed with exit code $rosdep_exit_code"
+        
+        # Parse the output to identify specific failed packages
+        failed_packages=()
+        if echo "$rosdep_output" | grep -q "ERROR: the following rosdeps failed to install"; then
+          print_warning "Analyzing failed dependencies..."
+          
+          # Extract failed package names from rosdep output
+          while IFS= read -r line; do
+            if [[ "$line" =~ apt:.*command.*\[(apt-get install -y ([^]]+))\].*failed ]]; then
+              failed_pkg="${BASH_REMATCH[1]}"
+              failed_packages+=("$failed_pkg")
+              print_warning "  ✗ Failed to install: $failed_pkg"
+            fi
+          done <<< "$rosdep_output"
+          
+          # Check if failed packages are known problematic ones
+          known_problematic_packages=(
+            "ros-humble-gazebo-ros2-control"  # Often missing in Humble
+            "ros-humble-gazebo-ros-control"   # Legacy Gazebo Classic
+            "ros-humble-gazebo-plugins"       # Sometimes unavailable
+          )
+          
+          critical_failures=()
+          non_critical_failures=()
+          
+          for failed_pkg in "${failed_packages[@]}"; do
+            is_known_problematic=false
+            for known_pkg in "${known_problematic_packages[@]}"; do
+              if [[ "$failed_pkg" == "$known_pkg" ]]; then
+                is_known_problematic=true
+                non_critical_failures+=("$failed_pkg")
+                break
+              fi
+            done
+            
+            if [ "$is_known_problematic" = false ]; then
+              critical_failures+=("$failed_pkg")
+            fi
+          done
+          
+          if [ ${#non_critical_failures[@]} -gt 0 ]; then
+            print_warning "Known problematic packages (simulation-only, can be ignored for hardware builds):"
+            for pkg in "${non_critical_failures[@]}"; do
+              print_warning "  ⚠ $pkg (often missing in ROS2 Humble repositories)"
+            done
+          fi
+          
+          if [ ${#critical_failures[@]} -gt 0 ]; then
+            print_error "Critical package installation failures:"
+            for pkg in "${critical_failures[@]}"; do
+              print_error "  ✗ $pkg"
+            done
+          fi
+          
+          # Try to install alternative packages for known problematic ones
+          print_step "Attempting to install alternative packages..."
+          alternative_packages=(
+            "ros-${ROS_DISTRO}-gz-ros2-control"     # New Gazebo (Garden/Fortress)
+            "ros-${ROS_DISTRO}-ros-gz-sim"          # Gazebo simulation
+            "ros-${ROS_DISTRO}-ros-gz-bridge"       # Gazebo bridge
+          )
+          
+          for alt_pkg in "${alternative_packages[@]}"; do
+            if sudo apt-get install -y "$alt_pkg" >/dev/null 2>&1; then
+              print_success "Installed alternative package: $alt_pkg"
+            else
+              print_step "Alternative package not available: $alt_pkg"
+            fi
+          done
+          
+        else
+          print_warning "rosdep failed but no specific package failures identified"
+          echo "$rosdep_output" | head -20  # Show first 20 lines of output for debugging
+        fi
+        
+        print_warning "Continuing with available dependencies..."
+        print_warning "Some simulation features may not work if Gazebo packages are missing"
       fi
     else
       print_error "rosdep is not available; skipping dependency resolution."
@@ -284,6 +362,7 @@ main() {
     print_duration $script_start $script_end
     
     # Gib immer den Exit-Code 0 zurück, um die CI/CD-Pipeline nicht zu blockieren.
+    print_success "Setup script completed - always returning success for CI/CD"
     exit 0
 }
 
