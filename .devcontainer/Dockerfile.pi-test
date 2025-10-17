@@ -58,7 +58,12 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /etc/skel/.bashrc && \
 
 USER ${USERNAME}
 
-RUN touch ~/.bashrc && \
+# Set AMENT_TRACE_SETUP_FILES to prevent unbound variable errors
+ENV AMENT_TRACE_SETUP_FILES=""
+
+# Pre-create directories that colcon will need with proper permissions
+RUN mkdir -p ${WORKSPACE}/build ${WORKSPACE}/install ${WORKSPACE}/log && \
+    touch ~/.bashrc && \
     echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && \
     echo "if [ -f ${WORKSPACE}/install/setup.bash ]; then source ${WORKSPACE}/install/setup.bash; fi" >> ~/.bashrc
 

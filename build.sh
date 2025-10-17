@@ -78,21 +78,18 @@ fi
 # Ensure workspace directories exist and are writable
 for dir in build install log; do
   if ! mkdir -p "$dir" 2>/dev/null; then
-    if command -v sudo >/dev/null 2>&1; then
-      sudo mkdir -p "$dir" || {
-        log_error "Kann Verzeichnis $dir nicht erzeugen"
-        exit 1
-      }
+    if command -v sudo >/dev/null 2>&1 && sudo mkdir -p "$dir"; then
+      :
     else
       log_error "Kann Verzeichnis $dir nicht erzeugen"
       exit 1
-    }
+    fi
   fi
   if [ ! -w "$dir" ] && command -v sudo >/dev/null 2>&1; then
-    sudo chown -R "$(id -u)":"$(id -g)" "$dir" || {
+    if ! sudo chown -R "$(id -u)":"$(id -g)" "$dir"; then
       log_error "Verzeichnis $dir ist nicht beschreibbar"
       exit 1
-    }
+    fi
   elif [ ! -w "$dir" ]; then
     log_error "Verzeichnis $dir ist nicht beschreibbar"
     exit 1
