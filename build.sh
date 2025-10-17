@@ -36,6 +36,35 @@ log_success() {
   echo -e "${GREEN}[SUCCESS]${NC} $*"
 }
 
+get_package_name() {
+  local pkg_dir="$1"
+  local package_xml="$pkg_dir/package.xml"
+  if [ ! -f "$package_xml" ]; then
+    return 1
+  fi
+  local pkg_name
+  pkg_name=$(python3 - <<'PY' "$package_xml"
+import sys
+import xml.etree.ElementTree as ET
+
+package_xml = sys.argv[1]
+try:
+    tree = ET.parse(package_xml)
+    root = tree.getroot()
+    name = root.findtext('name')
+    if name:
+        print(name.strip())
+except ET.ParseError:
+    pass
+PY
+)
+  if [ -n "$pkg_name" ]; then
+    echo "$pkg_name"
+    return 0
+  fi
+  return 1
+}
+
 ROS_DISTRO=${ROS_DISTRO:-humble}
 ROS_SETUP="/opt/ros/${ROS_DISTRO}/setup.bash"
 
@@ -317,11 +346,14 @@ fi
 EXPECTED_PACKAGES=()
 if [ -d "src" ]; then
   while IFS= read -r -d '' pkg_dir; do
-    pkg_name=$(basename "$pkg_dir")
     # Skip if COLCON_IGNORE exists in the package directory
     if [ ! -f "$pkg_dir/COLCON_IGNORE" ]; then
       # Check if it has a package.xml (valid ROS2 package)
       if [ -f "$pkg_dir/package.xml" ]; then
+        pkg_name=$(get_package_name "$pkg_dir")
+        if [ -z "$pkg_name" ]; then
+          pkg_name=$(basename "$pkg_dir")
+        fi
         EXPECTED_PACKAGES+=("$pkg_name")
       fi
     fi
@@ -336,7 +368,12 @@ if [ -d "install/share" ]; then
   while IFS= read -r -d '' pkg_dir; do
     pkg_name=$(basename "$pkg_dir")
     if [ -f "$pkg_dir/package.xml" ]; then
-      BUILT_PACKAGES+=("$pkg_name")
+      parsed_name=$(get_package_name "$pkg_dir")
+      if [ -n "$parsed_name" ]; then
+        BUILT_PACKAGES+=("$parsed_name")
+      else
+        BUILT_PACKAGES+=("$pkg_name")
+      fi
     fi
   done < <(find install/share -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null || true)
 fi

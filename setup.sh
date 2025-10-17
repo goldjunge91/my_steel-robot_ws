@@ -62,7 +62,7 @@ wait_for_apt_lock() {
     "/var/lib/apt/lists/lock"
   )
   
-  while [ $waited -lt $timeout ]; do
+  while [ $waited -lt "$timeout" ]; do
     local locked=false
     for lock_file in "${lock_files[@]}"; do
       if sudo fuser "$lock_file" >/dev/null 2>&1; then
@@ -98,10 +98,10 @@ retry_command() {
   local cmd=("$@")
   local attempt=1
   
-  while [ $attempt -le $max_attempts ]; do
+  while [ $attempt -le "$max_attempts" ]; do
     if [ $attempt -gt 1 ]; then
       print_step "Retry attempt $attempt of $max_attempts..."
-      sleep $delay
+      sleep "$delay"
     fi
     
     if "${cmd[@]}"; then
@@ -176,7 +176,7 @@ main() {
       print_success "ROS setup script loaded successfully"
       if verify_ros_environment; then
         local step_end=$(date +%s)
-        print_duration $step_start $step_end
+        print_duration "$step_start" "$step_end"
       else
         print_warning "ROS environment verification failed"
       fi
@@ -244,6 +244,23 @@ main() {
       else
         print_warning "'rosdep update' failed after retries. Attempting to continue with existing cache."
       fi
+
+      print_step "Ensuring critical apt dependencies are installed..."
+      local extra_pkgs=(
+        "ros-${ROS_DISTRO}-micro-ros-msgs"
+      )
+      for pkg in "${extra_pkgs[@]}"; do
+        if dpkg -s "$pkg" >/dev/null 2>&1; then
+          print_success "$pkg already installed"
+        else
+          print_step "Installing $pkg..."
+          if retry_command 3 5 sudo apt-get install -y "$pkg"; then
+            print_success "$pkg installed successfully"
+          else
+            print_warning "Failed to install $pkg; downstream builds may fail."
+          fi
+        fi
+      done
       
       print_step "Installing dependencies with rosdep..."
       if sudo rosdep install --from-paths src --ignore-src -y --rosdistro="$ROS_DISTRO"; then
