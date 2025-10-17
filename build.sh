@@ -1,6 +1,29 @@
 #!/bin/bash
 set -euo pipefail
 
+# Colored output keeps local feedback clear
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+log_step() {
+  echo -e "${BLUE}[BUILD]${NC} $1"
+}
+
+log_success() {
+  echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+  echo -e "${YELLOW}[WARNING]${NC} $1" >&2
+}
+
+log_error() {
+  echo -e "${RED}[ERROR]${NC} $1" >&2
+}
+
 safe_source() {
   local file="$1"
   if [ -f "$file" ]; then
@@ -17,46 +40,41 @@ safe_source() {
 ROS_DISTRO=${ROS_DISTRO:-humble}
 ROS_SETUP="/opt/ros/${ROS_DISTRO}/setup.bash"
 
-if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
-  AMENT_TRACE_SETUP_FILES=""
-fi
-export AMENT_TRACE_SETUP_FILES
-
+log_step "Sourcing ROS environment (${ROS_SETUP})"
 if safe_source "$ROS_SETUP"; then
-  :
+  log_success "ROS environment sourced"
 else
-  echo "ROS setup script not found at $ROS_SETUP — continuing without sourcing ROS." >&2
+  log_warning "ROS setup script nicht gefunden – fahre ohne globales ROS fort"
 fi
 
 if [ -f "install/setup.bash" ]; then
-  safe_source "install/setup.bash"
+  log_step "Sourcing vorhandenes install/setup.bash"
+  if safe_source "install/setup.bash"; then
+    log_success "Bestehende Workspace-Umgebung geladen"
+  else
+    log_warning "install/setup.bash konnte nicht geladen werden"
+  fi
 fi
 
 if ! command -v colcon >/dev/null 2>&1; then
-  echo "colcon is not available; skipping build step." >&2
-  exit 0
+  log_error "colcon nicht gefunden – bitte ROS 2 build tools installieren"
+  exit 1
 fi
 
-# Set the default build type
 BUILD_TYPE=${BUILD_TYPE:-RelWithDebInfo}
+log_step "Starte colcon build (BUILD_TYPE=${BUILD_TYPE})"
 colcon build \
-        --merge-install \
-        --symlink-install \
-        --cmake-args \
-            -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
-            -DCMAKE_CXX_FLAGS=-Wall\ -Wextra\ -Wpedantic \
-        || true
+  --merge-install \
+  --symlink-install \
+  --cmake-args \
+    "-DCMAKE_BUILD_TYPE=${BUILD_TYPE}" \
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=On" \
+    "-DCMAKE_CXX_FLAGS=-Wall\ -Wextra\ -Wpedantic"
 
-# Minimal artifact validation: ensure install/setup.bash exists and at least one package installed
-if [ -d "install" ] && [ -f "install/setup.bash" ]; then
-  if [ -d "install/share" ] && find install/share -mindepth 1 -maxdepth 1 -type d -print -quit | grep -q .; then
-    : # ok
-  else
-    echo "Warning: install/share contains no packages — build may be empty." >&2
-  fi
-else
-  echo "Warning: build artifacts missing (install/setup.bash not found)." >&2
+log_success "colcon build abgeschlossen"
+
+if [ ! -f "install/setup.bash" ]; then
+  log_warning "install/setup.bash nicht gefunden – wurde der Build Workspace leer?"
 fi
 
 # #!/bin/bash

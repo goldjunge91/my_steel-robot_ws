@@ -1,75 +1,42 @@
 #!/usr/bin/env bash
-# Note: Removed 'set -e' to allow CI/CD to continue even if individual commands fail
-# This ensures the workflow always completes successfully
+set -euo pipefail
 
-# Fix git safe.directory issue in GitHub Actions (git 2.35.2+)
-git config --global --add safe.directory '*' 2>/dev/null || true
-
-# Increase file descriptor limit to prevent "too many open files" errors
-ulimit -n 4096 2>/dev/null || echo "Warning: Could not increase file descriptor limit"
-
-# --- Farbdefinitionen für die Ausgabe ---
-# Diese ANSI-Escape-Codes fügen den "echo"-Ausgaben Farben hinzu.
+# Keep colored output for readability
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color (Setzt die Farbe auf Standard zurück)
+NC='\033[0m'
 
-# --- Hilfsfunktionen ---
-
-# Diese Funktion druckt einen gut sichtbaren Header für jeden Arbeitsschritt.
-print_header() {
+log_step() {
   echo -e "\n${BLUE}=======================================================================${NC}"
   echo -e "${BLUE}===== $1${NC}"
   echo -e "${BLUE}=======================================================================${NC}"
 }
 
-# Diese Funktion führt einen Befehl aus, misst die benötigte Zeit und gibt eine klare Erfolgs- oder Fehlermeldung aus.
-run_command() {
+log_success() {
+  echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+  echo -e "${YELLOW}[WARNING]${NC} $1" >&2
+}
+
+run_step() {
   local description="$1"
-  # 'shift' entfernt das erste Argument (die Beschreibung),
-  # sodass $@ alle restlichen Argumente (den auszuführenden Befehl) enthält.
   shift
-  local command_to_run="$*"
-
-  print_header "$description"
-
-  local start_time=$SECONDS
-
-  # Führt den Befehl aus und prüft den Exit-Code
-  if $command_to_run; then
-    local duration=$((SECONDS - start_time))
-    echo -e "\n${GREEN}SUCCESS:${NC} '$description' wurde in ${duration}s erfolgreich abgeschlossen."
-  else
-    local exit_code=$?
-    local duration=$((SECONDS - start_time))
-    echo -e "\n${YELLOW}WARNING:${NC} '$description' hatte Probleme nach ${duration}s mit Exit-Code ${exit_code}."
-    echo -e "${YELLOW}Continuing for CI/CD compatibility...${NC}"
-    # Don't exit with error - continue for CI/CD compatibility
-  fi
+  log_step "$description"
+  "$@"
+  log_success "$description abgeschlossen"
 }
 
-# --- Haupt-Workflow ---
+log_step "Initialisiere GitHub Actions Umgebung"
+git config --global --add safe.directory '*' 2>/dev/null || log_warning "Konnte git safe.directory nicht setzen"
 
-# Die 'main' Funktion kapselt die gesamte Logik.
-main() {
-  echo -e "${YELLOW}Starte den CI/CD Workflow...${NC}"
+run_step "Setup-Skript wird ausgeführt" ./setup.sh
+run_step "Build-Skript wird ausgeführt" ./build.sh
+run_step "Test-Skript wird ausgeführt" ./test.sh
 
-  # Führe die einzelnen Schritte über die 'run_command' Funktion aus.
-  # Dies sorgt für eine konsistente und informative Ausgabe.
-  # run_command "Workspace-Validierung wird ausgeführt" ./scripts/validate_workspace_structure.sh
-  run_command "Setup-Skript wird ausgeführt" ./setup.sh
-  run_command "Build-Skript wird ausgeführt" ./build.sh
-  run_command "Test-Skript wird ausgeführt"  ./test.sh
-
-  echo -e "\n${GREEN}=======================================================================${NC}"
-  echo -e "${GREEN}===== Workflow abgeschlossen - always returning success for CI/CD! ====="
-  echo -e "${GREEN}=======================================================================${NC}"
-  
-  # Always exit with success for CI/CD compatibility
-  exit 0
-}
-
-# Starte die Hauptfunktion des Skripts
-main
+echo -e "\n${GREEN}=======================================================================${NC}"
+echo -e "${GREEN}===== Workflow erfolgreich abgeschlossen =====${NC}"
+echo -e "${GREEN}=======================================================================${NC}"
