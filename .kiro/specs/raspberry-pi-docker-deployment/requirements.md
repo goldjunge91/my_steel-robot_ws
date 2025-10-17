@@ -1,172 +1,128 @@
-# Requirements Document
+# Anforderungsdokument
 
-## Introduction
+## Einführung
 
-This specification defines the requirements for creating a production-ready Docker image and container orchestration system for deploying the my_steel robot software stack on a Raspberry Pi 4B. The solution addresses current deployment challenges including missing dependencies, environment configuration issues, and service management complexity. The Docker image will encapsulate the complete ROS2 Humble workspace with all necessary dependencies, ensuring consistent and reliable deployment on the Raspberry Pi hardware platform.
+Diese Spezifikation definiert die Anforderungen für die Erstellung eines produktionsreifen Docker-Images und Container-Orchestrierungssystems zur Bereitstellung des my_steel-Roboter-Systems auf einem Raspberry Pi 4B. Die Lösung adressiert aktuelle Bereitstellungsherausforderungen einschließlich fehlender Abhängigkeiten, Umgebungskonfigurationsproblemen und Komplexität des Service-Managements. Das Docker-Image wird den vollständigen ROS2 Humble-Arbeitsbereich mit allen notwendigen Abhängigkeiten kapseln und eine konsistente und zuverlässige Bereitstellung auf der Raspberry Pi-Hardware-Plattform gewährleisten.
 
-## Glossary
+## Glossar
 
-- **Docker_Image**: A lightweight, standalone, executable package that includes everything needed to run the robot software including code, runtime, system tools, libraries, and settings
-- **Container**: A running instance of a Docker_Image
-- **ROS2_Workspace**: The colcon workspace containing all ROS2 packages for the robot
-- **Raspberry_Pi**: The Raspberry Pi 4B single-board computer serving as the robot's main controller
-- **micro_ROS_Agent**: The bridge service that enables communication between the Raspberry Pi Pico microcontroller and ROS2
-- **Hardware_Interface**: The ros2_control plugin that interfaces with the Pico firmware via micro-ROS
-- **Bringup_System**: The complete robot launch system including controllers, state publishers, and sensor interfaces
-- **Host_System**: The Raspberry Pi's base operating system (Ubuntu 22.04)
-- **DDS_Middleware**: Data Distribution Service middleware for ROS2 communication (FastRTPS or CycloneDDS)
-- **USB_Device**: Serial devices connected via USB including the Raspberry Pi Pico (/dev/ttyACM0)
-- **Network_Mode**: Docker networking configuration determining how containers communicate with the host and external networks
-- **Volume_Mount**: A mechanism to share directories between the host system and container
-- **Environment_Variables**: Configuration parameters passed to the container at runtime
-- **Multi_Stage_Build**: A Docker build technique that uses multiple FROM statements to optimize image size
-- **Docker_Compose**: A tool for defining and running multi-container Docker applications using YAML configuration
-- **Tailscale**: A VPN service that creates a secure mesh network between devices for remote access and communication
-- **Tailscale_Network**: The virtual private network created by Tailscale connecting the Raspberry_Pi and remote development machines
-- **Remote_PC**: A development workstation that connects to the robot over the Tailscale_Network for monitoring and control
+- **Docker_Image**: Eine schreibgeschützte Vorlage, die alle notwendigen Komponenten (Code, Laufzeitumgebung, Systemwerkzeuge, Bibliotheken und Konfigurationen) enthält, um das my_steel-Roboter-System in einem isolierten, konsistenten und ausführbaren Paket auszuführen
+- **Container**: Eine laufende, isolierte Instanz eines Docker_Image, die das my_steel-Roboter-System in einer eigenen Umgebung ausführt. Er wird basierend auf dem Image erstellt, enthält aber eine zusätzliche beschreibbare Ebene für dynamische Änderungen zur Laufzeit
+- **ROS2_Workspace**: Ein Verzeichnis, das den gesamten Quellcode, die Build-Artefakte und die Installationsdateien der ROS2-Pakete für das my_steel-Roboter-System organisiert. Es wird mit colcon verwaltet und ermöglicht das gleichzeitige Bauen und Verwalten mehrerer Pakete
+- **micro_ROS_Agent**: Ein Bridge-Service, der die Kommunikation zwischen einem leistungsschwachen Mikrocontroller (wie dem Raspberry Pi Pico) und der vollwertigen ROS2-Umgebung ermöglicht. Er übersetzt die Kommunikation zwischen dem micro-ROS-Client und dem ROS2-Netzwerk
+- **Hardware_Interface**: Ein ros2_control-Plugin, das als Schnittstelle zwischen den Steuerungs-Controllern von ROS2 und der tatsächlichen my_steel-Roboter-Hardware dient. In diesem Fall kommuniziert es über micro-ROS mit der Firmware des Raspberry Pi Pico
+- **Bringup_System**: Ein ROS2-Launch-System (typischerweise eine Launch-Datei), das alle notwendigen Komponenten (wie Controller, State Publisher und Sensor-Interfaces) startet und konfiguriert, um das my_steel-Roboter-System in einen betriebsbereiten Zustand zu versetzen
+- **USB_Device**: Ein über USB angeschlossenes serielles Gerät, das für die Kommunikation mit der Host-Maschine (z. B. einem Docker-Container) verwendet wird. In diesem Setup ist es die Verbindung zum Raspberry Pi Pico (häufig unter /dev/ttyACM0)
+- **Volume_Mount**: Ein Mechanismus in Docker, der es ermöglicht, ein Verzeichnis vom Host-System in einen Container einzubinden. Dies wird verwendet, um Daten zwischen Host und Container zu teilen und dauerhaft zu speichern
+- **Environment_Variables**: Konfigurationsparameter, die an einen Container zur Laufzeit übergeben werden. Sie können das Verhalten der darin enthaltenen Anwendung steuern, ohne das Image selbst ändern zu müssen
+- **Docker_Compose**: Ein Tool, das die Definition und Verwaltung von Multi-Container-Docker-Anwendungen vereinfacht. Mithilfe einer YAML-Datei können Dienste, Netzwerke und Volumes konfiguriert werden
+- **Tailscale_Network**: Ein virtuelles privates Netzwerk (VPN), das von Tailscale erstellt wird. Es ermöglicht eine sichere, direkte und einfache Verbindung zwischen Geräten (wie dem Raspberry Pi und Remote-Entwicklungsmaschinen), ohne komplexe Firewall-Konfigurationen vornehmen zu müssen
 
-## Requirements
+**Beispiel-Log-Struktur:**
+```
+/var/log/robot/
+├── 17_10_25_14:30/
+│   ├── ros2_bringup.log
+│   ├── controller_manager.log
+│   └── microros_agent.log
+├── 17_10_25_15:45/
+│   ├── ros2_bringup.log
+│   └── microros_agent.log
+```
 
-### Requirement 1
+**Beispiel-Image-Versionierung:**
+```
+goldjunge491/my-steel-robot:1.0.0    # Erste stabile Version
+goldjunge491/my-steel-robot:1.1.0    # Neue Features hinzugefügt
+goldjunge491/my-steel-robot:1.1.1    # Bugfixes
+goldjunge491/my-steel-robot:latest   # Zeigt auf neueste stabile Version
+goldjunge491/my-steel-robot:dev      # Entwicklungsversion
+```
 
-**User Story:** As a robot operator, I want a Docker image that contains all necessary ROS2 dependencies and packages, so that I can deploy the robot software without manual dependency installation.
+## Anforderungen
 
-#### Acceptance Criteria
+### Anforderung 1 (Funktional)
 
-1. WHEN THE Docker_Image is built, THE Docker_Image SHALL include ROS2 Humble base installation with all required packages
-2. WHEN THE Docker_Image is built, THE Docker_Image SHALL include micro_ros_agent package version compatible with the Pico firmware
-3. WHEN THE Docker_Image is built, THE Docker_Image SHALL include all custom ROS2 packages from the ROS2_Workspace
-4. WHEN THE Docker_Image is built, THE Docker_Image SHALL include all Python dependencies specified in requirements files
-5. WHEN THE Docker_Image is built, THE Docker_Image SHALL resolve all rosdep dependencies for the robot packages
+**User Story:** Als Roboter-Operator möchte ich ein vollständig funktionsfähiges Docker-System, das alle ROS2-Abhängigkeiten enthält und das my_steel-Roboter-System automatisch startet, damit der Roboter ohne manuelle Eingriffe betriebsbereit wird.
 
-### Requirement 2
+#### Akzeptanzkriterien
 
-**User Story:** As a robot operator, I want the Docker container to access USB devices and network interfaces, so that the robot can communicate with the Pico microcontroller and external systems.
+1. (Funktional) WENN DAS Docker_Image erstellt wird, SOLL DAS Docker_Image eine ROS2 Humble-Basisinstallation mit allen erforderlichen Paketen enthalten
+2. (Funktional) WENN DAS Docker_Image erstellt wird, SOLL DAS Docker_Image eine mit der Raspberry Pi Pico-Firmware kompatible micro_ros_agent-Paketversion enthalten
+3. (Funktional) WENN DAS Docker_Image erstellt wird, SOLL DAS Docker_Image alle benutzerdefinierten ROS2-Pakete aus dem ROS2_Workspace enthalten
+4. (Funktional) WENN DAS Docker_Image erstellt wird, SOLL DAS Docker_Image alle rosdep-Abhängigkeiten für die my_steel-Roboter-Pakete auflösen
+5. (Nicht-funktional) WENN DAS Docker_Image erstellt wird, SOLL DAS Docker_Image mit semantischer Versionierung (MAJOR.MINOR.PATCH + v1.2.3) getaggt werden
+6. (Funktional) WENN DER Container gestartet wird, SOLL DER Container die ROS2-Umgebung vor dem Starten der Services sourcen
+7. (Funktional) WENN DER Container gestartet wird, SOLL DER Container das ROS2_Workspace-Install-Verzeichnis sourcen
+8. (Funktional) WENN DER Container gestartet wird, SOLL DER Container das Bringup_System mit robot_model-Parameter auf robot_xl starten
+9. (Funktional) WENN DER Container gestartet wird, SOLL DER Container das Bringup_System mit mecanum:=true Parameter für Mecanum-Antrieb starten
+10. (Nicht-funktional) WENN DER Container gestartet wird, SOLL DER Container bis zu 30 Sekunden auf micro_ROS_Agent-Verbindung warten, bevor das Hardware_Interface gestartet wird
+11. (Funktional) WENN DER Container gestartet wird, SOLL DER Container den Host-Netzwerk-Namespace für ROS2-Kommunikation verwenden
 
-#### Acceptance Criteria
+### Anforderung 2 (Funktional)
 
-1. WHEN THE Container is started, THE Container SHALL have access to USB_Device at /dev/ttyACM0 for micro-ROS communication
-2. WHEN THE Container is started, THE Container SHALL use host network mode to enable ROS2 DDS communication
-3. WHEN THE Container is started, THE Container SHALL have access to USB camera devices for vision capabilities
-4. WHEN THE Container is started, THE Container SHALL preserve device permissions for serial and USB access
-5. WHEN THE Container is started, THE Container SHALL support hot-plugging of USB devices without restart
+**User Story:** Als Roboter-Operator möchte ich, dass der Docker-Container auf USB-Geräte und Netzwerk-Interfaces zugreifen kann, damit das my_steel-Roboter-System mit dem Raspberry Pi Pico und externen Systemen kommunizieren kann.
 
-### Requirement 3
+#### Akzeptanzkriterien
 
-**User Story:** As a robot operator, I want proper DDS middleware configuration in the container, so that ROS2 communication is reliable and does not encounter buffer or discovery issues.
+1. (Funktional) WENN DER Container gestartet wird, SOLL DER Container Zugriff auf USB_Device unter /dev/ttyACM0 für micro-ROS-Kommunikation haben
+2. (Funktional) WENN DER Container gestartet wird, SOLL DER Container den Host-Netzwerk-Modus verwenden, um ROS2 DDS-Kommunikation zu ermöglichen
+3. (Funktional) WENN DER Container gestartet wird, SOLL DER Container Zugriff auf USB-Kamera-Geräte für Vision-Fähigkeiten haben
+4. (Funktional) WENN DER Container gestartet wird, SOLL DER Container Geräteberechtigungen für seriellen und USB-Zugriff bewahren
+5. (Nicht-funktional) WENN DER Container gestartet wird, SOLL DER Container Hot-Plugging von USB-Geräten ohne Neustart unterstützen
 
-#### Acceptance Criteria
+### Anforderung 3 (Funktional)
 
-1. WHEN THE Container is started, THE Container SHALL set RMW_IMPLEMENTATION to rmw_fastrtps_cpp by default
-2. WHEN THE Container is started, THE Container SHALL set ROS_DOMAIN_ID to 0 for network isolation
-3. WHEN THE Container is started, THE Container SHALL unset CYCLONEDDS_URI to prevent configuration conflicts
-4. WHEN THE Container is started, THE Container SHALL configure FastRTPS with appropriate buffer sizes for robot telemetry
-5. WHERE CycloneDDS is required, THE Container SHALL support alternative DDS configuration via environment override
+**User Story:** Als Roboter-Operator möchte ich eine Docker Compose-Konfiguration für einfaches Container-Management, damit ich das my_steel-Roboter-System mit einfachen Befehlen starten, stoppen und konfigurieren kann.
 
-### Requirement 4
+#### Akzeptanzkriterien
 
-**User Story:** As a robot operator, I want the container to automatically start the robot bringup system, so that the robot becomes operational without manual intervention.
+1. (Funktional) WENN DIE Docker_Compose-Datei verwendet wird, SOLL DIE Docker_Compose-Datei Service-Konfiguration für den my_steel-Roboter-Container definieren
+2. (Funktional) WENN DIE Docker_Compose-Datei verwendet wird, SOLL DIE Docker_Compose-Datei Service-Konfiguration für den micro_ROS_Agent-Container definieren
+3. (Nicht-funktional) WENN DIE Docker_Compose-Datei verwendet wird, SOLL DIE Docker_Compose-Datei automatische Neustart-Richtlinie für Service-Resilienz konfigurieren
+4. (Funktional) WENN DIE Docker_Compose-Datei verwendet wird, SOLL DIE Docker_Compose-Datei Environment_Variables für Laufzeit-Konfiguration bereitstellen
+5. (Funktional) WENN DIE Docker_Compose-Datei verwendet wird, SOLL DIE Docker_Compose-Datei Volume_Mount für persistente Konfiguration und Logs definieren
 
-#### Acceptance Criteria
 
-1. WHEN THE Container is started, THE Container SHALL source the ROS2 environment before launching services
-2. WHEN THE Container is started, THE Container SHALL source the ROS2_Workspace install directory
-3. WHEN THE Container is started, THE Container SHALL launch the Bringup_System with robot_model parameter set to robot_xl
-4. WHEN THE Container is started, THE Container SHALL launch the Bringup_System with mecanum drive configuration
-5. WHEN THE Container is started, THE Container SHALL wait for micro_ROS_Agent connection before starting Hardware_Interface
+### Anforderung 4 (Nicht-funktional)
 
-### Requirement 5
+**User Story:** Als Roboter-Operator möchte ich einen optimierten und zuverlässigen Container, der effizient auf dem Raspberry Pi läuft und sich von Fehlern erholen kann, damit das System stabil und wartbar ist.
 
-**User Story:** As a robot operator, I want a Docker Compose configuration for easy container management, so that I can start, stop, and configure the robot with simple commands.
+#### Akzeptanzkriterien
 
-#### Acceptance Criteria
+1. (Nicht-funktional) WENN DAS Docker_Image erstellt wird, SOLL DAS Docker_Image ARM64-Architektur für Raspberry Pi 4B anvisieren
+2. (Nicht-funktional) WENN DAS Docker_Image erstellt wird, SOLL DAS Docker_Image Build-Abhängigkeiten und Cache-Dateien nach der Kompilierung entfernen
+3. (Nicht-funktional) WENN DAS Docker_Image erstellt wird, SOLL DAS Docker_Image kleiner als 2GB in komprimierter Größe sein
+4. (Nicht-funktional) WENN DER Container läuft, SOLL DER Container einen Health-Check-Endpunkt für Überwachung bereitstellen
+5. (Nicht-funktional) WENN DER Container-Health-Check fehlschlägt, SOLL DER Container automatisch nach 3 aufeinanderfolgenden Fehlern neu starten
+6. (Nicht-funktional) WENN DER Container ein SIGTERM-Signal empfängt, SOLL DER Container ROS2-Knoten graceful herunterfahren
+7. (Nicht-funktional) WENN DER Container ein SIGTERM-Signal empfängt, SOLL DER Container bis zu 30 Sekunden für sauberes Herunterfahren warten
+8. (Nicht-funktional) WENN DER Container ungesund ist, SOLL DER Container Diagnoseinformationen für Troubleshooting protokollieren
 
-1. WHEN THE Docker_Compose file is used, THE Docker_Compose file SHALL define service configuration for the robot container
-2. WHEN THE Docker_Compose file is used, THE Docker_Compose file SHALL define service configuration for the micro_ROS_Agent container
-3. WHEN THE Docker_Compose file is used, THE Docker_Compose file SHALL configure automatic restart policy for service resilience
-4. WHEN THE Docker_Compose file is used, THE Docker_Compose file SHALL expose environment variables for runtime configuration
-5. WHEN THE Docker_Compose file is used, THE Docker_Compose file SHALL define volume mounts for persistent configuration and logs
+### Anforderung 5 (Funktional)
 
-### Requirement 6
+**User Story:** Als Roboter-Operator möchte ich, dass der Container Logs und Konfiguration persistiert, damit ich Probleme debuggen und Einstellungen über Container-Neustarts hinweg beibehalten kann.
 
-**User Story:** As a robot operator, I want the Docker image to be optimized for ARM64 architecture, so that it runs efficiently on the Raspberry Pi with minimal resource overhead.
+#### Akzeptanzkriterien
 
-#### Acceptance Criteria
+1. (Funktional) WENN DER Container Logs schreibt, SOLL DER Container ROS2-Logs in Unterordnern mit Zeitstempel-Format dd_mm_yy_hh:mm und klaren Namen organisieren
+2. (Funktional) WENN DER Container Logs schreibt, SOLL DER Container micro-ROS-Agent-Logs in Unterordnern mit Zeitstempel-Format dd_mm_yy_hh:mm und klaren Namen organisieren
+3. (Funktional) WENN DER Container Logs schreibt, SOLL DER Container alle Logs auf einen Volume_Mount auf dem Host-System schreiben
+4. (Funktional) WENN DER Container Konfiguration liest, SOLL DER Container my_steel-Roboter-Konfiguration von einem Volume_Mount auf dem Host-System lesen
+5. (Nicht-funktional) WENN DER Container neu gestartet wird, SOLL DER Container Log-Historie von vorherigen Läufen bewahren
+6. (Funktional) WENN DER Container neu gestartet wird, SOLL DER Container aktualisierte Konfiguration von gemounteten Volumes anwenden
 
-1. WHEN THE Docker_Image is built, THE Docker_Image SHALL target ARM64 architecture for Raspberry Pi 4B
-2. WHEN THE Docker_Image is built, THE Docker_Image SHALL use Multi_Stage_Build to minimize final image size
-3. WHEN THE Docker_Image is built, THE Docker_Image SHALL remove build dependencies and cache files after compilation
-4. WHEN THE Docker_Image is built, THE Docker_Image SHALL use release build configuration for ROS2 packages
-5. WHEN THE Docker_Image is built, THE Docker_Image SHALL be smaller than 2GB in compressed size
+### Anforderung 6 (Funktional)
 
-### Requirement 7
+**User Story:** Als Roboter-Operator möchte ich Tailscale VPN vollständig in den Container integriert, damit das my_steel-Roboter-System und Remote-PC sicher über das Internet kommunizieren können und die Konfiguration flexibel verwaltbar ist.
 
-**User Story:** As a robot operator, I want the container to support both standalone and multi-service deployment modes, so that I can run micro-ROS agent separately or integrated based on my needs.
+#### Akzeptanzkriterien
 
-#### Acceptance Criteria
-
-1. WHEN THE Container is configured for standalone mode, THE Container SHALL run only the Bringup_System without micro_ROS_Agent
-2. WHEN THE Container is configured for integrated mode, THE Container SHALL run both micro_ROS_Agent and Bringup_System
-3. WHEN THE Container is configured for agent-only mode, THE Container SHALL run only the micro_ROS_Agent service
-4. WHERE multiple containers are used, THE Container SHALL coordinate startup order via health checks
-5. WHERE multiple containers are used, THE Container SHALL share network namespace for ROS2 communication
-
-### Requirement 8
-
-**User Story:** As a robot operator, I want the container to persist logs and configuration, so that I can debug issues and maintain settings across container restarts.
-
-#### Acceptance Criteria
-
-1. WHEN THE Container writes logs, THE Container SHALL write ROS2 logs to a Volume_Mount on the Host_System
-2. WHEN THE Container writes logs, THE Container SHALL write micro-ROS agent logs to a Volume_Mount on the Host_System
-3. WHEN THE Container reads configuration, THE Container SHALL read robot configuration from a Volume_Mount on the Host_System
-4. WHEN THE Container is restarted, THE Container SHALL preserve log history from previous runs
-5. WHEN THE Container is restarted, THE Container SHALL apply updated configuration from mounted volumes
-
-### Requirement 9
-
-**User Story:** As a developer, I want clear build and deployment documentation, so that I can build custom images and deploy to new Raspberry Pi units efficiently.
-
-#### Acceptance Criteria
-
-1. THE documentation SHALL provide step-by-step instructions for building the Docker_Image on ARM64 systems
-2. THE documentation SHALL provide step-by-step instructions for building the Docker_Image on x86_64 systems using buildx
-3. THE documentation SHALL provide instructions for pushing images to Docker Hub or private registry
-4. THE documentation SHALL provide instructions for deploying containers on fresh Raspberry Pi installations
-5. THE documentation SHALL provide troubleshooting guidance for common deployment issues
-
-### Requirement 10
-
-**User Story:** As a robot operator, I want the container to support health checks and graceful shutdown, so that the system can recover from failures and shut down safely.
-
-#### Acceptance Criteria
-
-1. WHEN THE Container is running, THE Container SHALL expose a health check endpoint for monitoring
-2. WHEN THE Container health check fails, THE Container SHALL restart automatically after 3 consecutive failures
-3. WHEN THE Container receives SIGTERM signal, THE Container SHALL gracefully shutdown ROS2 nodes
-4. WHEN THE Container receives SIGTERM signal, THE Container SHALL wait up to 30 seconds for clean shutdown
-5. WHEN THE Container is unhealthy, THE Container SHALL log diagnostic information for troubleshooting
-
-### Requirement 11
-
-**User Story:** As a robot operator, I want Tailscale VPN integrated into the container, so that the robot and remote PC can communicate securely over the internet without complex network configuration.
-
-#### Acceptance Criteria
-
-1. WHEN THE Container is started, THE Container SHALL initialize Tailscale client if authentication key is provided
-2. WHEN THE Container is started with Tailscale enabled, THE Container SHALL connect to the Tailscale_Network automatically
-3. WHEN THE Container is connected to Tailscale_Network, THE Container SHALL advertise ROS2 DDS traffic over the VPN interface
-4. WHEN THE Remote_PC is connected to Tailscale_Network, THE Remote_PC SHALL discover and communicate with robot ROS2 nodes
-5. WHERE Tailscale is not configured, THE Container SHALL operate normally using local network interfaces
-
-### Requirement 12
-
-**User Story:** As a developer, I want Tailscale configuration to be manageable via environment variables and volumes, so that I can deploy to multiple robots without rebuilding the image.
-
-#### Acceptance Criteria
-
-1. WHEN THE Container is configured for Tailscale, THE Container SHALL accept Tailscale authentication key via environment variable
-2. WHEN THE Container is configured for Tailscale, THE Container SHALL persist Tailscale state to a Volume_Mount for reconnection
-3. WHEN THE Container is configured for Tailscale, THE Container SHALL accept custom Tailscale hostname via environment variable
-4. WHEN THE Container is configured for Tailscale, THE Container SHALL support Tailscale subnet routing for multi-robot networks
-5. WHEN THE Container is restarted, THE Container SHALL reconnect to Tailscale_Network without re-authentication
+1. (Funktional) WENN DER Container gestartet wird, SOLL DER Container den Tailscale-Client initialisieren, falls ein Authentifizierungsschlüssel bereitgestellt wird
+2. (Funktional) WENN DER Container mit aktiviertem Tailscale gestartet wird, SOLL DER Container sich automatisch mit dem Tailscale_Network verbinden
+3. (Funktional) WENN DER Container mit Tailscale_Network verbunden ist, SOLL DER Container ROS2 DDS-Traffic über das VPN-Interface bewerben
+4. (Funktional) WO Tailscale nicht konfiguriert ist, SOLL DER Container normal mit lokalen Netzwerk-Interfaces operieren
+5. (Funktional) WENN DER Container für Tailscale konfiguriert ist, SOLL DER Container Tailscale-Authentifizierungsschlüssel über Environment_Variables akzeptieren
+6. (Funktional) WENN DER Container für Tailscale konfiguriert ist, SOLL DER Container Tailscale-Zustand auf einem Volume_Mount für Wiederverbindung persistieren
+7. (Funktional) WENN DER Container für Tailscale konfiguriert ist, SOLL DER Container benutzerdefinierten Tailscale-Hostnamen über Environment_Variables akzeptieren
+8. (Nicht-funktional) WENN DER Container neu gestartet wird, SOLL DER Container sich ohne erneute Authentifizierung mit Tailscale_Network verbinden

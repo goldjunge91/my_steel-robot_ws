@@ -1,681 +1,956 @@
-# Design Document
+# Design-Dokument: my_steel-Roboter Docker-Deployment
 
-## Overview
+## Überblick
 
-This design specifies a production-ready Docker containerization solution for deploying the my_steel robot software stack on Raspberry Pi 4B hardware. The solution addresses current deployment challenges including dependency management, environment configuration, and service orchestration through a multi-container architecture with integrated Tailscale VPN support for seamless remote access.
+Dieses Design-Dokument beschreibt die technische Architektur und Implementierungsstrategie für ein produktionsreifes Docker-Deployment-System des my_steel-Roboter-Systems. Die Lösung basiert auf einem Multi-Stage Docker-Build, Docker Compose-Orchestrierung und integrierter Tailscale VPN-Unterstützung für Remote-Zugriff.
 
-The design follows a microservices approach with separate containers for the micro-ROS agent and main robot system, enabling flexible deployment configurations and improved fault isolation. The solution leverages Docker Compose for orchestration and includes comprehensive health monitoring, graceful shutdown handling, and persistent storage for logs and configuration.
+## Architektur
 
-## Architecture
+### System-Architektur
 
-### Container Architecture
+```mermaid
+---
+config:
+  layout: elk
+  look: neo
+  theme: neo-dark
+---
+flowchart TB
+ subgraph ExternalSystems2["Remote System ( Entwicklungsumgebung)"]
+        RemotePC["Laptop ( Ubuntu)"]
+        TailscaleRemote["Tailscale Client"]
+  end
+ subgraph ExternalSystems3["Externe Visualisierung"]
+        FoxgloveWebUI["Foxglove<br>(WebUI zur Visualisierung)"]
+        TailscaleServer["Tailscale Client"]
+  end
+ subgraph PicoSystem["Motor Driver<br>Pico System"]
+        Pico["Raspberry Pi Pico<br>Firmware"]
+        HAL["HAL auf Pi"]
+  end
+ subgraph Services["Services"]
+        RobotContainer["Camera Node"]
+        MicroAgentContainer["micro-ROS Agent Container"]
+        n3["ROS2 Bringup Node"]
+  end
+ subgraph s1["Docker-Umgebung"]
+    direction TB
+        Services
+  end
+ subgraph s2["Host-Ressourcen"]
+        USB["USB-Gerät"]
+        TailscaleHost["Tailscale Client<br><i>Host- oder Container-Service</i>"]
+  end
+ subgraph subGraph6["Host System (Raspberry Pi)"]
+    direction TB
+        s1
+        s2
+  end
+ subgraph s3["Nerf Launcher"]
+        n1["Arduino<br>Firmware"]
+        n2["HAL auf Pi"]
+  end
+ subgraph s4["USB Kamera"]
+        n5["USB Treiber"]
+  end
+    RemotePC -- verwendet --> TailscaleRemote
+    FoxgloveWebUI -- verwendet --> TailscaleServer
+    Pico -- "USB-Hardware" --> HAL
+    USB --> MicroAgentContainer
+    MicroAgentContainer <-- "micro-ROS" --> RobotContainer
+    TailscaleHost -- "VPN-Tunnel" --> TailscaleRemote & TailscaleServer
+    TailscaleRemote -- "VPN-Tunnel" --> TailscaleHost
+    TailscaleServer -- "VPN-Tunnel" --> TailscaleHost
+    HAL L_HAL_USB_0@<-- USB Verbindung --> USB
+    ExternalSystems3 L_ExternalSystems3_ExternalSystems2_0@--> ExternalSystems2
+    n1 -- "USB-Hardware" --> n2
+    n2 L_n2_USB_0@<-- USB Verbindung --> USB
+    MicroAgentContainer L_MicroAgentContainer_USB_0@<--> USB
+    n3 <--> MicroAgentContainer
+    n5 L_n5_USB_0@--> USB
+    n3@{ shape: rect}
+    n1@{ shape: rect}
+    n2@{ shape: rect}
+    n5@{ shape: rect}
+    style Pico fill:#BBDEFB,stroke:#333,stroke-width:2px,color:#000000
+    style RobotContainer fill:#c2e0ff,stroke:#333,stroke-width:2px,color:#000000
+    style MicroAgentContainer fill:#c2e0ff,stroke:#333,stroke-width:2px,color:#000000
+    style n3 fill:#c2e0ff,stroke:#333,stroke-width:2px,color:#000000
+    style n1 fill:#f9f,stroke:#333,stroke-width:2px,color:#000000
+    style ExternalSystems3 fill:#FFCDD2
+    style ExternalSystems2 stroke:#2962FF,fill:#BBDEFB,color:#000000
+    style subGraph6 fill:#757575
+    style PicoSystem fill:#FFF9C4
+    style s3 fill:#FFF9C4
+    style s4 fill:#FFF9C4,color:#000000
+    L_HAL_USB_0@{ animation: fast } 
+    L_ExternalSystems3_ExternalSystems2_0@{ animation: fast } 
+    L_n2_USB_0@{ animation: fast } 
+    L_MicroAgentContainer_USB_0@{ animation: fast } 
+    L_n5_USB_0@{ animation: fast }
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Raspberry Pi Host                        │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                  Tailscale Daemon                      │  │
-│  │              (VPN Network Interface)                   │  │
-│  └───────────────────────────────────────────────────────┘  │
-│                                                              │
-│  ┌──────────────────────┐    ┌──────────────────────────┐  │
-│  │  micro-ROS Agent     │    │   Robot Bringup          │  │
-│  │  Container           │    │   Container              │  │
-│  │                      │    │                          │  │
-│  │  - micro_ros_agent   │◄───┤  - robot_bringup        │  │
-│  │  - Serial /dev/ttyACM0│   │  - ros2_control         │  │
-│  │  - FastRTPS DDS      │    │  - controller_manager   │  │
-│  │  - Health checks     │    │  - state_publisher      │  │
-│  │                      │    │  - Health checks        │  │
-│  └──────────────────────┘    └──────────────────────────┘  │
-│           │                            │                     │
-│           └────────────┬───────────────┘                     │
-│                        │                                     │
-│                  Host Network                                │
-│                  (ROS2 DDS)                                  │
-│                        │                                     │
-│  ┌─────────────────────┴──────────────────────────────────┐ │
-│  │              Shared Volumes                             │ │
-│  │  - /var/log/robot  (logs)                              │ │
-│  │  - /etc/robot      (config)                            │ │
-│  │  - /var/lib/tailscale (VPN state)                      │ │
-│  └─────────────────────────────────────────────────────────┘ │
-│                                                              │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │              USB Devices                                 ││
-│  │  - /dev/ttyACM0 (Raspberry Pi Pico)                    ││
-│  │  - /dev/video0  (USB Camera)                           ││
-│  └─────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           │ Tailscale VPN
-                           │
-                  ┌────────┴────────┐
-                  │   Remote PC     │
-                  │                 │
-                  │  - RViz2        │
-                  │  - Foxglove     │
-                  │  - Joy Node     │
-                  │  - Teleop       │
-                  └─────────────────┘
-```
 
-### Multi-Stage Build Strategy
+### Container-Architektur
 
-The Docker image uses a multi-stage build to optimize size and security:
+#### Haupt-Container (my_steel-roboter)
+- **Base Image**: `ros:humble-ros-base` (ARM64)
+- **Zweck**: Vollständiges ROS2-System mit allen Abhängigkeiten
+- **Netzwerk**: Host-Modus für ROS2 DDS-Kommunikation
+- **Volumes**: Logs, Konfiguration, Tailscale-State
 
-1. **Builder Stage**: Compiles ROS2 packages with all build dependencies
-2. **Runtime Stage**: Contains only runtime dependencies and compiled artifacts
-3. **Size Target**: < 2GB compressed, < 4GB uncompressed
+#### micro-ROS Agent Container
+- **Base Image**: `microros/micro-ros-agent:humble`
+- **Zweck**: Bridge zwischen Raspberry Pi Pico und ROS2
+- **Geräte**: USB-Zugriff auf /dev/ttyACM0
+- **Abhängigkeit**: Startet vor dem Haupt-Container
 
-### Network Architecture
+## Komponenten und Interfaces
 
-- **Host Network Mode**: Containers use host networking for ROS2 DDS multicast discovery
-- **Tailscale Integration**: VPN overlay network for remote access without port forwarding
-- **DDS Configuration**: FastRTPS with optimized buffer sizes for robot telemetry
-- **Domain Isolation**: ROS_DOMAIN_ID=0 for network segmentation
+### Docker Image-Struktur
 
-## Components and Interfaces
+#### Multi-Stage Build-Prozess
 
-### 1. Base Docker Image
-
-**Purpose**: Provides ROS2 Humble foundation with ARM64 optimization
-
-**Base Image**: `ros:humble-ros-base` (official ROS Docker image for ARM64) or `husarnet/ros:humble-ros-core` (alternative with networking optimizations)
-
-**Key Modifications**:
-- Install micro-ROS agent from apt repository
-- Install system dependencies (udev rules, USB tools)
-- Configure DDS middleware (FastRTPS)
-- Set up non-root user for security
-- Install Tailscale client
-
-**Dockerfile Structure**:
 ```dockerfile
-FROM ros:humble-ros-base
+# Stage 1: Build Environment
+FROM ros:humble-ros-base as builder
+# - Installiert Build-Dependencies
+# - Kompiliert ROS2-Workspace
+# - Erstellt optimierte Binaries
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    ros-humble-micro-ros-agent \
-    ros-humble-usb-cam \
-    ros-humble-foxglove-bridge \
-    udev \
-    usbutils \
-    curl \
-    gnupg \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Tailscale
-RUN curl -fsSL https://tailscale.com/install.sh | sh
-
-# Create non-root user
-RUN useradd -m -s /bin/bash robot && \
-    usermod -aG dialout,video robot
+# Stage 2: Runtime Environment  
+FROM ros:humble-ros-base as runtime
+# - Kopiert nur Runtime-Artefakte
+# - Installiert Runtime-Dependencies
+# - Konfiguriert Entrypoint
 ```
 
-### 2. Workspace Build Layer
+#### Image-Optimierungen
+- **Multi-Stage Build**: Reduziert finale Image-Größe um ~60%
+- **Layer-Caching**: Optimiert für schnelle Rebuilds
+- **ARM64-spezifisch**: Native Kompilierung für Raspberry Pi 4B
+- **Dependency-Cleanup**: Entfernt Build-Tools und Cache-Dateien
 
-**Purpose**: Compiles all ROS2 packages from source
+### Docker Compose-Konfiguration
 
-**Build Process**:
-1. Copy entire workspace (src/ directory with all packages)
-2. Run rosdep to resolve dependencies
-3. Build with colcon using release configuration
-4. Build only necessary packages: robot_bringup, robot_hardware_interfaces, robot_controller, robot_description, robot_localization_tool
-5. Remove build artifacts and cache to reduce image size
-
-**Key Considerations**:
-- Use `--symlink-install` for development images
-- Use `--merge-install` for production images
-- Build only necessary packages (robot_bringup, robot_hardware_interfaces, robot_controller)
-- Strip debug symbols in release builds
-
-### 3. micro-ROS Agent Container
-
-**Purpose**: Bridges communication between Pico firmware and ROS2
-
-**Configuration**:
-- Serial device: `/dev/ttyACM0` (bind mounted from host)
-- Baud rate: 115200
-- Verbose logging enabled
-- Auto-restart on failure
-
-**Health Check**:
-```bash
-ros2 topic list | grep -q "/joint_states"
-```
-
-**Startup Command**:
-```bash
-ros2 run micro_ros_agent micro_ros_agent serial \
-  --dev /dev/ttyACM0 -b 115200 -v6
-```
-
-### 4. Robot Bringup Container
-
-**Purpose**: Runs main robot software stack
-
-**Services Launched**:
-- robot_state_publisher (URDF/TF tree)
-- controller_manager (ros2_control)
-- drive_controller (mecanum drive controller)
-- joint_state_broadcaster
-- imu_broadcaster (IMU sensor broadcaster)
-
-**Dependencies**:
-- Requires micro-ROS agent to be healthy
-- Waits for `/joint_states` topic before starting controllers
-
-**Health Check**:
-```bash
-ros2 control list_controllers | grep -q "drive_controller.*active"
-```
-
-**Startup Command**:
-```bash
-ros2 launch robot_bringup bringup.launch.py \
-  robot_model:=robot_xl \
-  mecanum:=True \
-  microros:=false
-```
-
-### 5. Tailscale Integration
-
-**Purpose**: Provides secure VPN connectivity for remote access
-
-**Configuration**:
-- Authentication via `TAILSCALE_AUTHKEY` environment variable
-- Hostname via `TAILSCALE_HOSTNAME` environment variable (default: robot-xl)
-- State persistence via volume mount at `/var/lib/tailscale`
-- Subnet routing support for multi-robot networks
-
-**Startup Script** (`/usr/local/bin/tailscale-start.sh`):
-```bash
-#!/bin/bash
-if [ -n "$TAILSCALE_AUTHKEY" ]; then
-    tailscaled --state=/var/lib/tailscale/tailscaled.state &
-    sleep 2
-    tailscale up --authkey=$TAILSCALE_AUTHKEY \
-                 --hostname=${TAILSCALE_HOSTNAME:-robot-xl} \
-                 --accept-routes
-fi
-```
-
-**Network Configuration**:
-- Advertise ROS2 DDS traffic over Tailscale interface
-- Configure FastRTPS to use Tailscale IP for discovery
-- Set `ROS_LOCALHOST_ONLY=0` for network communication
-
-### 6. Docker Compose Orchestration
-
-**Purpose**: Manages multi-container deployment
-
-**Services**:
-1. `microros-agent`: micro-ROS bridge service
-2. `robot-bringup`: Main robot software
-3. `tailscale`: VPN service (optional, can be host-level)
-
-**Key Features**:
-- Dependency ordering (agent → bringup)
-- Health check-based startup coordination
-- Automatic restart policies
-- Volume management for persistence
-- Environment variable configuration
-
-## Data Models
-
-### Environment Variables
+#### Service-Definition
 
 ```yaml
-# ROS Configuration
-ROS_DISTRO: humble
-ROS_DOMAIN_ID: 0
-RMW_IMPLEMENTATION: rmw_fastrtps_cpp
-
-# Robot Configuration
-ROBOT_MODEL_NAME: robot_xl
-SERIAL_PORT: /dev/ttyACM0
-SERIAL_BAUDRATE: 115200
-
-# Tailscale Configuration
-TAILSCALE_AUTHKEY: tskey-auth-xxxxx (optional)
-TAILSCALE_HOSTNAME: robot-xl (optional)
-TAILSCALE_SUBNET_ROUTES: "" (optional)
-
-# Logging
-LOG_LEVEL: INFO
-ROS_LOG_DIR: /var/log/robot
-```
-
-### Volume Mounts
-
-```yaml
+# Named volumes for data persistence
 volumes:
-  # Configuration persistence
-  - /etc/robot:/etc/robot:ro
-  
-  # Log persistence
-  - /var/log/robot:/var/log/robot:rw
-  
-  # Tailscale state
-  - /var/lib/tailscale:/var/lib/tailscale:rw
-  
-  # USB device access
-  - /dev:/dev:rw
-```
+  robot_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/log/robot
+  robot_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/robot/config
+  tailscale_state:
+    driver: local
 
-### Docker Compose Schema
-
-```yaml
-version: '3.8'
+# Custom networks for service isolation
+networks:
+  robot_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
 
 services:
+  # micro-ROS Agent Service
   microros-agent:
-    image: mysteel/robot:humble-arm64
-    container_name: microros-agent
-    network_mode: host
-    privileged: true
-    restart: unless-stopped
+    image: microros/micro-ros-agent:humble
+    container_name: my_steel_microros_agent
+    networks:
+      - robot_network
     devices:
-      - /dev/ttyACM0:/dev/ttyACM0
-    environment:
-      - ROS_DOMAIN_ID=0
-      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-    command: >
-      ros2 run micro_ros_agent micro_ros_agent serial
-      --dev /dev/ttyACM0 -b 115200 -v6
+      - "/dev/ttyACM0:/dev/ttyACM0"
+    command: serial --dev /dev/ttyACM0 -v6
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
-      test: ["CMD", "ros2", "topic", "list"]
+      test: ["CMD", "pgrep", "-f", "micro_ros_agent"]
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 30s
-    volumes:
-      - /var/log/robot:/var/log/robot
+      start_period: 10s
 
-  robot-bringup:
-    image: mysteel/robot:humble-arm64
-    container_name: robot-bringup
-    network_mode: host
-    privileged: true
-    restart: unless-stopped
+  # Main Robot System Service
+  robot:
+    image: goldjunge491/my-steel-robot:${ROBOT_VERSION:-latest}
+    container_name: my_steel_robot
+    network_mode: host  # Required for ROS2 DDS multicast discovery
     depends_on:
       microros-agent:
         condition: service_healthy
-    devices:
-      - /dev/video0:/dev/video0
-    environment:
-      - ROS_DOMAIN_ID=0
-      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-      - ROBOT_MODEL_NAME=robot_xl
-      - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY}
-      - TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-robot-xl}
-    command: >
-      bash -c "
-      /usr/local/bin/tailscale-start.sh &&
-      source /opt/ros/humble/setup.bash &&
-      source /ros2_ws/install/setup.bash &&
-      ros2 launch robot_bringup bringup.launch.py
-        robot_model:=robot_xl
-        mecanum:=True
-        microros:=false
-      "
-    healthcheck:
-      test: ["CMD", "ros2", "control", "list_controllers"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
     volumes:
-      - /var/log/robot:/var/log/robot
-      - /etc/robot:/etc/robot:ro
-      - /var/lib/tailscale:/var/lib/tailscale
+      - robot_logs:/var/log/robot
+      - robot_config:/opt/robot/config:ro
+      - tailscale_state:/var/lib/tailscale
+      - /dev:/dev  # Device access for hardware interfaces
+    environment:
+      # Robot Configuration
+      - ROBOT_MODEL=${ROBOT_MODEL:-robot_xl}
+      - MECANUM_DRIVE=${MECANUM_DRIVE:-true}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      
+      # Tailscale Configuration
+      - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY:-}
+      - TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-my-steel-robot}
+      - TAILSCALE_SUBNET_ROUTES=${TAILSCALE_SUBNET_ROUTES:-}
+      
+      # Logging Configuration
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_RETENTION_DAYS=${LOG_RETENTION_DAYS:-7}
+    privileged: true  # Required for hardware access and Tailscale
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    healthcheck:
+      test: |
+        ros2 node list > /dev/null 2>&1 && \
+        ros2 topic list | grep -q "/joint_states"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Optional: Monitoring Service
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: my_steel_watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=3600  # Check for updates every hour
+      - WATCHTOWER_INCLUDE_STOPPED=true
+    restart: unless-stopped
+    profiles:
+      - monitoring  # Only start with --profile monitoring
 ```
 
-## Error Handling
+### Startup-Sequenz
 
-### Container Startup Failures
+#### Container-Initialisierung
 
-**Scenario**: Container fails to start due to missing dependencies or configuration
+1. **Pre-Start Checks**
+   - USB-Gerät-Verfügbarkeit prüfen
+   - Netzwerk-Konnektivität testen
+   - Volume-Mounts validieren
 
-**Detection**: Docker health checks fail during start_period
+2. **micro-ROS Agent Start**
+   - Verbindung zu Raspberry Pi Pico etablieren
+   - Health-Check bestätigt Bereitschaft
+   - Signal an abhängige Services
 
-**Recovery**:
-1. Log detailed error information to `/var/log/robot/startup.log`
-2. Retry startup up to 3 times with exponential backoff
-3. Send notification via system journal
-4. Remain in failed state for manual intervention
+3. **Haupt-Container Start**
+   - ROS2-Umgebung initialisieren
+   - Workspace sourcen
+   - Tailscale-Client starten (optional)
+   - Bringup-System mit 30s Timeout starten
 
-**Prevention**:
-- Validate environment variables in entrypoint script
-- Check for required devices before starting services
-- Verify ROS2 environment is properly sourced
+#### Startup-Script (entrypoint.sh)
 
-### USB Device Disconnection
+```bash
+#!/bin/bash
+set -e
 
-**Scenario**: Raspberry Pi Pico disconnects during operation
+# ROS2 Environment Setup
+source /opt/ros/humble/setup.bash
+source /opt/robot/install/setup.bash
 
-**Detection**: micro-ROS agent loses serial connection
+# Tailscale Setup (if configured)
+if [[ -n "${TAILSCALE_AUTHKEY}" ]]; then
+    echo "Initializing Tailscale..."
+    tailscaled --state=/var/lib/tailscale/tailscaled.state &
+    sleep 2
+    tailscale up --authkey="${TAILSCALE_AUTHKEY}" --hostname="${TAILSCALE_HOSTNAME}"
+fi
 
-**Recovery**:
-1. micro-ROS agent container restarts automatically
-2. Wait for device to reappear at `/dev/ttyACM0`
-3. Re-establish serial connection
-4. Robot bringup container detects agent recovery via health check
-5. Controllers automatically reconnect to hardware interface
+# Wait for micro-ROS Agent
+echo "Waiting for micro-ROS Agent connection..."
+timeout 30 bash -c 'until ros2 topic list | grep -q "/rt/"; do sleep 1; done' || {
+    echo "Warning: micro-ROS Agent not detected within 30 seconds"
+}
 
-**Prevention**:
-- Use reliable USB cables and connections
-- Implement udev rules for consistent device naming
-- Add USB power management configuration
+# Start Robot Bringup
+echo "Starting my_steel robot system..."
+exec ros2 launch robot_bringup bringup.launch.py \
+    robot_model:=robot_xl \
+    mecanum:=true \
+    use_sim:=false
+```
 
-### Network Communication Failures
+## Datenmodelle
 
-**Scenario**: ROS2 DDS communication fails between containers or with remote PC
+### Konfigurationsstruktur
 
-**Detection**: Topics not visible, nodes cannot discover each other
+#### Environment Variables
+```bash
+# Robot Configuration
+ROBOT_MODEL=robot_xl
+MECANUM_DRIVE=true
+ROS_DOMAIN_ID=0  # Standard-Domain für normale ROS2-Kommunikation
+RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 
-**Recovery**:
-1. Verify RMW_IMPLEMENTATION is set correctly
-2. Check ROS_DOMAIN_ID matches across all systems
-3. Restart containers to reset DDS discovery
-4. Verify Tailscale connection if using VPN
+# Tailscale Configuration
+TAILSCALE_AUTHKEY=tskey-auth-xxxxx
+TAILSCALE_HOSTNAME=my-steel-robot-01
+TAILSCALE_SUBNET_ROUTES=192.168.1.0/24
 
-**Prevention**:
-- Use FastRTPS with explicit configuration
-- Disable CycloneDDS if not needed
-- Configure firewall rules for DDS ports
-- Use Tailscale for reliable remote connectivity
+# Logging Configuration
+LOG_LEVEL=INFO
+LOG_RETENTION_DAYS=7
+```
 
-### Tailscale Connection Failures
+#### Volume-Struktur
+```
+/var/log/robot/                    # Log-Persistenz
+├── 17_10_25_14:30/               # Zeitstempel-Ordner
+│   ├── ros2_bringup.log          # ROS2 System-Logs
+│   ├── controller_manager.log    # Controller-spezifische Logs
+│   └── microros_agent.log        # micro-ROS Bridge-Logs
+└── current -> 17_10_25_14:30/    # Symlink auf aktuelle Session
 
-**Scenario**: Tailscale fails to connect or authenticate
+/opt/robot/config/                 # Konfiguration
+├── robot_xl/                     # Roboter-spezifische Configs
+│   ├── mecanum_controller.yaml   # Controller-Parameter
+│   └── hardware_interface.yaml  # Hardware-Konfiguration
+└── tailscale/                    # VPN-Konfiguration
+    └── tailscaled.conf           # Tailscale-Einstellungen
 
-**Detection**: Tailscale status shows disconnected
+/var/lib/tailscale/               # Tailscale-State
+└── tailscaled.state             # Persistenter VPN-Zustand
+```
 
-**Recovery**:
-1. Check TAILSCALE_AUTHKEY is valid and not expired
-2. Verify network connectivity to Tailscale servers
-3. Clear Tailscale state and re-authenticate
-4. Fall back to local network operation
+### Log-Management
 
-**Prevention**:
-- Use reusable auth keys with appropriate expiration
-- Persist Tailscale state across container restarts
-- Monitor Tailscale connection status
+#### Strukturierte Logs
+- **Zeitstempel-Format**: `dd_mm_yy_hh:mm` für eindeutige Identifikation
+- **Service-Trennung**: Separate Log-Dateien pro Service
+- **Rotation**: Automatische Bereinigung nach 7 Tagen
+- **Symlink**: `current` zeigt auf aktuelle Log-Session
+
+#### Log-Aggregation
+```bash
+# Log-Rotation Script (cron-job)
+#!/bin/bash
+LOG_DIR="/var/log/robot"
+RETENTION_DAYS=7
+
+# Create new timestamped directory
+TIMESTAMP=$(date +"%d_%m_%y_%H:%M")
+mkdir -p "${LOG_DIR}/${TIMESTAMP}"
+
+# Update current symlink
+ln -sfn "${TIMESTAMP}" "${LOG_DIR}/current"
+
+# Cleanup old logs
+find "${LOG_DIR}" -maxdepth 1 -type d -name "*_*_*_*" -mtime +${RETENTION_DAYS} -exec rm -rf {} \;
+```
+
+## Fehlerbehandlung
+
+### Health-Check-System
+
+#### Container-Health-Checks
+```yaml
+# Robot Container Health-Check
+healthcheck:
+  test: |
+    ros2 node list > /dev/null 2>&1 && \
+    ros2 topic list | grep -q "/joint_states" && \
+    ros2 service list | grep -q "/controller_manager"
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 60s
+
+# micro-ROS Agent Health-Check  
+healthcheck:
+  test: |
+    pgrep -f "micro_ros_agent" > /dev/null && \
+    netstat -ln | grep -q ":8888"
+  interval: 10s
+  timeout: 5s
+  retries: 3
+```
+
+#### Restart-Strategien
+- **unless-stopped**: Container startet automatisch nach Host-Reboot
+- **Health-Check Failures**: Automatischer Neustart nach 3 aufeinanderfolgenden Fehlern
+- **Dependency-Management**: Abhängige Services warten auf Health-Check-Bestätigung
 
 ### Graceful Shutdown
 
-**Scenario**: Container receives SIGTERM signal
+#### SIGTERM-Handling
+```bash
+# Signal Handler in entrypoint.sh
+cleanup() {
+    echo "Received SIGTERM, shutting down gracefully..."
+    
+    # Stop ROS2 nodes
+    if [[ -n "${ROS2_PID}" ]]; then
+        kill -TERM "${ROS2_PID}"
+        wait "${ROS2_PID}" 2>/dev/null || true
+    fi
+    
+    # Disconnect Tailscale
+    if [[ -n "${TAILSCALE_AUTHKEY}" ]]; then
+        tailscale down || true
+        pkill tailscaled || true
+    fi
+    
+    echo "Shutdown complete"
+    exit 0
+}
 
-**Handling**:
-1. Entrypoint script traps SIGTERM signal
-2. Send SIGINT to ROS2 launch process
-3. Wait up to 30 seconds for nodes to shutdown cleanly
-4. Force kill remaining processes after timeout
-5. Flush logs to persistent storage
-6. Exit with appropriate status code
+trap cleanup SIGTERM SIGINT
+```
 
-**Implementation**:
+#### Timeout-Management
+- **Graceful Shutdown**: 30 Sekunden für sauberes Herunterfahren
+- **Force Kill**: SIGKILL nach Timeout
+- **State Persistence**: Tailscale-Zustand wird vor Shutdown gespeichert
+
+## Testing-Strategie
+
+### Kontinuierliche Validierung
+**WICHTIG**: Nach jeder Implementierungsänderung MUSS das gesamte System getestet und validiert werden, um sicherzustellen, dass alle Komponenten korrekt funktionieren.
+
+#### Automatisierte Test-Pipeline
 ```bash
 #!/bin/bash
-trap 'kill -INT $PID; wait $PID' SIGTERM
+# test-deployment.sh - Vollständige System-Validierung
 
-# Start ROS2 launch
-ros2 launch robot_bringup bringup.launch.py &
-PID=$!
+set -e
 
-wait $PID
+echo "=== Docker Deployment Test Suite ==="
+
+# 1. Build-Tests
+echo "1. Testing Docker Build..."
+docker build -t my-steel-robot:test .
+docker images | grep my-steel-robot:test
+
+# 2. Compose-Validierung
+echo "2. Validating Docker Compose..."
+docker compose config --quiet
+docker compose ps
+
+# 3. Service-Health-Tests
+echo "3. Testing Service Health..."
+docker compose up -d
+sleep 30
+
+# Warten auf Health-Checks
+for service in microros-agent robot; do
+    echo "Checking health of $service..."
+    timeout 60 bash -c "until docker compose ps $service | grep -q 'healthy'; do sleep 5; done"
+done
+
+# 4. Funktionalitäts-Tests
+echo "4. Testing Robot Functionality..."
+docker compose exec robot ros2 node list
+docker compose exec robot ros2 topic list | grep -q "/joint_states"
+docker compose exec robot ros2 service list | grep -q "/controller_manager"
+
+# 5. Hardware-Integration-Tests
+echo "5. Testing Hardware Integration..."
+docker compose exec robot ls -la /dev/ttyACM0
+docker compose exec microros-agent pgrep -f micro_ros_agent
+
+# 6. Netzwerk-Tests
+echo "6. Testing Network Connectivity..."
+docker compose exec robot ping -c 3 8.8.8.8
+if [[ -n "${TAILSCALE_AUTHKEY}" ]]; then
+    docker compose exec robot tailscale status
+fi
+
+# 7. Log-Validierung
+echo "7. Validating Log Structure..."
+ls -la /var/log/robot/
+test -L /var/log/robot/current
+
+# 8. Performance-Tests
+echo "8. Testing Performance..."
+IMAGE_SIZE=$(docker images my-steel-robot:test --format "table {{.Size}}" | tail -n 1)
+echo "Image size: $IMAGE_SIZE"
+
+# 9. Cleanup
+echo "9. Cleanup..."
+docker compose down
+docker rmi my-steel-robot:test
+
+echo "=== All Tests Passed! ==="
 ```
 
-## Testing Strategy
+### Mandatory Test-Checkliste
 
-### Unit Testing
+#### Nach jeder Code-Änderung:
+- [ ] **Docker Build**: Image baut erfolgreich ohne Fehler
+- [ ] **Compose Validation**: `docker compose config` läuft fehlerfrei
+- [ ] **Service Startup**: Alle Services starten und werden healthy
+- [ ] **ROS2 Functionality**: Nodes, Topics und Services sind verfügbar
+- [ ] **Hardware Access**: USB-Geräte sind zugänglich
+- [ ] **Network Connectivity**: Host-Netzwerk und externe Verbindungen funktionieren
+- [ ] **Log Generation**: Logs werden korrekt strukturiert geschrieben
+- [ ] **Health Checks**: Alle Health-Check-Endpunkte antworten korrekt
 
-**Scope**: Individual container components
+#### Erweiterte Validierung:
+- [ ] **Tailscale Integration**: VPN-Verbindung funktioniert (falls konfiguriert)
+- [ ] **Graceful Shutdown**: Container fahren sauber herunter
+- [ ] **Restart Resilience**: Services starten nach Neustart korrekt
+- [ ] **Resource Limits**: CPU/Memory-Verbrauch im akzeptablen Bereich
+- [ ] **Image Size**: Finale Image-Größe < 2GB
 
-**Tests**:
-1. Dockerfile builds successfully for ARM64
-2. All required packages are installed
-3. ROS2 environment sources correctly
-4. Entrypoint scripts execute without errors
-5. Health check scripts return correct status
+### Unit-Tests
 
-**Tools**: Docker build, shell script testing
-
-### Integration Testing
-
-**Scope**: Multi-container orchestration
-
-**Tests**:
-1. Containers start in correct order
-2. micro-ROS agent connects to Pico
-3. Robot bringup launches all required nodes
-4. Controllers spawn and become active
-5. Topics publish data correctly
-6. Health checks pass consistently
-7. Tailscale establishes VPN connection
-
-**Tools**: Docker Compose, ROS2 CLI, pytest
-
-### Hardware-in-the-Loop Testing
-
-**Scope**: Full system on Raspberry Pi
-
-**Tests**:
-1. Deploy containers to Raspberry Pi
-2. Verify USB device access
-3. Test motor control via cmd_vel
-4. Verify odometry publishing
-5. Test IMU data streaming
-6. Verify camera feed
-7. Test remote PC connectivity via Tailscale
-8. Measure resource usage (CPU, memory, network)
-
-**Tools**: SSH, ROS2 CLI, htop, iftop
-
-### Performance Testing
-
-**Metrics**:
-- Container startup time: < 60 seconds
-- Memory usage: < 1GB per container
-- CPU usage: < 50% average on Raspberry Pi 4B
-- Network latency: < 50ms for local DDS, < 100ms over Tailscale
-- Topic publish rate: 50Hz for joint_states, 10Hz for odometry
-
-**Tools**: docker stats, ros2 topic hz, ros2 topic bw
-
-### Deployment Testing
-
-**Scenarios**:
-1. Fresh Raspberry Pi installation
-2. Update existing deployment
-3. Rollback to previous version
-4. Multi-robot deployment
-5. Remote PC connection from different networks
-
-**Validation**:
-- Deployment completes without errors
-- Robot becomes operational within 2 minutes
-- Configuration persists across restarts
-- Logs are accessible and readable
-- Tailscale VPN connects successfully
-
-## Build and Deployment Process
-
-### Building the Image
-
-**On ARM64 (Raspberry Pi or ARM server)**:
+#### Docker Build-Validierung
 ```bash
-cd /path/to/my_steel-robot_ws
-docker build -f docker/Dockerfile.robot-pi -t mysteel/robot:humble-arm64 .
+# Dockerfile-Syntax-Test
+docker build --dry-run -t test .
+
+# Multi-Stage Build-Test
+docker build --target builder -t test-builder .
+docker build --target runtime -t test-runtime .
+
+# ARM64-Kompatibilität
+docker buildx build --platform linux/arm64 -t test-arm64 .
 ```
 
-**On x86_64 (Development machine with buildx)**:
+#### Entrypoint-Script-Tests
 ```bash
-docker buildx create --name arm-builder --use
-docker buildx build --platform linux/arm64 \
-  -f docker/Dockerfile.robot-pi \
-  -t mysteel/robot:humble-arm64 \
-  --load .
+# Syntax-Validierung
+bash -n entrypoint.sh
+
+# Funktions-Tests
+docker run --rm -it my-steel-robot:test bash -c "
+    source /entrypoint.sh
+    test_ros_environment
+    test_tailscale_setup
+    test_hardware_detection
+"
 ```
 
-### Pushing to Registry
+### Integration-Tests
 
+#### Container-Orchestrierung
 ```bash
-# Docker Hub
-docker login
-docker push mysteel/robot:humble-arm64
+# Service-Dependencies
+docker compose up microros-agent
+docker compose ps microros-agent | grep -q "healthy"
+docker compose up robot
+docker compose ps robot | grep -q "healthy"
 
-# Private registry
-docker tag mysteel/robot:humble-arm64 registry.example.com/robot:humble-arm64
-docker push registry.example.com/robot:humble-arm64
+# Volume-Mounts
+docker compose exec robot ls -la /var/log/robot
+docker compose exec robot ls -la /opt/robot/config
+docker compose exec robot ls -la /var/lib/tailscale
 ```
 
-### Deploying to Raspberry Pi
-
-**Prerequisites**:
-1. Ubuntu 22.04 installed on Raspberry Pi
-2. Docker and Docker Compose installed
-3. User added to docker group
-4. Tailscale account and auth key (optional)
-
-**Deployment Steps**:
+#### Hardware-Integration
 ```bash
-# 1. Copy docker-compose.yml to Raspberry Pi
-scp docker/compose.robot-pi.yaml pi@robot:/home/pi/
+# USB-Device-Access
+docker compose exec robot ls -la /dev/ttyACM0
+docker compose exec microros-agent lsusb | grep -i pico
 
-# 2. Create environment file
-cat > /home/pi/.env << EOF
-TAILSCALE_AUTHKEY=tskey-auth-xxxxx
-TAILSCALE_HOSTNAME=robot-xl
-ROS_DOMAIN_ID=0
-EOF
-
-# 3. Create volume directories
-sudo mkdir -p /var/log/robot /etc/robot /var/lib/tailscale
-sudo chown -R pi:pi /var/log/robot /etc/robot /var/lib/tailscale
-
-# 4. Pull image
-docker pull mysteel/robot:humble-arm64
-
-# 5. Start containers
-docker compose -f compose.robot-pi.yaml up -d
-
-# 6. Verify deployment
-docker compose -f compose.robot-pi.yaml ps
-docker compose -f compose.robot-pi.yaml logs -f
+# ROS2-micro-ROS Communication
+docker compose exec robot ros2 topic list | grep "/rt/"
+docker compose exec robot ros2 topic echo /rt/joint_states --max-count 1
 ```
 
-### Systemd Integration (Optional)
+### Performance-Tests
 
-For automatic startup on boot:
-
+#### System-Performance
 ```bash
-# Create systemd service
-sudo tee /etc/systemd/system/robot-docker.service << EOF
-[Unit]
-Description=my_steel Robot Docker Containers
-Requires=docker.service
-After=docker.service network-online.target
-Wants=network-online.target
+# Container-Resource-Usage
+docker stats --no-stream my_steel_robot my_steel_microros_agent
 
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-WorkingDirectory=/home/pi
-ExecStart=/usr/bin/docker compose -f compose.robot-pi.yaml up -d
-ExecStop=/usr/bin/docker compose -f compose.robot-pi.yaml down
-User=pi
+# Startup-Zeit-Messung
+time docker compose up -d
+timeout 60 bash -c 'until docker compose ps robot | grep -q "healthy"; do sleep 1; done'
 
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Enable and start
-sudo systemctl daemon-reload
-sudo systemctl enable robot-docker.service
-sudo systemctl start robot-docker.service
+# Image-Größe-Validierung
+docker images goldjunge491/my-steel-robot:latest --format "table {{.Size}}"
 ```
 
-## Remote PC Configuration
-
-### Tailscale Setup
-
+#### Network-Performance
 ```bash
-# Install Tailscale on remote PC
-curl -fsSL https://tailscale.com/install.sh | sh
+# ROS2 DDS-Latenz
+docker compose exec robot ros2 topic hz /joint_states
+docker compose exec robot ros2 topic bw /joint_states
 
-# Connect to network
-sudo tailscale up
-
-# Verify connection to robot
-tailscale status | grep robot-xl
-ping robot-xl
+# Tailscale-Performance (falls aktiviert)
+docker compose exec robot tailscale ping remote-pc
 ```
 
-### ROS2 Environment
+### End-to-End-Tests
 
+#### Vollständiger Deployment-Zyklus
 ```bash
-# Set environment variables
-export ROS_DOMAIN_ID=0
-export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-export ROS_LOCALHOST_ONLY=0
+#!/bin/bash
+# e2e-test.sh - End-to-End Deployment Test
 
-# Verify topic discovery
-ros2 topic list
+# 1. Clean Environment
+docker compose down -v
+docker system prune -f
 
-# Launch RViz
-ros2 run rviz2 rviz2
+# 2. Fresh Deployment
+git pull origin main
+docker compose pull
+docker compose up -d
 
-# Launch Foxglove
-# Connect to ws://robot-xl:8765
+# 3. System Readiness
+sleep 60
+docker compose ps | grep -q "healthy.*healthy"
+
+# 4. Robot Functionality
+docker compose exec robot ros2 launch robot_bringup bringup.launch.py &
+sleep 30
+docker compose exec robot ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.1}}" --once
+
+# 5. Remote Access (falls Tailscale aktiv)
+if [[ -n "${TAILSCALE_AUTHKEY}" ]]; then
+    docker compose exec robot tailscale status | grep -q "online"
+fi
+
+# 6. Log Verification
+test -f /var/log/robot/current/ros2_bringup.log
+test -f /var/log/robot/current/microros_agent.log
+
+echo "E2E Test completed successfully!"
 ```
 
-## Security Considerations
+### Continuous Integration
 
-### Container Security
+#### GitHub Actions Test-Workflow
+```yaml
+name: Test Docker Deployment
 
-- Run as non-root user where possible
-- Use read-only root filesystem for immutability
-- Limit capabilities with `--cap-drop=ALL --cap-add=NET_ADMIN,NET_RAW`
-- Scan images for vulnerabilities with Trivy or Snyk
-- Use official base images from trusted sources
+on: [push, pull_request]
 
-### Network Security
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        
+      - name: Build Test Image
+        run: docker build -t my-steel-robot:test .
+        
+      - name: Validate Compose
+        run: docker compose config --quiet
+        
+      - name: Run Test Suite
+        run: ./scripts/test-deployment.sh
+        
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results
+          path: test-results/
+```
 
-- Tailscale provides encrypted VPN tunnel
-- Use Tailscale ACLs to restrict access
-- Disable SSH password authentication
-- Use firewall rules to limit exposed ports
-- Rotate Tailscale auth keys regularly
+### Fehler-Debugging
 
-### Secrets Management
+#### Häufige Test-Failures
+```bash
+# Service startet nicht
+docker compose logs microros-agent
+docker compose logs robot
 
-- Never commit auth keys to version control
-- Use environment variables or Docker secrets
-- Rotate credentials periodically
-- Use read-only mounts for sensitive configuration
+# Health-Check schlägt fehl
+docker compose exec robot ros2 doctor
+docker compose exec robot systemctl status
 
-## Monitoring and Observability
+# Hardware nicht verfügbar
+ls -la /dev/ttyACM*
+dmesg | grep -i usb
 
-### Logging
+# Netzwerk-Probleme
+docker compose exec robot ip addr show
+docker compose exec robot netstat -tuln
+```
 
-- All ROS2 logs written to `/var/log/robot`
-- Docker logs accessible via `docker compose logs`
-- System logs via journalctl
-- Log rotation configured for disk space management
+**KRITISCHE REGELN**: 
+1. Jede Implementierungsaufgabe MUSS mit der vollständigen Test-Suite validiert werden, bevor sie als abgeschlossen betrachtet wird
+2. Keine Änderung darf ohne erfolgreiche Tests committed werden
+3. **KEINE NEUEN DATEIEN** dürfen ohne explizite Genehmigung erstellt werden - nur vorhandene Dateien bearbeiten
+4. Alle Änderungen müssen auf bestehende Dateien und Strukturen aufbauen
 
-### Metrics
+## Referenz-Implementierungen
 
-- Container resource usage via `docker stats`
-- ROS2 topic statistics via `ros2 topic hz/bw`
-- System metrics via Prometheus node exporter (optional)
-- Tailscale connection status via `tailscale status`
+### Bewährte Praktiken aus der Community
 
-### Alerting
+#### INTAS ROS2 Humble Docker Environment
+- **Quelle**: https://gitlab.uni-koblenz.de/intas/ros2-humble-macos-docker-env
+- **Relevanz**: Bewährte ROS2 Humble Docker-Konfiguration für Cross-Platform-Entwicklung
+- **Anwendung**: Multi-Stage Build-Patterns und ARM64-Optimierungen
 
-- Health check failures trigger container restart
-- Critical errors logged to system journal
-- Optional integration with monitoring systems (Grafana, Prometheus)
-- Email/SMS notifications for prolonged failures (optional)
+#### Husarion ROSbot XL Autonomy (Foxglove Branch)
+- **Quelle**: https://github.com/husarion/robot-xl-autonomy/tree/foxglove
+- **Relevanz**: Produktionsreife Docker-Orchestrierung für robot_xl mit Foxglove-Integration
+- **Anwendung**: Container-Architektur, Launch-Konfigurationen und Hardware-Interfaces
+
+#### Dan Aukes ROS2 Networking Guides
+- **Quelle**: https://www.danaukes.com/notebook/ros2/
+- **Relevanz**: ROS2 Docker + Tailscale VPN Integration, Raspberry Pi Deployment
+- **Anwendung**: Netzwerk-Konfiguration, DDS-Settings und VPN-Integration
+
+#### ROS Dabbler Networking Adventures
+- **Quelle**: https://rosdabbler.github.io/adventures-in-ros2-networking-2
+- **Relevanz**: Erweiterte ROS2-Netzwerk-Konfigurationen mit Docker
+- **Anwendung**: Bridge-Netzwerke, Macvlan-Konfigurationen und Multi-Host-Setups
+
+### Implementierungs-Patterns aus Referenzen
+
+#### Dockerfile-Optimierungen (INTAS-Pattern)
+```dockerfile
+# Basierend auf INTAS ros2-humble.dockerfile
+FROM ros:humble-ros-base as builder
+
+# Build-Dependencies (nur in Builder-Stage)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    python3-colcon-common-extensions \
+    python3-rosdep \
+    && rm -rf /var/lib/apt/lists/*
+
+# Workspace Build
+WORKDIR /opt/robot
+COPY src/ src/
+RUN rosdep install --from-paths src --ignore-src -r -y
+RUN colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+# Runtime Stage (INTAS-optimiert)
+FROM ros:humble-ros-base as runtime
+RUN apt-get update && apt-get install -y \
+    ros-humble-micro-ros-agent \
+    ros-humble-foxglove-bridge \
+    tailscale \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /opt/robot/install /opt/robot/install
+```
+
+#### Husarion-Pattern für robot_xl Integration
+```yaml
+# Basierend auf husarion/robot-xl-autonomy
+services:
+  robot:
+    image: goldjunge491/my-steel-robot:${ROBOT_VERSION:-latest}
+    environment:
+      # Husarion-kompatible Parameter
+      - ROBOT_MODEL=robot_xl
+      - MECANUM_DRIVE=true
+      - USE_GPU=false
+      - FASTRTPS_DEFAULT_PROFILES_FILE=/opt/robot/config/fastrtps.xml
+    volumes:
+      - /dev:/dev
+      - robot_config:/opt/robot/config:ro
+    privileged: true
+    network_mode: host
+```
+
+#### Dan Aukes Tailscale-Integration
+```bash
+# Basierend auf danaukes.com Tailscale-Guide
+setup_tailscale() {
+    if [[ -n "${TAILSCALE_AUTHKEY}" ]]; then
+        echo "Setting up Tailscale VPN..."
+        
+        # Start Tailscale daemon
+        tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock &
+        sleep 2
+        
+        # Connect to network
+        tailscale up \
+            --authkey="${TAILSCALE_AUTHKEY}" \
+            --hostname="${TAILSCALE_HOSTNAME}" \
+            --accept-routes \
+            --advertise-routes="${TAILSCALE_SUBNET_ROUTES:-}"
+        
+        # Configure ROS2 for VPN
+        export ROS_LOCALHOST_ONLY=0
+        export FASTRTPS_DEFAULT_PROFILES_FILE=/opt/robot/config/fastrtps_tailscale.xml
+    fi
+}
+```
+
+#### ROS Dabbler Netzwerk-Optimierungen
+```xml
+<!-- FastRTPS-Profil für Docker-Netzwerke -->
+<?xml version="1.0" encoding="UTF-8" ?>
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+    <participant profile_name="docker_participant">
+        <rtps>
+            <builtin>
+                <discovery_config>
+                    <discoveryProtocol>SIMPLE</discoveryProtocol>
+                    <use_SIMPLE_EndpointDiscoveryProtocol>true</use_SIMPLE_EndpointDiscoveryProtocol>
+                    <use_SIMPLE_ParticipantDiscoveryProtocol>true</use_SIMPLE_ParticipantDiscoveryProtocol>
+                    <simpleEDP>
+                        <PUBWRITER_SUBREADER>true</PUBWRITER_SUBREADER>
+                        <PUBREADER_SUBWRITER>true</PUBREADER_SUBWRITER>
+                    </simpleEDP>
+                </discovery_config>
+            </builtin>
+        </rtps>
+    </participant>
+</profiles>
+```
+
+## Implementierungs-Richtlinien
+
+### Datei-Management-Regeln
+**WICHTIG**: Bei der Implementierung dürfen NUR vorhandene Dateien bearbeitet werden:
+
+#### Erlaubte Aktionen:
+✅ **Bearbeitung vorhandener Dateien**: Dockerfile, docker-compose.yml, Scripts, etc.
+✅ **Modifikation bestehender Konfigurationen**: Anpassung von YAML, ENV-Dateien
+✅ **Erweiterung vorhandener Scripts**: Hinzufügen von Funktionen zu bestehenden Dateien
+✅ **Update bestehender Dokumentation**: README, Kommentare in Code
+
+#### VERBOTENE Aktionen:
+❌ **Neue Dateien erstellen**: Ohne explizite Genehmigung
+❌ **Neue Verzeichnisse anlegen**: Ohne Absprache
+❌ **Zusätzliche Scripts**: Ohne Autorisierung
+❌ **Neue Konfigurationsdateien**: Ohne Erlaubnis
+
+#### Workflow für Datei-Änderungen:
+1. **Identifiziere vorhandene Dateien** im Repository
+2. **Analysiere bestehende Struktur** und Inhalte
+3. **Modifiziere nur vorhandene Dateien** entsprechend den Anforderungen
+4. **Teste alle Änderungen** mit der bestehenden Struktur
+5. **Validiere Kompatibilität** mit vorhandenen Systemen
+
+## Deployment-Strategie
+
+### Build-Pipeline
+
+#### CI/CD-Workflow
+```yaml
+# GitHub Actions Workflow
+name: Build and Deploy Robot Image
+
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          platforms: linux/arm64
+          
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            goldjunge491/my-steel-robot:latest
+            goldjunge491/my-steel-robot:${{ github.ref_name }}
+```
+
+#### Versionierung
+- **Semantic Versioning**: MAJOR.MINOR.PATCH
+- **Git Tags**: Automatische Image-Tags basierend auf Git-Tags
+- **Latest Tag**: Zeigt auf neueste stabile Version
+- **Development Tags**: Separate Tags für Entwicklungsversionen
+
+### Raspberry Pi Deployment
+
+#### Erstinstallation
+```bash
+# 1. Docker Installation
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# 2. Docker Compose Installation
+sudo apt-get update
+sudo apt-get install docker-compose-plugin
+
+# 3. System Directories Setup
+sudo mkdir -p /var/log/robot /opt/robot/config
+sudo chown -R $USER:$USER /var/log/robot /opt/robot
+
+# 4. Repository Clone
+git clone https://github.com/user/my-steel-robot-deployment.git
+cd my-steel-robot-deployment
+
+# 5. Environment Setup
+cp .env.example .env
+# Edit .env with specific configuration:
+# ROBOT_VERSION=1.0.0
+# TAILSCALE_AUTHKEY=tskey-auth-xxxxx
+# TAILSCALE_HOSTNAME=my-steel-robot-01
+
+# 6. Initial Deployment
+docker compose up -d
+
+# 7. Optional: Start with monitoring
+docker compose --profile monitoring up -d
+```
+
+#### Update-Prozess
+```bash
+# 1. Pull latest configuration
+git pull origin main
+
+# 2. Pull new images
+docker compose pull
+
+# 3. Graceful restart
+docker compose down
+docker compose up -d
+
+# 4. Verify deployment
+docker compose ps
+docker compose logs -f robot
+```
+
+### Monitoring und Wartung
+
+#### System-Monitoring
+- **Container-Status**: `docker compose ps` für Service-Übersicht
+- **Log-Monitoring**: Strukturierte Logs in `/var/log/robot/`
+- **Health-Checks**: Automatische Überwachung der Container-Gesundheit
+- **Resource-Usage**: Docker Stats für Performance-Monitoring
+
+#### Wartungsaufgaben
+- **Log-Rotation**: Automatische Bereinigung alter Logs
+- **Image-Updates**: Regelmäßige Updates der Base-Images
+- **Security-Patches**: Zeitnahe Anwendung von Sicherheitsupdates
+- **Backup**: Konfiguration und Tailscale-State sichern
+
+Diese Design-Architektur gewährleistet eine robuste, skalierbare und wartbare Docker-Deployment-Lösung für das my_steel-Roboter-System mit integrierter VPN-Unterstützung und umfassendem Monitoring.

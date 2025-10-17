@@ -1,45 +1,81 @@
-# Product Overview
-## Code Implementation Rules
+# my_steel Robot - Produktbeschreibung
 
-- **Always write code directly to the correct files** - Never create dummy or pseudo code without permission
-- **Write production-ready code** - All code should be complete, functional, and ready to use
-- **No placeholder implementations** - Avoid stub functions, TODOs, or incomplete logic unless explicitly requested
-- **Never create READMEs, summaries, documentation, or other additional artifacts** (such as README.md files, project overviews, or automatic reports) without explicit request
-- **Always wait for direct instruction** from the user before generating or adding such content
+# Coding Conventions
 
-> **Note**: See `coding-conventions.md` for important rules about code implementation and documentation.
+## Code-Implementierungsregeln
+- **Schreibe Code immer direkt in die korrekten Dateien** - Niemals Dummy- oder Pseudo-Code ohne Erlaubnis erstellen
+- **Schreibe produktionsreifen Code** - Aller Code sollte vollständig, funktional und einsatzbereit sein
+- **Keine Platzhalter-Implementierungen** - Vermeide Stub-Funktionen, TODOs oder unvollständige Logik, außer explizit angefordert
 
-## my_steel Robot
+## Dokumentationsrichtlinien
+- **Niemals READMEs, Zusammenfassungen, Dokumentation oder andere zusätzliche Artefakte erstellen** (wie README.md-Dateien, Projektübersichten oder automatische Berichte) ohne explizite Anfrage
+- **Immer auf direkte Anweisung warten** vom Benutzer, bevor solche Inhalte generiert oder hinzugefügt werden
+- **Fokus auf Code, nicht Dokumentation** - Wenn nach Feature-Implementierung gefragt wird, nur den Code schreiben
+- **Ausnahme**: Inline-Code-Kommentare sind akzeptabel und für Klarheit erwünscht
 
-An omnidirectional mobile robot platform built on ROS2 Humble, featuring mecanum wheel drive and an interactive Nerf dart launcher with computer vision capabilities.
+## Was das bedeutet
+Bei Anfragen wie "Feature hinzufügen" oder "X implementieren":
+- ✅ Schreibe die tatsächliche Implementierung
+- ✅ Füge notwendige Imports und Dependencies hinzu
+- ✅ Inkludiere Inline-Kommentare für komplexe Logik
+- ❌ Erstelle keine README zur Erklärung der Arbeit
+- ❌ Schreibe keine Zusammenfassungsdokumente
+- ❌ Generiere keine Projektübersichten oder Berichte
+- ❌ Erstelle keinen Dummy- oder Pseudo-Code
+- ❌ Schreibe keine .md-Datei ohne Erlaubnis
 
-## Core Capabilities
+Der Benutzer wird nach Dokumentation fragen, wenn sie benötigt wird.
 
-- **Omnidirectional mobility** via 4-wheel mecanum drive system with custom controller
-- **Autonomous navigation** using RPLiDAR and sensor fusion (ICM20948 9-DOF IMU)
-- **Computer vision** for face detection and tracking
-- **Interactive Nerf launcher** with pan/tilt servos and brushless dart acceleration (separate controller)
-- **Real-time telemetry** via Foxglove and RViz
-- **Optional manipulator arm** support (Open Manipulator X with Dynamixel servos)
+## Codebase-Untersuchung
+- Erkunde relevante Dateien und Verzeichnisse
+- Suche nach Schlüsselfunktionen, Klassen oder Variablen zum Problem
+- Lese und verstehe relevante Code-Snippets
+- Identifiziere die Grundursache des Problems
+- Validiere und aktualisiere kontinuierlich das Verständnis beim Sammeln von Kontext
 
-## Hardware Architecture
+## Code-Änderungen durchführen
+- **Vor dem Bearbeiten immer die relevanten Dateiinhalte oder Abschnitte lesen** für vollständigen Kontext
+- **Immer Dateien lesen, die in der zu bearbeitenden Datei importiert werden** für vollständigen Kontext
+- Stelle sicher, den vollständigen Kontext der Codebase vor Änderungen zu verstehen
+- Denke immer über die Auswirkungen der Änderungen nach auf:
+  - Die gesamte Codebase
+  - Dependencies und Interaktionen mit anderen Code-Teilen
+  - Edge Cases und potenzielle Fallstricke
+  - Performance, Sicherheit und Wartbarkeit
+- Falls ein Patch nicht korrekt angewendet wird, versuche ihn erneut anzuwenden
+- Mache kleine, testbare, inkrementelle Änderungen, die logisch aus Untersuchung und Plan folgen
 
-Two-tier control system:
-- **High-level (Raspberry Pi 4B)**: ROS2 Humble framework, navigation, SLAM, computer vision, web dashboard
-- **Low-level (Raspberry Pi Pico)**: Real-time motor control (4x DC motors with encoders), IMU (ICM20948), ToF sensor (VL6180X), micro-ROS over USB serial
+## Umgebungsvariablen
+- Wenn erkannt wird, dass ein Projekt eine Umgebungsvariable benötigt (wie API-Key oder Secret), prüfe immer, ob eine `.env`-Datei im Projekt-Root existiert
+- Falls sie nicht existiert, erstelle automatisch eine `.env`-Datei mit Platzhalter für die benötigte(n) Variable(n) und informiere den Benutzer
+- Tue dies proaktiv, ohne auf Benutzeranfrage zu warten
 
-## Current Status
+**Omnidirektionale mobile Roboterplattform mit ROS2 Humble, Mecanum-Antrieb und interaktivem Nerf-Launcher für Bildung und Forschung.**
 
-- **Supported robot model**: robot_xl only
-- **Supported drive type**: mecanum (primary), differential (legacy support)
-- **Firmware**: FreeRTOS-based with micro-ROS client on Raspberry Pi Pico
-- **Simulation**: Gazebo Classic with ros2_control integration
-- **Development**: Active development with CI/CD via GitHub Actions
+## Überblick
 
-## Target Use Cases
+Der my_steel Robot ist eine omnidirektionale mobile Roboterplattform basierend auf ROS2 Humble. Das System kombiniert autonome Navigation mit einem interaktiven Nerf-Dart-Launcher für Bildung und Forschung.
 
-- Educational robotics platform
-- Alternative to commercial systems like TurtleBot and Husarion ROSbot
-- Interactive demonstration of autonomous navigation + computer vision
-- Modular base for mecanum or differential drive configurations
-- Research platform for mobile manipulation
+## Kernfunktionen
+
+- **Omnidirektionale Mobilität**: 4-Rad Mecanum-Antrieb für holonome Bewegung (seitlich, diagonal, Rotation auf der Stelle)
+- **Autonome Navigation**: SLAM mit LiDAR (YDLIDAR LDS01RR) und Sensorfusion (IMU + Odometrie)
+- **Computer Vision**: Gesichtserkennung und automatisches Tracking mit USB-Kamera
+- **Interaktiver Launcher**: Nerf-Dart-System mit Pan/Tilt-Servos und Brushless-Motoren
+- **Remote-Steuerung**: Xbox-Controller und Web-Dashboard über Tailscale VPN
+- **Echtzeit-Kontrolle**: Raspberry Pi Pico mit micro-ROS für präzise Motorsteuerung
+
+## Hardware-Architektur
+
+- **High-Level**: Raspberry Pi 4B (ROS2, Navigation, Computer Vision)
+- **Low-Level**: Raspberry Pi Pico (FreeRTOS, Motorsteuerung, Sensorik)
+- **Launcher**: Arduino Nano/Pro Micro (dedizierte Nerf-Steuerung)
+- **Sensorik**: LiDAR, 9-DoF IMU, ToF-Sensor, USB-Kamera
+- **Antrieb**: 4x DC-Motoren mit Hall-Encodern, Mecanum-Räder
+
+## Zielgruppen
+
+- Robotik-Studenten und -Forscher
+- Entwickler von autonomen Navigationssystemen
+- Maker und Hobbyisten mit ROS2-Interesse
+- Bildungseinrichtungen für praktische Robotik-Lehre

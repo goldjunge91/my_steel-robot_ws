@@ -1,320 +1,251 @@
-# Technology Stack
-## Code Implementation Rules
+# my_steel Robot - Technischer Stack
 
-- **Always write code directly to the correct files** - Never create dummy or pseudo code without permission
-- **Write production-ready code** - All code should be complete, functional, and ready to use
-- **No placeholder implementations** - Avoid stub functions, TODOs, or incomplete logic unless explicitly requested
-- **Never create any *.md files, summaries, documentation, analysis or other additional artifacts** (such as README.md summaries, documentation, analysis .md files, project overviews, or automatic reports) without explicit request 
-- **Always wait for direct instruction** from the user before generating or adding such content
+# Coding Conventions
 
-> **Note**: See `coding-conventions.md` for important rules about code implementation, investigation, and making changes.
+## Code-Implementierungsregeln
+- **Schreibe Code immer direkt in die korrekten Dateien** - Niemals Dummy- oder Pseudo-Code ohne Erlaubnis erstellen
+- **Schreibe produktionsreifen Code** - Aller Code sollte vollständig, funktional und einsatzbereit sein
+- **Keine Platzhalter-Implementierungen** - Vermeide Stub-Funktionen, TODOs oder unvollständige Logik, außer explizit angefordert
 
-## Core Framework
+## Dokumentationsrichtlinien
+- **Niemals READMEs, Zusammenfassungen, Dokumentation oder andere zusätzliche Artefakte erstellen** (wie README.md-Dateien, Projektübersichten oder automatische Berichte) ohne explizite Anfrage
+- **Immer auf direkte Anweisung warten** vom Benutzer, bevor solche Inhalte generiert oder hinzugefügt werden
+- **Fokus auf Code, nicht Dokumentation** - Wenn nach Feature-Implementierung gefragt wird, nur den Code schreiben
+- **Ausnahme**: Inline-Code-Kommentare sind akzeptabel und für Klarheit erwünscht
 
-- **ROS2 Humble** - Primary robotics middleware
-- **Ubuntu 22.04** - Target OS for SBC and development
+## Was das bedeutet
+Bei Anfragen wie "Feature hinzufügen" oder "X implementieren":
+- ✅ Schreibe die tatsächliche Implementierung
+- ✅ Füge notwendige Imports und Dependencies hinzu
+- ✅ Inkludiere Inline-Kommentare für komplexe Logik
+- ❌ Erstelle keine README zur Erklärung der Arbeit
+- ❌ Schreibe keine Zusammenfassungsdokumente
+- ❌ Generiere keine Projektübersichten oder Berichte
+- ❌ Erstelle keinen Dummy- oder Pseudo-Code
+- ❌ Schreibe keine .md-Datei ohne Erlaubnis
 
-## Build System
+Der Benutzer wird nach Dokumentation fragen, wenn sie benötigt wird.
 
-- **colcon** - ROS2 workspace build tool
-- **CMake 3.13+** - C++ package builds
-- **ament_cmake** - ROS2 CMake extensions
-- **ament_python** - Python package builds
+## Codebase-Untersuchung
+- Erkunde relevante Dateien und Verzeichnisse
+- Suche nach Schlüsselfunktionen, Klassen oder Variablen zum Problem
+- Lese und verstehe relevante Code-Snippets
+- Identifiziere die Grundursache des Problems
+- Validiere und aktualisiere kontinuierlich das Verständnis beim Sammeln von Kontext
 
-## Firmware
+## Code-Änderungen durchführen
+- **Vor dem Bearbeiten immer die relevanten Dateiinhalte oder Abschnitte lesen** für vollständigen Kontext
+- **Immer Dateien lesen, die in der zu bearbeitenden Datei importiert werden** für vollständigen Kontext
+- Stelle sicher, den vollständigen Kontext der Codebase vor Änderungen zu verstehen
+- Denke immer über die Auswirkungen der Änderungen nach auf:
+  - Die gesamte Codebase
+  - Dependencies und Interaktionen mit anderen Code-Teilen
+  - Edge Cases und potenzielle Fallstricke
+  - Performance, Sicherheit und Wartbarkeit
+- Falls ein Patch nicht korrekt angewendet wird, versuche ihn erneut anzuwenden
+- Mache kleine, testbare, inkrementelle Änderungen, die logisch aus Untersuchung und Plan folgen
 
-- **Raspberry Pi Pico SDK** - Microcontroller framework
-- **FreeRTOS** - Real-time operating system
-- **micro-ROS** - ROS2 client library for microcontrollers
-- **Eigen** - Linear algebra for odometry calculations
-- **CMake** - Firmware build system
+## Umgebungsvariablen
+- Wenn erkannt wird, dass ein Projekt eine Umgebungsvariable benötigt (wie API-Key oder Secret), prüfe immer, ob eine `.env`-Datei im Projekt-Root existiert
+- Falls sie nicht existiert, erstelle automatisch eine `.env`-Datei mit Platzhalter für die benötigte(n) Variable(n) und informiere den Benutzer
+- Tue dies proaktiv, ohne auf Benutzeranfrage zu warten
 
-## Key Libraries & Dependencies
+**ROS2 Humble + Colcon Build-System + micro-ROS Firmware + Docker Deployment**
 
-### Control & Hardware
-- `ros2_control` - Hardware abstraction framework
-- `ros2_controllers` - Standard controller implementations (diff_drive_controller)
-- `mecanum_drive_controller` - Custom mecanum drive controller (in robot_controllers package)
-- `controller_manager` - Controller lifecycle management
-- `hardware_interface` - Hardware plugin interface
-- `imu_sensor_broadcaster` - IMU data broadcasting
-- `joint_state_broadcaster` - Joint state broadcasting
+- **Build**: `colcon build --symlink-install` (ROS2), `make build && make flash` (Firmware)
+- **Test**: `colcon test`, `make test` (Firmware Unit-Tests)
+- **Deploy**: `docker compose -f docker/compose.robot-pi.yaml up -d`
+- **Debug**: `ros2 topic list`, `ros2 control list_controllers`, Foxglove Studio
 
-### Simulation
-- `gazebo_ros2_control` - Gazebo integration
-- `gazebo_ros` - ROS2-Gazebo bridge
+## Build-System & Architektur
 
-### Navigation & Localization
-- `nav2` - Navigation stack
-- `robot_localization` - Sensor fusion (EKF)
-- `cartographer` - SLAM implementation (planned)
+### ROS2 Workspace (Colcon)
+- **Build-Tool**: `colcon build --symlink-install --merge-install`
+- **ROS2 Distribution**: Humble (Ubuntu 22.04)
+- **Dependency Management**: `vcs` für ROS2-Pakete, Git-Submodules für Libraries
+- **Package Format**: ament_cmake (C++) und ament_python (Python)
 
-### Utilities
-- `xacro` - URDF macro language
-- `robot_state_publisher` - TF tree publishing
-- `joint_state_publisher` - Joint state management
-- `micro_ros_agent` - Bridge between micro-ROS and ROS2
-- `teleop_twist_keyboard` - Keyboard teleoperation
-- `joy` - Joystick interface
+### Firmware Build-System
+- **Mikrocontroller**: Raspberry Pi Pico (RP2040)
+- **Build-Tool**: CMake + Make
+- **SDK**: Pico SDK + FreeRTOS + micro-ROS
+- **Compiler**: gcc-arm-none-eabi
 
-### External Components
-- `husarion_components_description` - Component descriptions
-- `dynamixel_hardware_interface` - Dynamixel servo interface
-- `open_manipulator_x` - Manipulator arm support
-- `foxglove-joystick` - Foxglove joystick integration
+## Technologie-Stack
 
-## Code Style & Linting
+### High-Level (Raspberry Pi 4B)
+- **OS**: Ubuntu Server 22.04 LTS
+- **Middleware**: ROS2 Humble
+- **Control Framework**: ros2_control + ros2_controllers
+- **Navigation**: Nav2 + SLAM Toolbox
+- **Computer Vision**: OpenCV + dlib
+- **Communication**: micro-ROS Agent, Tailscale VPN
 
-### C++
-- **Standard**: C++17
-- **Formatter**: clang-format (Google style base, 4-space indent, 100 char line limit)
-- **Linters**: ament_cppcheck, ament_cpplint
+### Low-Level (Raspberry Pi Pico)
+- **RTOS**: FreeRTOS
+- **Communication**: micro-ROS Client
+- **Libraries**: Eigen (Mathematik), Pico SDK (Hardware)
+- **Protokoll**: USB Serial (CDC) zu ROS2 Host
 
-### Python
-- **Standard**: Python 3
-- **Linters**: flake8 (120 char line limit), ament_flake8, ament_pep257
-- **Test**: pytest
+### Deployment & Container
+- **Container**: Docker + Docker Compose
+- **Base Image**: `goldjunge491/robot:humble-arm64`
+- **Orchestration**: Multi-Container (micro-ROS Agent + Robot Bringup)
+- **VPN**: Tailscale für Remote-Zugriff
 
-## Common Commands
+## Wichtige Frameworks & Libraries
+
+### ROS2 Pakete
+- `mecanum_drive_controller` - Omnidirektionale Bewegungssteuerung
+- `joint_state_broadcaster` - Gelenkzustände publizieren
+- `imu_sensor_broadcaster` - IMU-Daten publizieren
+- `robot_state_publisher` - TF-Tree aus URDF
+- `micro_ros_agent` - Brücke zu Mikrocontrollern
+- `foxglove_bridge` - Web-Dashboard Konnektivität
+
+### Hardware-Interfaces
+- **ros2_control**: Hardware-Abstraktion für Motoren/Sensoren
+- **SystemInterface**: Custom Hardware-Plugin für Pico-Kommunikation
+- **CommandInterface**: Geschwindigkeitsbefehle an Motoren
+- **StateInterface**: Encoder-Feedback und Sensordaten
+
+### Firmware Libraries
+- **micro-ROS**: ROS2-Client für Mikrocontroller
+- **FreeRTOS**: Echtzeit-Task-Scheduling
+- **Eigen**: Lineare Algebra für Odometrie-Berechnungen
+- **Pico SDK**: Hardware-Abstraktion (GPIO, PWM, SPI, I2C)
+
+## Häufige Build-Kommandos
 
 ### Workspace Build
 ```bash
-# Source ROS2
+# Vollständiger Build
 source /opt/ros/humble/setup.bash
+colcon build --symlink-install --merge-install
 
-# Build entire workspace
-colcon build --symlink-install
+# Einzelnes Paket
+colcon build --packages-select robot_description
 
-# Build specific packages
-colcon build --packages-select <package_name>
+# Mit Dependencies
+colcon build --packages-up-to robot_bringup
 
-# Build with dependencies
-colcon build --packages-up-to <package_name>
-
-# Source workspace
-source install/setup.bash
-```
-
-### Testing
-```bash
-# Run all tests
-colcon test
-
-# Run tests for specific package
-colcon test --packages-select <package_name>
-
-# Show test results
+# Tests ausführen
+colcon test --packages-select robot_hardware_interfaces
 colcon test-result --all --verbose
 ```
 
-### Firmware Build & Flash
+### Firmware Build
 ```bash
-# Build firmware (debug)
-cd firmware && make build
+# Debug Build
+cd src/robot_firmware
+make build
 
-# Build firmware (release)
-cd firmware && make build_release
+# Release Build
+make build_release
 
-# Flash to Pico (BOOTSEL mode or picotool)
-cd firmware && make flash
+# Flash auf Pico
+make flash
 
-# Flash release firmware
-cd firmware && make flash-release
-
-# Monitor debug output
-./firmware/monitor_firmware.sh
-
-# Test firmware topics
-./firmware/test_firmware_topics.sh
-
-# Create release
-cd firmware && ./create_release.sh
+# Tests
+make test
+make test-verbose
 ```
 
-### Using Just (Task Runner)
+### Docker Deployment
 ```bash
-# List all available commands
-just
+# Auf Raspberry Pi
+docker compose -f docker/compose.robot-pi.yaml up -d
 
-# Build workspace
-just build
+# Logs anzeigen
+docker compose -f docker/compose.robot-pi.yaml logs -f
 
-# Build only hardware packages
-just build-hardware
-
-# Run tests
-just run-tests
-
-# Clean build artifacts
-just clean
-
-# Build firmware (debug)
-just build-firmware
-
-# Build firmware (release)
-just build-firmware-release
-
-# Flash firmware (debug)
-just flash-firmware
-
-# Flash firmware (release)
-just flash-firmware-release
-
-# Monitor firmware output
-just monitor-firmware
-
-# Test firmware connection
-just test-firmware
-
-# Start simulation
-just start-gazebo-sim
-
-# Start simulation with tmux
-just start-sim-tmux
-
-# Run teleoperation
-just run-teleop
-
-# Start micro-ROS agent (auto-detect)
-just start-microros
-
-# Start micro-ROS agent with specific device
-just start-microros-dev /dev/ttyACM0
-
-# Check target configuration
-just check-target
-
-# Open shell with ROS sourced
-just shell
+# Services stoppen
+docker compose -f docker/compose.robot-pi.yaml down
 ```
 
-### ROS2 Runtime
+### Development Workflow
 ```bash
-# Launch robot bringup
-ros2 launch robot_bringup bringup.launch.py
+# Setup Dependencies
+./setup.sh
 
-# Launch with parameters
-ros2 launch robot_bringup bringup.launch.py \
-  robot_model:=robot_xl \
-  drive_type:=mecanum \
-  microros:=true \
-  serial_port:=/dev/ttyACM0
+# Build Workspace
+./build.sh
 
-# Launch simulation
-ros2 launch robot launch_sim.launch.py use_sim_time:=true
+# Start Robot (Pi)
+./scripts/start_robot.sh
 
-# Launch robot on Raspberry Pi
-ros2 launch robot launch_robot_pi.launch.py
+# Start Simulation (Dev PC)
+ros2 launch robot_gazebo simulation.launch.py
 
-# Launch joystick control
-ros2 launch robot joystick_xbox_mecanum_pico.launch.py
+# Teleop Control
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
 
-# Start micro-ROS agent manually
-ros2 run micro_ros_agent micro_ros_agent serial \
-  --dev /dev/ttyACM0 -b 115200 -v
+## Konfigurationsdateien
 
-# Start micro-ROS agent with Python script (auto-detect)
-python3 scripts/launch_microros_agent.py
+### Controller-Konfiguration
+- `src/robot_controller/config/robot_xl/mecanum_drive_controller.yaml`
+- Update-Rate: 100 Hz, Geschwindigkeitslimits, Kinematik-Parameter
 
-# Teleoperation
-ros2 run teleop_twist_keyboard teleop_twist_keyboard \
-  --ros-args -r /cmd_vel:=/mecanum_cont/cmd_vel_unstamped
+### Hardware-Interface
+- `src/robot_hardware_interfaces/config/ros2_control_params.yaml`
+- Serial-Port, Baudrate, Timeout-Werte
 
-# List topics
-ros2 topic list
+### Launch-Parameter
+- `robot_model`: robot_xl (Standard)
+- `mecanum`: True/False (Antriebstyp)
+- `microros`: True/False (micro-ROS Agent starten)
+- `camera`: True/False (USB-Kamera aktivieren)
 
-# Echo topic
-ros2 topic echo /odom
+## Testing & Debugging
 
-# List controllers
+### Unit Tests
+```bash
+# Firmware Tests
+cd src/robot_firmware
+make test
+
+# ROS2 Package Tests
+colcon test --packages-select <package_name>
+```
+
+### Hardware-Debugging
+```bash
+# micro-ROS Verbindung prüfen
+ros2 topic list | grep rt/
+
+# Controller Status
 ros2 control list_controllers
 
-# Spawn controller
-ros2 run controller_manager spawner <controller_name>
+# Hardware-Interface Status
+ros2 service call /controller_manager/list_hardware_interfaces
 
-# Check controller status
-./scripts/check_and_spawn_controllers.sh
+# Firmware Monitor
+cd src/robot_firmware
+./monitor_firmware.sh
 ```
 
-### Development Tools
+### Performance Monitoring
 ```bash
-# Format C++ code
-./format.sh
+# Topic-Frequenzen
+ros2 topic hz /joint_states
+ros2 topic hz /odom
 
-# Check Python style
-flake8 .
-
-# Run RViz
-rviz2
-
-# Run RViz with config
-rviz2 -d src/robot/config/view_robot.rviz
-
-# Run RViz clean (without previous state)
-./scripts/run_rviz_clean.sh
-
-# Check joystick
-ros2 run joy joy_enumerate_devices
-jstest-gtk
-
-# Check Pico connection
-./scripts/check_pico.sh
-
-# Check micro-ROS and Pico USB
-./scripts/check_micro_ros_and_pico_usb0.sh
-
-# Check system status
-./scripts/check_status.sh
-
-# Diagnose agent issues
-./scripts/diagnose_agent_issues.sh
-
-# Test firmware connection
-./scripts/test_firmware_connection.sh
-
-# Proper test procedure
-./scripts/proper_test_procedure.sh
-
-# ROS2 verification checks
-./scripts/ros2_verification_checks.sh
+# CPU/Memory Usage
+htop
+ros2 node info /controller_manager
 ```
 
-## Environment Configuration
+## Entwicklungsumgebung
 
-Use `.env` file to configure target platform (see `.env.*.example` for templates):
-- `TARGET=robot` - Raspberry Pi SBC deployment
-- `TARGET=remote_pc` - Development workstation with simulation
+### Erforderliche Tools
+- **ROS2 Humble**: `sudo apt install ros-humble-desktop`
+- **Colcon**: `pip3 install colcon-common-extensions`
+- **VCS**: `pip3 install vcstool`
+- **Pico SDK**: Für Firmware-Entwicklung
+- **Docker**: Für Deployment-Tests
 
-Key environment variables:
-- `ROS_DISTRO=humble` - ROS2 distribution
-- `ROBOT_MODEL_NAME=robot_xl` - Robot model (only robot_xl supported)
-- `DRIVE_TYPE=mecanum` - Drive type (mecanum or diff)
-- `SERIAL_PORT=/dev/ttyACM0` - Pico serial port
-- `SERIAL_BAUDRATE=115200` - Serial communication baud rate
-- `MICROROS=true` - Enable micro-ROS agent
-- `PICO_SDK_PATH` - Path to Pico SDK (for firmware builds)
-
-## Communication Protocols
-
-- **micro-ROS**: USB serial (115200 baud default) between Pico and SBC via `/dev/ttyACM0`
-- **ROS2 DDS**: Inter-process communication on SBC
-- **Rosbridge WebSocket**: Web dashboard connectivity (port 9090, planned)
-- **Web Video Server**: Camera streaming (port 8080, planned)
-
-## Hardware Components
-
-### Sensors
-- **ICM20948** - 9-DOF IMU (SPI0 on Pico)
-- **VL6180X** - Time-of-Flight distance sensor (I2C1 on Pico)
-- **RPLiDAR** - 2D LiDAR scanner
-- **Camera** - USB camera for vision
-
-### Actuators
-- **4x DC Motors** - Mecanum wheels with encoders
-- **Motor Drivers** - TB6612 or similar H-bridge drivers
-- **Servos** - Dynamixel servos for manipulator (optional)
-
-### Controllers
-- **Raspberry Pi 4B** - Main SBC running ROS2
-- **Raspberry Pi Pico** - Real-time motor control and sensor interfacing
-- **Arduino Nano** - Nerf launcher controller (separate)
+### IDE-Integration
+- **VS Code**: ROS2-Extension, C++ IntelliSense
+- **CLion**: CMake-Integration für Firmware
+- **Foxglove Studio**: Robotik-Visualisierung und -Debugging
