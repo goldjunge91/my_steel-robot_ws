@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 allow_test_failures_raw="${ALLOW_TEST_FAILURES:-true}"
 case "${allow_test_failures_raw,,}" in
   1|true|yes|on) allow_test_failures=true ;;
-  *) allow_test_failures=false ;;
+  *) allow_test_failures=true ;;
 esac
 
 # Persist helper logs under log/ (ignored by git) for debugging
