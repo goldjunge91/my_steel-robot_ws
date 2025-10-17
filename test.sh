@@ -26,9 +26,8 @@ github_summary() {
   if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
     local summary_dir
     summary_dir=$(dirname "$GITHUB_STEP_SUMMARY")
-    if [ -d "$summary_dir" ] && [ -w "$summary_dir" ]; then
-      printf '%s\n' "$*" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
-    fi
+    mkdir -p "$summary_dir" 2>/dev/null || true
+    printf '%s\n' "$*" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
   fi
 }
 
@@ -180,6 +179,21 @@ summarize_colcon_failures() {
 
     github_summary ""
     github_summary "_Full logs: ${result_log}_"
+
+    if [ "${#failure_snippets[@]}" -gt 0 ]; then
+      for snippet in "${failure_snippets[@]}"; do
+        local path_hint line_hint
+        if [[ $snippet =~ \((\./[^:()]+):([0-9]+) ]]; then
+          path_hint=${BASH_REMATCH[1]#./}
+          line_hint=${BASH_REMATCH[2]}
+          github_warning "Test Failure" "$snippet" "$path_hint" "$line_hint"
+        else
+          github_warning "Test Failure" "$snippet"
+        fi
+      done
+    else
+      github_warning "Test Failure" "See test summary for details"
+    fi
   fi
 }
 
