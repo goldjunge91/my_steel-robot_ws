@@ -244,21 +244,21 @@ colcon test-result --all --verbose | tee "$colcon_result_log"
 test_result_exit=${PIPESTATUS[0]}
 set -e
 
-if [ $test_exit -ne 0 ]; then
+if [ "$test_exit" -ne 0 ]; then
   log_error "colcon test exited with code $test_exit"
   github_error "colcon test" "colcon test exited with code $test_exit"
 fi
 
-if [ $test_result_exit -ne 0 ]; then
+if [ "$test_result_exit" -ne 0 ]; then
   log_error "Tests reported failures (exit code $test_result_exit)"
   github_error "Test Results" "colcon test-result reported failures"
 fi
 
-if [ $test_exit -ne 0 ] || [ $test_result_exit -ne 0 ]; then
+if [ "$test_exit" -ne 0 ] || [ "$test_result_exit" -ne 0 ]; then
   summarize_colcon_failures "$colcon_result_log" "$allow_test_failures"
 
   if [ "$allow_test_failures" = true ]; then
-    log_warning "ALLOW_TEST_FAILURES=$allow_test_failures_raw – continuing despite test failures."
+    log_warning "ALLOW_TEST_FAILURES=$allow_test_failures_raw - continuing despite test failures."
     log_warning "Detailed log saved to $colcon_result_log"
     exit 0
   fi
