@@ -48,20 +48,28 @@ log_step "ROS workspace setup gestartet (ROS_DISTRO=${ROS_DISTRO})"
 
 require_cmd rosdep
 require_cmd sudo
+require_cmd vcs
+
+mkdir -p src
+if [ ! -w src ]; then
+  log_warning "src/ ist nicht beschreibbar – versuche Besitzrechte anzupassen"
+  sudo chown -R "$(id -u)":"$(id -g)" src
+fi
+
+if [ ! -w src ]; then
+  log_error "src/ bleibt nicht beschreibbar – breche ab"
+  exit 1
+fi
 
 if [ -f "src/ros2.repos" ]; then
   log_step "Importiere Repositories aus src/ros2.repos"
-  if command -v vcs >/dev/null 2>&1; then
-    if command -v envsubst >/dev/null 2>&1; then
-      envsubst < src/ros2.repos | vcs import src
-    else
-      log_warning "envsubst nicht gefunden – ros2.repos wird ohne Variablenersetzung importiert"
-      vcs import src < src/ros2.repos
-    fi
-    log_success "Repositories importiert"
+  if command -v envsubst >/dev/null 2>&1; then
+    envsubst < src/ros2.repos | vcs import src
   else
-    log_warning "vcs nicht gefunden – überspringe Repository-Import"
+    log_warning "envsubst nicht gefunden – ros2.repos wird ohne Variablenersetzung importiert"
+    vcs import src < src/ros2.repos
   fi
+  log_success "Repositories importiert"
 else
   log_warning "Keine src/ros2.repos gefunden – überspringe VCS-Import"
 fi
