@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 allow_test_failures_raw="${ALLOW_TEST_FAILURES:-true}"
 case "${allow_test_failures_raw,,}" in
   1|true|yes|on) allow_test_failures=true ;;
-  *) allow_test_failures=true ;;
+  *) allow_test_failures=false ;;
 esac
 
 # Persist helper logs under log/ (ignored by git) for debugging
@@ -260,12 +260,20 @@ set -e
 
 if [ "$test_exit" -ne 0 ]; then
   log_error "colcon test exited with code $test_exit"
-  github_error "colcon test" "colcon test exited with code $test_exit"
+  if [ "$allow_test_failures" = true ]; then
+    github_warning "colcon test" "colcon test exited with code $test_exit"
+  else
+    github_error "colcon test" "colcon test exited with code $test_exit"
+  fi
 fi
 
 if [ "$test_result_exit" -ne 0 ]; then
   log_error "Tests reported failures (exit code $test_result_exit)"
-  github_error "Test Results" "colcon test-result reported failures"
+  if [ "$allow_test_failures" = true ]; then
+    github_warning "Test Results" "colcon test-result reported failures"
+  else
+    github_error "Test Results" "colcon test-result reported failures"
+  fi
 fi
 
 if [ "$test_exit" -ne 0 ] || [ "$test_result_exit" -ne 0 ]; then
