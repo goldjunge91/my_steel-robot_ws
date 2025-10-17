@@ -10,6 +10,45 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# GitHub Actions functions
+github_summary() {
+  if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    echo "$*" >> "$GITHUB_STEP_SUMMARY"
+  fi
+}
+
+github_annotation() {
+  local type="$1"  # error, warning, notice
+  local title="$2"
+  local message="$3"
+  local file="${4:-}"
+  local line="${5:-}"
+  
+  if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
+    local annotation="::${type}"
+    if [ -n "$file" ]; then
+      annotation="${annotation} file=${file}"
+    fi
+    if [ -n "$line" ]; then
+      annotation="${annotation},line=${line}"
+    fi
+    annotation="${annotation} title=${title}::${message}"
+    echo "$annotation"
+  fi
+}
+
+github_error() {
+  github_annotation "error" "$1" "$2" "$3" "$4"
+}
+
+github_warning() {
+  github_annotation "warning" "$1" "$2" "$3" "$4"
+}
+
+github_notice() {
+  github_annotation "notice" "$1" "$2" "$3" "$4"
+}
+
 # --- Hilfsfunktionen ---
 print_header() {
   echo -e "\n${BLUE}=======================================================================${NC}"
@@ -159,11 +198,15 @@ verify_vcstool_in_path() {
 
 # --- Haupt-Workflow ---
 main() {
-    local script_start=$(date +%s)
+    # statt: local script_start=$(date +%s)
+    local script_start
+    script_start=$(date +%s)
     ROS_DISTRO=${ROS_DISTRO:-humble}
 
     print_header "ROS-Umgebung wird eingerichtet (Distribution: $ROS_DISTRO)"
-    local step_start=$(date +%s)
+    # statt: local step_start=$(date +%s)
+    local step_start
+    step_start=$(date +%s)
     
     ROS_SETUP="/opt/ros/${ROS_DISTRO}/setup.bash"
     if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
@@ -175,7 +218,9 @@ main() {
     if safe_source "$ROS_SETUP"; then
       print_success "ROS setup script loaded successfully"
       if verify_ros_environment; then
-        local step_end=$(date +%s)
+        # statt: local step_end=$(date +%s)
+        local step_end
+        step_end=$(date +%s)
         print_duration "$step_start" "$step_end"
       else
         print_warning "ROS environment verification failed"
@@ -186,6 +231,7 @@ main() {
 
     if [ -f src/ros2.repos ]; then
       print_header "VCS Repositories werden importiert"
+      # statt: step_start=$(date +%s)
       step_start=$(date +%s)
       
       if ! command -v vcs >/dev/null 2>&1; then
@@ -207,7 +253,9 @@ main() {
         print_step "Importing repositories from src/ros2.repos..."
         if vcs import src < src/ros2.repos; then
           print_success "Repositories imported successfully"
-          local step_end=$(date +%s)
+          # statt: local step_end=$(date +%s)
+          local step_end
+          step_end=$(date +%s)
           print_duration $step_start $step_end
         else
           print_warning "Failed to import VCS repositories. Continuing anyway."
@@ -270,7 +318,9 @@ main() {
       
       if [ $rosdep_exit_code -eq 0 ]; then
         print_success "rosdep dependencies installed successfully"
-        local step_end=$(date +%s)
+        # statt: local step_end=$(date +%s)
+        local step_end
+        step_end=$(date +%s)
         print_duration $step_start $step_end
       else
         print_warning "'rosdep install' failed with exit code $rosdep_exit_code"
@@ -356,10 +406,30 @@ main() {
       print_error "rosdep is not available; skipping dependency resolution."
     fi
 
-    local script_end=$(date +%s)
+    # statt: local script_end=$(date +%s)
+    local script_end
+    script_end=$(date +%s)
     echo ""
     print_success "Setup script completed"
     print_duration $script_start $script_end
+    
+    # GitHub Actions summary for setup completion
+    if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
+      local total_duration=$((script_end - script_start))
+      github_summary "## ✅ Setup Completed"
+      github_summary ""
+      github_summary "**Duration:** ${total_duration}s"
+      github_summary "**ROS Distribution:** $ROS_DISTRO"
+      github_summary ""
+      github_summary "### Setup Steps Completed"
+      github_summary "- ✅ ROS environment sourced"
+      if [ -f src/ros2.repos ]; then
+        github_summary "- ✅ VCS repositories imported"
+      fi
+      github_summary "- ✅ Dependencies resolved with rosdep"
+      github_summary ""
+      github_notice "Setup Complete" "ROS2 workspace setup completed successfully"
+    fi
     
     # Gib immer den Exit-Code 0 zurück, um die CI/CD-Pipeline nicht zu blockieren.
     print_success "Setup script completed - always returning success for CI/CD"
@@ -410,7 +480,7 @@ main
 # from pathlib import Path
 # print(Path(sys.executable).resolve().parent)
 # PY
-# )
+#     )
 #     export PATH="$VCS_BIN_DIR:$PATH"
 #   fi
 #   vcs import src < src/ros2.repos || true
