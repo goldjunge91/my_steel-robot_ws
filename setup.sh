@@ -74,8 +74,12 @@ else
   log_warning "Keine src/ros2.repos gefunden – überspringe VCS-Import"
 fi
 
-log_step "Aktualisiere apt Paketquellen"
-sudo apt-get update -y
+if command -v apt-get >/dev/null 2>&1; then
+  log_step "Aktualisiere apt Paketquellen"
+  sudo apt-get update -y
+else
+  log_warning "apt-get nicht gefunden – Paketquellen-Aktualisierung übersprungen (nicht Debian/Ubuntu?)"
+fi
 
 log_step "Stelle Schreibrechte für rosdep Cache sicher"
 if [ -n "${HOME:-}" ]; then
@@ -102,7 +106,7 @@ fi
 
 log_step "Installiere Abhängigkeiten via rosdep"
 set +e
-rosdep install --from-paths src --ignore-src -y --rosdistro="$ROS_DISTRO"
+rosdep install --from-paths "$PWD/src" --ignore-src -y --rosdistro="$ROS_DISTRO"
 ROSDEP_INSTALL_RC=$?
 set -e
 if [ "$ROSDEP_INSTALL_RC" -ne 0 ]; then
@@ -114,7 +118,7 @@ fi
 log_success "Setup abgeschlossen"
 
 if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
-  github_summary "## ✅ Setup Completed"
-  github_summary "**ROS Distribution:** $ROS_DISTRO"
-  github_notice "Setup Complete" "ROS2 workspace setup completed successfully"
+  github_summary "## ✅ Setup Completed" || true
+  github_summary "**ROS Distribution:** $ROS_DISTRO" || true
+  github_notice "Setup Complete" "ROS2 workspace setup completed successfully" || true
 fi

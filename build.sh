@@ -69,7 +69,7 @@ colcon build \
   --cmake-args \
     "-DCMAKE_BUILD_TYPE=${BUILD_TYPE}" \
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=On" \
-    "-DCMAKE_CXX_FLAGS=-Wall\ -Wextra\ -Wpedantic"
+    "-DCMAKE_CXX_FLAGS=-Wall -Wextra -Wpedantic"
 
 log_success "colcon build abgeschlossen"
 
