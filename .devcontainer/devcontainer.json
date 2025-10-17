@@ -5,7 +5,7 @@
 	"build": {
 		"args": {
 			"WORKSPACE": "${containerWorkspaceFolder}",
-			"TARGET": "${localEnv:TARGET:-remote_pc}"
+			// "TARGET": "${localEnv:TARGET:-remote_pc}"
 		}
 	},
 	"remoteUser": "ros",

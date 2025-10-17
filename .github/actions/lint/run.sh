@@ -68,12 +68,8 @@ else
   print_warning "ROS setup script not found at $ROS_SETUP — continuing without sourcing ROS."
 fi
 
-# Linters work directly on source code without requiring workspace build
-print_info "Linting source code directly (no workspace build required)"
-
-# Debug: Show current environment
-print_info "Current working directory: $(pwd)"
-print_info "GitHub workspace: ${GITHUB_WORKSPACE:-not set}"
+# Run setup.sh to prepare the workspace (VCS import, dependencies, etc.)
+print_info "Running setup.sh to prepare workspace for linting"
 
 # In GitHub Actions Docker containers, the workspace is mounted at /github/workspace
 # Ensure we're in the correct directory
@@ -85,22 +81,31 @@ elif [ -n "${GITHUB_WORKSPACE}" ] && [ -d "${GITHUB_WORKSPACE}" ]; then
   cd "${GITHUB_WORKSPACE}"
 fi
 
-print_info "Working directory after change: $(pwd)"
+print_info "Current working directory: $(pwd)"
 
-# Verify source directory exists
-if [ ! -d "src" ]; then
-  print_error "Source directory 'src/' not found"
-  print_error "Current directory: $(pwd)"
-  print_error "Directory contents:"
-  ls -la
-  print_error "Looking for src in common locations:"
-  find / -maxdepth 3 -name "src" -type d 2>/dev/null | head -10 || true
+# Run setup.sh to import repositories and install dependencies
+if [ -f "setup.sh" ]; then
+  print_info "Running setup.sh..."
+  if ./setup.sh; then
+    print_success "setup.sh completed successfully"
+  else
+    print_warning "setup.sh had issues, continuing anyway..."
+  fi
+else
+  print_error "setup.sh not found in $(pwd)"
   exit 1
 fi
 
-print_success "Source directory found at: $(pwd)/src"
-print_info "Source directory contents:"
-ls -la src/ | head -10
+# Verify source directory exists after setup
+if [ ! -d "src" ]; then
+  print_error "Source directory 'src/' not found after setup"
+  print_error "Current directory: $(pwd)"
+  print_error "Directory contents:"
+  ls -la
+  exit 1
+fi
+
+print_success "Workspace setup completed, source directory ready for linting"
 
 # Validate LINTER environment variable
 if [ -z "${LINTER:-}" ]; then
