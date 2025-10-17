@@ -86,17 +86,25 @@ fi
 log_step "Aktualisiere apt Paketquellen"
 sudo apt-get update -y
 
-log_step "Stelle Schreibrechte für rosdep Cache sicher"
-if [ -n "${HOME:-}" ]; then
-  if ! mkdir -p "$HOME/.ros"; then
-    sudo mkdir -p "$HOME/.ros"
-  fi
-  if [ ! -w "$HOME/.ros" ]; then
-    sudo chown -R "$(id -u)":"$(id -g)" "$HOME/.ros"
-  fi
-else
-  log_warning "\$HOME nicht gesetzt – kann rosdep Cache-Pfad nicht prüfen"
+log_step "Konfiguriere ROS Cache-Verzeichnis"
+ros_home="${ROS_HOME:-$PWD/.ros}"
+
+if ! mkdir -p "$ros_home" 2>/dev/null; then
+  log_warning "Kann $ros_home nicht anlegen – wechsle auf temporären Pfad"
+  ros_home="$(mktemp -d /tmp/ros_home.XXXXXX)"
 fi
+
+if [ ! -w "$ros_home" ]; then
+  if command -v sudo >/dev/null 2>&1 && sudo chown -R "$(id -u)":"$(id -g)" "$ros_home" 2>/dev/null; then
+    :
+  else
+    log_warning "$ros_home bleibt schreibgeschützt – nutze temporäres Verzeichnis"
+    ros_home="$(mktemp -d /tmp/ros_home.XXXXXX)"
+  fi
+fi
+
+export ROS_HOME="$ros_home"
+log_step "ROS_HOME gesetzt auf $ROS_HOME"
 
 log_step "Aktualisiere rosdep-Datenbank"
 set +e

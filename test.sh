@@ -46,10 +46,6 @@ github_warning() {
 # Timing helpers for consistent colored output
 start_time=$(date +%s)
 
-if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
-  export AMENT_TRACE_SETUP_FILES=""
-fi
-
 log_with_color() {
   local color="$1"
   local label="$2"
@@ -132,24 +128,22 @@ log_step "Running colcon test --merge-install"
 set +e
 colcon test --merge-install
 test_exit=$?
-set -e
-if [ $test_exit -ne 0 ]; then
-  log_error "colcon test exited with code $test_exit"
-  github_error "colcon test" "colcon test exited with code $test_exit"
-  exit $test_exit
-fi
-log_success "colcon test completed"
-
-log_step "Collecting test results (colcon test-result --all --verbose)"
-set +e
 colcon test-result --all --verbose
 test_result_exit=$?
 set -e
 
+if [ $test_exit -ne 0 ]; then
+  log_error "colcon test exited with code $test_exit"
+  github_error "colcon test" "colcon test exited with code $test_exit"
+fi
+
 if [ $test_result_exit -ne 0 ]; then
   log_error "Tests reported failures (exit code $test_result_exit)"
   github_error "Test Results" "colcon test-result reported failures"
-  exit $test_result_exit
+fi
+
+if [ $test_exit -ne 0 ] || [ $test_result_exit -ne 0 ]; then
+  exit 1
 fi
 
 log_success "colcon test-result completed with no failures"
