@@ -109,9 +109,15 @@ fi
 
 log_step "Checking colcon availability"
 if ! command -v colcon >/dev/null 2>&1; then
-  log_warning "colcon is not available; skipping tests"
-  github_warning "Test" "colcon is not available; tests skipped"
-  exit 0
+  if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
+    log_error "colcon is not available in CI; failing the test step"
+    github_error "Test" "colcon is not available in CI; tests cannot run"
+    exit 1
+  else
+    log_warning "colcon is not available; skipping tests locally"
+    github_warning "Test" "colcon is not available; tests skipped"
+    exit 0
+  fi
 fi
 
 log_step "Running colcon test --merge-install"
