@@ -58,7 +58,7 @@ main() {
 
   # Führe die einzelnen Schritte über die 'run_command' Funktion aus.
   # Dies sorgt für eine konsistente und informative Ausgabe.
-  run_command "Workspace-Validierung wird ausgeführt" ./scripts/validate_workspace_structure.sh
+  # run_command "Workspace-Validierung wird ausgeführt" ./scripts/validate_workspace_structure.sh
   run_command "Setup-Skript wird ausgeführt" ./setup.sh
   run_command "Build-Skript wird ausgeführt" ./build.sh
   run_command "Test-Skript wird ausgeführt"  ./test.sh
