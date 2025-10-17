@@ -26,12 +26,14 @@ The my_steel robot is an educational and research platform built on ROS2 Humble,
 ### Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/goldjunge91/my_steel-robot_ws.git
    cd my_steel-robot_ws
    ```
 
 2. Install VCS tool (for dependency management):
+
    ```bash
    pip3 install vcstool
    # Or on macOS with Homebrew:
@@ -39,6 +41,7 @@ The my_steel robot is an educational and research platform built on ROS2 Humble,
    ```
 
 3. Import dependencies:
+
    ```bash
    # Import ROS2 packages (src/)
    vcs import src < src/ros2.repos
@@ -48,12 +51,14 @@ The my_steel robot is an educational and research platform built on ROS2 Humble,
    ```
 
 4. Install ROS dependencies:
+
    ```bash
    source /opt/ros/humble/setup.bash
    rosdep install --from-paths src --ignore-src -r -y
    ```
 
 5. Build the workspace:
+
    ```bash
    colcon build --symlink-install
    source install/setup.bash
@@ -66,6 +71,7 @@ The my_steel robot is an educational and research platform built on ROS2 Humble,
 For production deployment on Raspberry Pi, Docker provides a containerized solution with all dependencies pre-installed:
 
 **Features:**
+
 - Pre-built ROS2 Humble environment with all dependencies
 - Automatic service orchestration with Docker Compose
 - Integrated Tailscale VPN for secure remote access
@@ -73,6 +79,7 @@ For production deployment on Raspberry Pi, Docker provides a containerized solut
 - Automatic restart on failure
 
 **Quick Start:**
+
 ```bash
 # Pull the pre-built image
 docker pull mysteel/robot:humble-arm64
@@ -92,6 +99,7 @@ docker compose -f ~/compose.robot-pi.yaml logs -f
 ```
 
 **Documentation:**
+
 - See [docker/README.md](docker/README.md) for complete deployment guide
 - Includes build instructions, configuration options, and troubleshooting
 - Supports Tailscale VPN for remote access over 4G/5G networks
@@ -99,6 +107,7 @@ docker compose -f ~/compose.robot-pi.yaml logs -f
 ### Running the Robot
 
 1. Start micro-ROS agent:
+
    ```bash
    ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200
    # Or use auto-detection:
@@ -106,11 +115,13 @@ docker compose -f ~/compose.robot-pi.yaml logs -f
    ```
 
 2. Launch robot bringup:
+
    ```bash
    ros2 launch robot_bringup bringup.launch.py robot_model:=robot_xl
    ```
 
 3. Control with keyboard:
+
    ```bash
    ros2 run teleop_twist_keyboard teleop_twist_keyboard
    ```
@@ -121,20 +132,20 @@ The robot uses standard ROS2 topic names following REP-105:
 
 ### Published Topics
 
-| Topic | Message Type | Rate | Description |
-|-------|--------------|------|-------------|
-| `/joint_states` | sensor_msgs/JointState | 100 Hz | Wheel encoder feedback |
-| `/imu/data_raw` | sensor_msgs/Imu | 50 Hz | IMU data (ICM20948) |
-| `/odom` | nav_msgs/Odometry | 50 Hz | Wheel odometry |
-| `/sensors/range_tof` | sensor_msgs/Range | Variable | Time-of-Flight distance (VL6180X) |
-| `/sensors/range_ultrasonic` | sensor_msgs/Range | Variable | Ultrasonic distance (HC-SR04) |
-| `/sensors/illuminance` | sensor_msgs/Illuminance | Variable | Ambient light (VL6180X) |
-| `/odometry/wheels` | nav_msgs/Odometry | 50 Hz | Controller odometry output |
+| Topic                       | Message Type            | Rate     | Description                       |
+| --------------------------- | ----------------------- | -------- | --------------------------------- |
+| `/joint_states`             | sensor_msgs/JointState  | 100 Hz   | Wheel encoder feedback            |
+| `/imu/data_raw`             | sensor_msgs/Imu         | 50 Hz    | IMU data (ICM20948)               |
+| `/odom`                     | nav_msgs/Odometry       | 50 Hz    | Wheel odometry                    |
+| `/sensors/range_tof`        | sensor_msgs/Range       | Variable | Time-of-Flight distance (VL6180X) |
+| `/sensors/range_ultrasonic` | sensor_msgs/Range       | Variable | Ultrasonic distance (HC-SR04)     |
+| `/sensors/illuminance`      | sensor_msgs/Illuminance | Variable | Ambient light (VL6180X)           |
+| `/odometry/wheels`          | nav_msgs/Odometry       | 50 Hz    | Controller odometry output        |
 
 ### Subscribed Topics
 
-| Topic | Message Type | Description |
-|-------|--------------|-------------|
+| Topic      | Message Type        | Description                        |
+| ---------- | ------------------- | ---------------------------------- |
 | `/cmd_vel` | geometry_msgs/Twist | Velocity commands for robot motion |
 
 ### Topic Architecture
@@ -175,6 +186,7 @@ The robot uses standard ROS2 topic names following REP-105:
 This project uses a **hybrid approach** for managing dependencies:
 
 ### VCS for ROS2 Packages (src/)
+
 - **What**: Your robot packages that change frequently
 - **Why**: Easy for contributors, standard ROS2 workflow
 - **How**: Uses `src/ros2.repos` file with `vcs import`
@@ -189,6 +201,7 @@ repositories:
 ```
 
 **Commands:**
+
 ```bash
 # Import all packages
 vcs import src < src/ros2.repos
@@ -204,6 +217,7 @@ vcs custom src --args checkout humble
 ```
 
 ### Git Submodules for Libraries (lib/)
+
 - **What**: External libraries that need exact versions
 - **Why**: Precise version control, important for firmware builds
 - **How**: Traditional git submodules with `lib/lib_repos.repos` as reference
@@ -218,6 +232,7 @@ repositories:
 ```
 
 **Commands:**
+
 ```bash
 # Initialize submodules
 git submodule update --init --recursive lib/
@@ -231,16 +246,17 @@ cd lib/FreeRTOS-Kernel && git checkout V10.6.2
 
 ### Why This Hybrid Approach?
 
-| Aspect | VCS (src/) | Submodules (lib/) |
-|--------|------------|-------------------|
-| **Use Case** | Your ROS2 packages | External libraries |
-| **Updates** | Frequent, latest from branch | Rare, specific versions |
-| **Complexity** | Simple `vcs pull` | More complex git commands |
-| **Contributors** | Easy `vcs import` | Automatic with git clone |
-| **Version Control** | Branch-based | Commit/tag-based |
-| **Offline Work** | Requires internet | Available offline |
+| Aspect              | VCS (src/)                   | Submodules (lib/)         |
+| ------------------- | ---------------------------- | ------------------------- |
+| **Use Case**        | Your ROS2 packages           | External libraries        |
+| **Updates**         | Frequent, latest from branch | Rare, specific versions   |
+| **Complexity**      | Simple `vcs pull`            | More complex git commands |
+| **Contributors**    | Easy `vcs import`            | Automatic with git clone  |
+| **Version Control** | Branch-based                 | Commit/tag-based          |
+| **Offline Work**    | Requires internet            | Available offline         |
 
 ### Directory Structure
+
 ```
 my_steel-robot_ws/
 ├── src/                    # ROS2 Packages → VCS managed
@@ -316,12 +332,14 @@ make build_release
 
 1. Put Pico in BOOTSEL mode (hold BOOTSEL button while connecting USB)
 2. Flash the firmware:
+
    ```bash
    make flash          # Debug
    make flash-release  # Release
    ```
 
 3. Monitor firmware output:
+
    ```bash
    ./monitor_firmware.sh
    ```
@@ -341,13 +359,13 @@ The micro-ROS agent bridges communication between the Pico firmware and ROS2. It
 
 ### Topic Remapping
 
-| Firmware Topic | ROS2 Topic | Direction |
-|----------------|------------|-----------|
+| Firmware Topic     | ROS2 Topic      | Direction       |
+| ------------------ | --------------- | --------------- |
 | `/rt/joint_states` | `/joint_states` | Firmware → ROS2 |
 | `/rt/imu/data_raw` | `/imu/data_raw` | Firmware → ROS2 |
-| `/rt/odom` | `/odom` | Firmware → ROS2 |
-| `/rt/sensors/*` | `/sensors/*` | Firmware → ROS2 |
-| `/cmd_vel` | `/rt/cmd_vel` | ROS2 → Firmware |
+| `/rt/odom`         | `/odom`         | Firmware → ROS2 |
+| `/rt/sensors/*`    | `/sensors/*`    | Firmware → ROS2 |
+| `/cmd_vel`         | `/rt/cmd_vel`   | ROS2 → Firmware |
 
 ### Starting the Agent
 
@@ -474,6 +492,7 @@ ros2 launch robot_gazebo launch_sim.launch.py use_sim_time:=true
 ```
 
 The simulation includes:
+
 - Robot model with mecanum wheels
 - Gazebo physics
 - ros2_control integration
@@ -484,17 +503,20 @@ The simulation includes:
 ### No topics appearing
 
 1. Check micro-ROS agent is running:
+
    ```bash
    ps aux | grep micro_ros_agent
    ```
 
 2. Verify Pico connection:
+
    ```bash
    ls -l /dev/ttyACM*
    ./scripts/check_pico.sh
    ```
 
 3. Monitor firmware:
+
    ```bash
    cd firmware && ./monitor_firmware.sh
    ```
@@ -502,16 +524,19 @@ The simulation includes:
 ### Remote connection issues (Tailscale)
 
 1. Check Tailscale status:
+
    ```bash
    sudo tailscale status
    ```
 
 2. Verify connectivity:
+
    ```bash
    ping <robot-tailscale-ip>
    ```
 
 3. Check ROS2 domain over Tailscale:
+
    ```bash
    export ROS_DOMAIN_ID=0
    ros2 topic list
@@ -520,16 +545,19 @@ The simulation includes:
 ### Hardware interface fails to activate
 
 1. Verify firmware is publishing:
+
    ```bash
    ros2 topic echo /joint_states --once
    ```
 
 2. Check controller status:
+
    ```bash
    ros2 control list_controllers
    ```
 
 3. Review logs:
+
    ```bash
    ros2 launch robot_bringup bringup.launch.py --log-level debug
    ```
@@ -537,18 +565,21 @@ The simulation includes:
 ### Robot doesn't respond to commands
 
 1. Test velocity commands:
+
    ```bash
    ros2 topic pub /cmd_vel geometry_msgs/msg/Twist \
      "{linear: {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}" --once
    ```
 
 2. Verify controller is active:
+
    ```bash
    ros2 control list_controllers
    # mecanum_drive_controller should be "active"
    ```
 
 3. Check firmware is receiving commands:
+
    ```bash
    ros2 topic echo /rt/cmd_vel
    ```
