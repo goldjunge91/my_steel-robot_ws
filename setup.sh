@@ -9,7 +9,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 github_summary() {
-  if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+  if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ] && [ -w "${GITHUB_STEP_SUMMARY}" ]; then
     echo "$*" >> "$GITHUB_STEP_SUMMARY"
   fi
 }
@@ -49,6 +49,10 @@ log_step "ROS workspace setup gestartet (ROS_DISTRO=${ROS_DISTRO})"
 require_cmd rosdep
 require_cmd sudo
 require_cmd vcs
+
+if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
+  export AMENT_TRACE_SETUP_FILES=""
+fi
 
 mkdir -p src
 if [ ! -w src ]; then
