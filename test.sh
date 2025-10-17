@@ -10,8 +10,12 @@ NC='\033[0m' # No Color
 
 # GitHub Actions helpers (kept lightweight)
 github_summary() {
-  if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ] && [ -w "${GITHUB_STEP_SUMMARY:-/dev/null}" ]; then
-    echo "$*" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+  if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    local summary_dir
+    summary_dir=$(dirname "$GITHUB_STEP_SUMMARY")
+    if [ -d "$summary_dir" ] && [ -w "$summary_dir" ]; then
+      printf '%s\n' "$*" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+    fi
   fi
 }
 
