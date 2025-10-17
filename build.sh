@@ -123,6 +123,11 @@ done
 
 BUILD_TYPE=${BUILD_TYPE:-RelWithDebInfo}
 log_step "Starte colcon build (BUILD_TYPE=${BUILD_TYPE})"
+
+# Record start time for GitHub Actions summary
+start_time=$(date +%s)
+
+set +e
 colcon build \
   --merge-install \
   --symlink-install \
@@ -130,8 +135,90 @@ colcon build \
     "-DCMAKE_BUILD_TYPE=${BUILD_TYPE}" \
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=On" \
     "-DCMAKE_CXX_FLAGS=-Wall -Wextra -Wpedantic"
+build_exit_code=$?
+set -e
 
-log_success "colcon build abgeschlossen"
+# Calculate build duration
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+
+if [ $build_exit_code -ne 0 ]; then
+  log_error "colcon build failed with exit code $build_exit_code"
+  
+  if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
+    github_summary "## ❌ Build Failed"
+    github_summary ""
+    github_summary "### 📊 Build Summary"
+    github_summary "- **Exit Code**: $build_exit_code"
+    github_summary "- **Duration**: ${duration}s"
+    github_summary "- **Build Type**: $BUILD_TYPE"
+    github_summary ""
+    
+    # Analyze build failures
+    if [ -d "log/latest_build" ]; then
+      github_summary "### 🔍 Build Analysis"
+      
+      # Count failed packages
+      failed_packages=$(find log/latest_build -name "stderr.log" -exec grep -l "CMake Error\|error:\|fatal error:\|compilation terminated" {} \; 2>/dev/null | wc -l || echo "0")
+      
+      github_summary "- **Packages with build errors**: $failed_packages"
+      github_summary ""
+      
+      # List failed packages
+      if [ "$failed_packages" -gt 0 ]; then
+        github_summary "### 📦 Failed Packages"
+        find log/latest_build -name "stderr.log" -exec grep -l "CMake Error\|error:\|fatal error:\|compilation terminated" {} \; 2>/dev/null | \
+        sed 's|log/latest_build/||' | sed 's|/stderr.log||' | head -10 | \
+        while read -r pkg; do
+          github_summary "- \`$pkg\`"
+          # Add error annotation
+          if [ -f "log/latest_build/$pkg/stderr.log" ]; then
+            error_msg=$(grep -m1 "CMake Error\|error:\|fatal error:" "log/latest_build/$pkg/stderr.log" 2>/dev/null || echo "Build failed")
+            github_error "Build Failure" "Package '$pkg' failed: $error_msg" "src/$pkg"
+          fi
+        done
+        github_summary ""
+      fi
+    fi
+    
+    github_summary "### 🛠️ Next Steps to Fix Build"
+    github_summary ""
+    github_summary "1. **Check build logs**:"
+    github_summary "   \`\`\`bash"
+    github_summary "   ls -la log/latest_build/"
+    github_summary "   cat log/latest_build/<package_name>/stderr.log"
+    github_summary "   \`\`\`"
+    github_summary ""
+    github_summary "2. **Build specific package with verbose output**:"
+    github_summary "   \`\`\`bash"
+    github_summary "   colcon build --packages-select <package_name> --event-handlers console_direct+"
+    github_summary "   \`\`\`"
+    github_summary ""
+    github_summary "3. **Check dependencies**:"
+    github_summary "   \`\`\`bash"
+    github_summary "   rosdep check --from-paths src --ignore-src"
+    github_summary "   \`\`\`"
+    github_summary ""
+    github_summary "4. **Clean build (if needed)**:"
+    github_summary "   \`\`\`bash"
+    github_summary "   rm -rf build/ install/ log/"
+    github_summary "   colcon build"
+    github_summary "   \`\`\`"
+  fi
+  
+  exit $build_exit_code
+fi
+
+log_success "colcon build abgeschlossen (${duration}s)"
+
+# Add success summary for GitHub Actions
+if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
+  github_summary "## ✅ Build Successful"
+  github_summary ""
+  github_summary "- **Duration**: ${duration}s"
+  github_summary "- **Build Type**: $BUILD_TYPE"
+  github_summary "- **ROS Distribution**: $ROS_DISTRO"
+fi
 
 if [ ! -f "install/setup.bash" ]; then
   log_warning "install/setup.bash nicht gefunden – wurde der Build Workspace leer?"
