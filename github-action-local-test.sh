@@ -1,59 +1,59 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="${IMAGE:-my_steel/pi-test}"
-DOCKERFILE="${DOCKERFILE:-.devcontainer/Dockerfile.pi-test}"
-CONTAINER="${CONTAINER:-pi-test}"
-HOST_WORKDIR="${HOST_WORKDIR:-$PWD}"
-CT_WORKDIR="${CT_WORKDIR:-/workspace}"
-PLATFORM="${PLATFORM:-linux/arm64}"
+REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+IMAGE="${IMAGE:-my_steel/dev-test}"
+DOCKERFILE="${DOCKERFILE:-.devcontainer/Dockerfile}"
+PLATFORM="${PLATFORM:-linux/amd64}"
 SKIP_BUILD="${SKIP_BUILD:-0}"  # Set to 1 to reuse an already-built IMAGE
+CONTAINER_NAME="${CONTAINER_NAME:-my-steel-devcontainer}"
 
-if [[ "${DOCKERFILE}" != /* ]]; then
-  DOCKERFILE_PATH="${HOST_WORKDIR}/${DOCKERFILE}"
-else
-  DOCKERFILE_PATH="${DOCKERFILE}"
+DOCKERFILE_PATH="${REPO_ROOT}/${DOCKERFILE}"
+
+if [[ ! -f "${DOCKERFILE_PATH}" ]]; then
+  echo "ERROR: Dockerfile not found at ${DOCKERFILE_PATH}" >&2
+  exit 1
 fi
-
-BUILD_CONTEXT="${BUILD_CONTEXT:-${HOST_WORKDIR}}"
-
-# shellcheck disable=SC2329
-cleanup() {
-  rc=$?
-  if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
-    docker stop "${CONTAINER}" >/dev/null 2>&1 || true
-    docker rm "${CONTAINER}" >/dev/null 2>&1 || true
-  fi
-  exit "${rc}"
-}
-trap cleanup INT TERM EXIT
 
 if [[ "${SKIP_BUILD}" == "1" ]]; then
   echo "==> Skipping image build, reusing existing image ${IMAGE}"
 else
   echo "==> Building image ${IMAGE} (Dockerfile: ${DOCKERFILE_PATH})"
-  docker buildx build --load --platform "${PLATFORM}" -t "${IMAGE}" -f "${DOCKERFILE_PATH}" "${BUILD_CONTEXT}"
+  docker buildx build --load --platform "${PLATFORM}" -t "${IMAGE}" -f "${DOCKERFILE_PATH}" "${REPO_ROOT}"
 fi
 
-echo "==> Starting container ${CONTAINER}"
-docker run -d --platform "${PLATFORM}" --name "${CONTAINER}" "${IMAGE}" sleep infinity
+if docker ps -a --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
+  echo "==> Reusing existing container ${CONTAINER_NAME}"
+  docker start "${CONTAINER_NAME}" >/dev/null || true
+else
+  echo "==> Creating persistent container ${CONTAINER_NAME}"
+  docker run \
+    --detach \
+    --platform "${PLATFORM}" \
+    --name "${CONTAINER_NAME}" \
+    "${IMAGE}" \
+    tail -f /dev/null >/dev/null
+fi
 
-echo "==> Copying workspace into container (no bind-mount; host bleibt unverändert)"
-# docker cp "${HOST_WORKDIR}/." "${CONTAINER}:${CT_WORKDIR}"
+echo "==> Syncing workspace into container ${CONTAINER_NAME}"
+docker exec -u root "${CONTAINER_NAME}" bash -lc "rm -rf /workspace && mkdir -p /workspace"
+docker cp "${REPO_ROOT}/." "${CONTAINER_NAME}:/workspace"
+docker exec -u root "${CONTAINER_NAME}" chown -R ros:ros /workspace >/dev/null 2>&1 || true
 
-echo "==> Fixing ownership & permissions inside container"
-docker exec -u root "${CONTAINER}" chown -R ros:ros "${CT_WORKDIR}" || true
-docker exec -u root "${CONTAINER}" find "${CT_WORKDIR}" -type f -name '*.sh' -exec chmod +x {} \; || true
+docker exec "${CONTAINER_NAME}" bash -lc "rm -rf /workspace/build /workspace/install /workspace/log"
 
-echo "==> Executing setup, build and tests inside container as user 'ros'"
-docker exec --user ros -it "${CONTAINER}" bash -lc "cd ${CT_WORKDIR} && ./setup.sh && ./build.sh && ./test.sh"
+echo "==> Running .github/actions/test/run.sh inside ${CONTAINER_NAME}"
+docker exec "${CONTAINER_NAME}" bash -lc "cd /workspace && .github/actions/test/run.sh"
 EXIT_CODE=$?
 
+echo "==> Stopping container ${CONTAINER_NAME} (container preserved for reuse)"
+# docker stop "${CONTAINER_NAME}" >/dev/null || true
 if [ "${EXIT_CODE}" -eq 0 ]; then
   echo "==> SUCCESS: Scripts completed inside container"
 else
   echo "==> FAILURE: Scripts exited with code ${EXIT_CODE}"
 fi
 
-# cleanup via trap
+
 exit "${EXIT_CODE}"

@@ -50,6 +50,11 @@ require_cmd rosdep
 require_cmd sudo
 require_cmd vcs
 
+if [ ! -w "." ]; then
+  log_step "Passe Besitzrechte im Workspace an"
+  sudo chown "$(id -u)":"$(id -g)" .
+fi
+
 if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
   export AMENT_TRACE_SETUP_FILES=""
 fi

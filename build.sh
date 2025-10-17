@@ -70,17 +70,23 @@ if ! command -v colcon >/dev/null 2>&1; then
   exit 1
 fi
 
+if [ ! -w "." ]; then
+  log_warning "Workspace-Verzeichnis nicht beschreibbar – passe Besitzrechte an"
+  sudo chown "$(id -u)":"$(id -g)" .
+fi
+
 # Ensure workspace directories exist and are writable
 for dir in build install log; do
-  if [ ! -d "$dir" ]; then
-    mkdir -p "$dir" || {
-      log_error "Cannot create directory $dir"
-      exit 1
-    }
+  if mkdir -p "$dir"; then
+    :
+  else
+    sudo mkdir -p "$dir"
   fi
   if [ ! -w "$dir" ]; then
-    log_error "Directory $dir is not writable"
-    exit 1
+    sudo chown -R "$(id -u)":"$(id -g)" "$dir" || {
+      log_error "Directory $dir is not writable"
+      exit 1
+    }
   fi
 done
 
