@@ -42,8 +42,22 @@ BUILD_TYPE=${BUILD_TYPE:-RelWithDebInfo}
 colcon build \
         --merge-install \
         --symlink-install \
-        --cmake-args "-DCMAKE_BUILD_TYPE=$BUILD_TYPE" "-DCMAKE_EXPORT_COMPILE_COMMANDS=On" \
-        -Wall -Wextra -Wpedantic || true
+        --cmake-args \
+            -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
+            -DCMAKE_CXX_FLAGS=-Wall\ -Wextra\ -Wpedantic \
+        || true
+
+# Minimal artifact validation: ensure install/setup.bash exists and at least one package installed
+if [ -d "install" ] && [ -f "install/setup.bash" ]; then
+  if [ -d "install/share" ] && find install/share -mindepth 1 -maxdepth 1 -type d -print -quit | grep -q .; then
+    : # ok
+  else
+    echo "Warning: install/share contains no packages — build may be empty." >&2
+  fi
+else
+  echo "Warning: build artifacts missing (install/setup.bash not found)." >&2
+fi
 
 # #!/bin/bash
 # set -euo pipefail
