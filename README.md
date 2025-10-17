@@ -31,19 +31,35 @@ The my_steel robot is an educational and research platform built on ROS2 Humble,
    cd my_steel-robot_ws
    ```
 
-2. Install dependencies:
+2. Install VCS tool (for dependency management):
+   ```bash
+   pip3 install vcstool
+   # Or on macOS with Homebrew:
+   # brew install vcstool
+   ```
+
+3. Import dependencies:
+   ```bash
+   # Import ROS2 packages (src/)
+   vcs import src < src/ros2.repos
+   
+   # Initialize library submodules (lib/)
+   git submodule update --init --recursive lib/
+   ```
+
+4. Install ROS dependencies:
    ```bash
    source /opt/ros/humble/setup.bash
    rosdep install --from-paths src --ignore-src -r -y
    ```
 
-3. Build the workspace:
+5. Build the workspace:
    ```bash
    colcon build --symlink-install
    source install/setup.bash
    ```
 
-4. Flash firmware to Pico (see [Firmware](#firmware) section)
+6. Flash firmware to Pico (see [Firmware](#firmware) section)
 
 ### Docker Deployment (Alternative)
 
@@ -153,6 +169,90 @@ The robot uses standard ROS2 topic names following REP-105:
 ```
 
 **Note**: The micro-ROS agent automatically adds `/rt/` prefix to firmware topics and remaps them to standard names. See [micro-ROS Agent Configuration](#micro-ros-agent-configuration) for details.
+
+## Dependency Management Strategy
+
+This project uses a **hybrid approach** for managing dependencies:
+
+### VCS for ROS2 Packages (src/)
+- **What**: Your robot packages that change frequently
+- **Why**: Easy for contributors, standard ROS2 workflow
+- **How**: Uses `src/ros2.repos` file with `vcs import`
+
+```yaml
+# src/ros2.repos example
+repositories:
+  robot:
+    type: git
+    url: https://github.com/goldjunge91/robot.git
+    version: humble  # Always latest from humble branch
+```
+
+**Commands:**
+```bash
+# Import all packages
+vcs import src < src/ros2.repos
+
+# Check status
+vcs status src
+
+# Update all packages
+vcs pull src
+
+# Switch branches
+vcs custom src --args checkout humble
+```
+
+### Git Submodules for Libraries (lib/)
+- **What**: External libraries that need exact versions
+- **Why**: Precise version control, important for firmware builds
+- **How**: Traditional git submodules with `lib/lib_repos.repos` as reference
+
+```yaml
+# lib/lib_repos.repos example
+repositories:
+  FreeRTOS-Kernel:
+    type: git
+    url: https://github.com/FreeRTOS/FreeRTOS-Kernel
+    version: V10.6.2  # Exact tag version
+```
+
+**Commands:**
+```bash
+# Initialize submodules
+git submodule update --init --recursive lib/
+
+# Update to latest
+git submodule update --remote lib/
+
+# Set specific version
+cd lib/FreeRTOS-Kernel && git checkout V10.6.2
+```
+
+### Why This Hybrid Approach?
+
+| Aspect | VCS (src/) | Submodules (lib/) |
+|--------|------------|-------------------|
+| **Use Case** | Your ROS2 packages | External libraries |
+| **Updates** | Frequent, latest from branch | Rare, specific versions |
+| **Complexity** | Simple `vcs pull` | More complex git commands |
+| **Contributors** | Easy `vcs import` | Automatic with git clone |
+| **Version Control** | Branch-based | Commit/tag-based |
+| **Offline Work** | Requires internet | Available offline |
+
+### Directory Structure
+```
+my_steel-robot_ws/
+├── src/                    # ROS2 Packages → VCS managed
+│   ├── robot/             # Your packages, frequent updates
+│   ├── robot_bringup/     # Development branches (humble/main)
+│   └── ros2.repos         # VCS configuration
+├── lib/                   # External Libraries → Git Submodules  
+│   ├── FreeRTOS-Kernel/  # Stable versions, exact tags
+│   ├── eigen/             # Precise version for firmware
+│   └── lib_repos.repos    # Reference (not used by git)
+└── firmware/              # Pico firmware (separate build)
+```
 
 ## Architecture
 
