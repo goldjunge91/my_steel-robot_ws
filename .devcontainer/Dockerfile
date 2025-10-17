@@ -18,6 +18,7 @@ RUN apt-get update \
     openssh-client \
     python3-argcomplete \
     python3-colcon-common-extensions \
+    python3-pip \
     python3-rosdep \
     python3-vcs2l \
     sudo \
