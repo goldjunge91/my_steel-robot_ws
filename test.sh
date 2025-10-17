@@ -151,6 +151,80 @@ if [ $test_result_exit -ne 0 ]; then
 fi
 
 if [ $test_exit -ne 0 ] || [ $test_result_exit -ne 0 ]; then
+  # Analyze test failures and provide detailed summary
+  if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
+    github_summary "## ❌ Tests Failed"
+    github_summary ""
+    github_summary "### 📊 Test Results Summary"
+    github_summary "- **colcon test exit code**: $test_exit"
+    github_summary "- **colcon test-result exit code**: $test_result_exit"
+    github_summary ""
+    
+    # Try to extract test statistics if available
+    if [ -d "log/latest_test" ]; then
+      github_summary "### 🔍 Test Analysis"
+      
+      # Count failed packages
+      failed_packages=$(find log/latest_test -name "stderr.log" -exec grep -l "FAILED\|ERROR\|FAIL" {} \; 2>/dev/null | wc -l || echo "0")
+      total_packages=$(find log/latest_test -maxdepth 1 -type d | wc -l || echo "0")
+      
+      github_summary "- **Packages with failures**: $failed_packages"
+      github_summary "- **Total packages tested**: $total_packages"
+      github_summary ""
+      
+      # List failed packages
+      if [ "$failed_packages" -gt 0 ]; then
+        github_summary "### 📦 Failed Packages"
+        find log/latest_test -name "stderr.log" -exec grep -l "FAILED\|ERROR\|FAIL" {} \; 2>/dev/null | \
+        sed 's|log/latest_test/||' | sed 's|/stderr.log||' | head -10 | \
+        while read -r pkg; do
+          github_summary "- \`$pkg\`"
+        done
+        github_summary ""
+      fi
+    fi
+    
+    github_summary "### 🛠️ Next Steps to Debug"
+    github_summary ""
+    github_summary "1. **Check detailed test logs**:"
+    github_summary "   \`\`\`bash"
+    github_summary "   colcon test-result --all --verbose"
+    github_summary "   ls -la log/latest_test/"
+    github_summary "   \`\`\`"
+    github_summary ""
+    github_summary "2. **Run tests for specific package**:"
+    github_summary "   \`\`\`bash"
+    github_summary "   colcon test --packages-select <package_name> --event-handlers console_direct+"
+    github_summary "   \`\`\`"
+    github_summary ""
+    github_summary "3. **Check test dependencies**:"
+    github_summary "   \`\`\`bash"
+    github_summary "   # Verify package.xml has correct test dependencies"
+    github_summary "   find src/ -name package.xml -exec grep -l \"test_depend\" {} \\;"
+    github_summary "   \`\`\`"
+    github_summary ""
+    github_summary "4. **Skip failing tests temporarily**:"
+    github_summary "   \`\`\`bash"
+    github_summary "   # Add COLCON_IGNORE file to problematic packages"
+    github_summary "   touch src/<failing_package>/COLCON_IGNORE"
+    github_summary "   \`\`\`"
+    github_summary ""
+    github_summary "### 🔧 Common Fixes"
+    github_summary "- **Missing dependencies**: Add missing test dependencies to package.xml"
+    github_summary "- **Environment issues**: Ensure ROS environment is sourced properly"
+    github_summary "- **Path problems**: Check test data files and launch files exist"
+    github_summary "- **Permission issues**: Verify test files have correct permissions"
+    
+    # Add specific error annotations for failed packages
+    if [ -d "log/latest_test" ]; then
+      find log/latest_test -name "stderr.log" -exec grep -l "FAILED\|ERROR\|FAIL" {} \; 2>/dev/null | head -5 | \
+      while read -r logfile; do
+        pkg=$(echo "$logfile" | sed 's|log/latest_test/||' | sed 's|/stderr.log||')
+        error_msg=$(grep -m1 "FAILED\|ERROR\|FAIL" "$logfile" 2>/dev/null || echo "Test failed")
+        github_error "Test Failure" "Package '$pkg' failed: $error_msg" "src/$pkg"
+      done
+    fi
+  fi
   exit 1
 fi
 

@@ -28,6 +28,31 @@ log_error() {
   echo -e "${RED}[ERROR]${NC} $1" >&2
 }
 
+# GitHub Actions helpers
+github_summary() {
+  if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    echo "$*" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+  fi
+}
+
+github_error() {
+  local title="${1:-}"
+  local message="${2:-}"
+  local file="${3:-}"
+  local line="${4:-}"
+  if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
+    local annotation="::error"
+    if [ -n "$file" ]; then
+      annotation="${annotation} file=${file}"
+    fi
+    if [ -n "$line" ]; then
+      annotation="${annotation},line=${line}"
+    fi
+    annotation="${annotation} title=${title}::${message}"
+    echo "$annotation"
+  fi
+}
+
 safe_source() {
   local file="$1"
   if [ -f "$file" ]; then
