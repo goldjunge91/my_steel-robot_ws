@@ -1,0 +1,114 @@
+# Docker Compose configuration for my_steel robot deployment on Raspberry Pi
+# 
+# This configuration deploys the robot software stack using a multi-container
+# architecture with separate services for micro-ROS agent and robot bringup.
+#
+# Prerequisites:
+# - Docker and Docker Compose installed on Raspberry Pi
+# - USB devices connected (/dev/ttyACM0 for Pico, /dev/video0 for camera)
+# - Tailscale auth key (optional, for VPN connectivity)
+#
+# Usage:
+#   docker compose -f docker/compose.robot-pi.yaml up -d
+#
+# Environment variables (create .env file or export):
+#   TAILSCALE_AUTHKEY - Tailscale authentication key (optional)
+#   TAILSCALE_HOSTNAME - Hostname for Tailscale network (default: robot-xl)
+#   ROS_DOMAIN_ID - ROS2 domain ID (default: 0)
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # micro-ROS Agent Service
+  # Bridges communication between Raspberry Pi Pico and ROS2
+  # ============================================================================
+  microros-agent:
+    image: ${DOCKER_IMAGE:-goldjunge491/robot:humble-arm64}
+    container_name: microros-agent
+    network_mode: host
+    privileged: true
+    restart: unless-stopped
+    
+    # USB device access for Raspberry Pi Pico
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
+    
+    # ROS2 environment configuration
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      - CYCLONEDDS_URI=
+    
+    # Start micro-ROS agent with serial transport
+    command: >
+      ros2 run micro_ros_agent micro_ros_agent serial
+      --dev /dev/ttyACM0 -b 115200 -v6
+    
+    # Health check to verify agent is running and topics are available
+    healthcheck:
+      test: ["CMD", "ros2", "topic", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    
+    # Persistent log storage
+    volumes:
+      - /var/log/robot:/var/log/robot
+
+  # ============================================================================
+  # Robot Bringup Service
+  # Main robot software stack including controllers and state publishers
+  # ============================================================================
+  robot-bringup:
+    image: ${DOCKER_IMAGE:-goldjunge491/robot:humble-arm64}
+    container_name: robot-bringup
+    network_mode: host
+    privileged: true
+    restart: unless-stopped
+    
+    # Wait for micro-ROS agent to be healthy before starting
+    depends_on:
+      microros-agent:
+        condition: service_healthy
+    
+    # USB camera device access
+    devices:
+      - /dev/video0:/dev/video0
+    
+    # ROS2 and Tailscale environment configuration
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      - CYCLONEDDS_URI=
+      - ROBOT_MODEL_NAME=robot_xl
+      - ROS_LOCALHOST_ONLY=0
+      - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY:-}
+      - TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-robot-xl}
+    
+    # Start Tailscale (if configured) and launch robot bringup
+    command: >
+      bash -c "
+      /usr/local/bin/tailscale-start.sh &&
+      source /opt/ros/humble/setup.bash &&
+      source /ros2_ws/install/setup.bash &&
+      ros2 launch robot_bringup bringup.launch.py
+        robot_model:=robot_xl
+        mecanum:=True
+        microros:=false
+      "
+    
+    # Health check to verify controllers are active
+    healthcheck:
+      test: ["CMD", "bash", "-c", "ros2 control list_controllers | grep -q 'active'"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    
+    # Persistent storage for logs, configuration, and Tailscale state
+    volumes:
+      - /var/log/robot:/var/log/robot
+      - /etc/robot:/etc/robot:ro
+      - /var/lib/tailscale:/var/lib/tailscale

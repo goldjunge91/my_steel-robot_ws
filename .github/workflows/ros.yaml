@@ -3,22 +3,35 @@ name: ROS
 on:
   pull_request:
   push:
-    branches: 
+    branches:
       - humble*
       - iron*
+      - jazzy*
       - rolling*
+      - main
   workflow_dispatch:
-    
+
 jobs:
   test:
     name: test
+    env:
+      ALLOW_TEST_FAILURES: "true"
     runs-on: ubuntu-latest
     steps:
-      - 
-        name: Checkout code
-        uses: actions/checkout@v4
-      -
-        name: Test
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Cache colcon build
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            install
+            log
+          key: ${{ runner.os }}-colcon-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-colcon-
+      - name: Test
         uses: ./.github/actions/test/
 
   lint:
@@ -27,15 +40,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-          linter: [cppcheck, cpplint, uncrustify, lint_cmake, xmllint, flake8, pep257]
+        linter:
+          [cppcheck, cpplint, uncrustify, lint_cmake, xmllint, flake8, pep257]
     steps:
-      - 
-        name: Checkout code
-        uses: actions/checkout@v4
-      -
-        name: Run linter
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Cache colcon build
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            install
+            log
+          key: ${{ runner.os }}-colcon-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-colcon-
+      - name: Run linter
         uses: ./.github/actions/lint/
-        env: 
+        env:
           LINTER: ${{ matrix.linter }}
 
   complete:

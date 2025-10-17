@@ -1,77 +1,104 @@
-FROM althack/ros2:humble-dev
+FROM osrf/ros:humble-desktop-full
 
-# Use root for package installation steps
-USER root
+# Build arguments
+ARG TARGET=remote_pc
+ARG INSTALL_PICO_SDK=false
+ARG WORKSPACE=/workspace
+
+# Environment variables
+ENV ROS_DISTRO=humble
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Allow skipping Doppler install (useful for debugging/build isolation)
-ARG INSTALL_DOPPLER=true
-
-# Install essential ROS2 packages and useful tools
+# Set up dev packages
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \
-        ros-humble-gazebo-ros-pkgs \
-        ros-humble-ros2-control \
-        ros-humble-ros2-controllers \
-        ros-humble-gazebo-ros2-control \
-        ros-humble-xacro \
-        ros-humble-joint-state-publisher-gui \
-        ros-humble-urdf \
-        ros-humble-urdf-launch \
-        ros-humble-urdf-tutorial \
-        ros-humble-twist-mux \
-        ros-humble-rqt-image-view \
-        ros-humble-rosbridge-suite \
-        ros-humble-rqt \
-        python3-colcon-common-extensions \
-        joystick jstest-gtk evtest \
-        software-properties-common \
-        curl \
-        apt-transport-https \
-        ca-certificates \
-        gnupg
-    # && apt-get autoremove -y \
-    # && apt-get clean -y \
-    # && rm -rf /var/lib/apt/lists/*
-
-# Install Doppler CLI (add key and repo, then install)
-RUN if [ "${INSTALL_DOPPLER}" = "true" ]; then \
-    set -eux; \
-    curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' \
-        | gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg; \
-    echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" \
-        > /etc/apt/sources.list.d/doppler-cli.list; \
-    apt-get update && apt-get -y install doppler && apt-get autoremove -y && apt-get clean -y; \
-    rm -rf /var/lib/apt/lists/*; \
-  else \
-    echo "Skipping Doppler install (INSTALL_DOPPLER=${INSTALL_DOPPLER})"; \
-  fi
+    bash-completion \
+    gdb \
+    gettext-base \
+    git-core \
+    openssh-client \
+    python3-argcomplete \
+    python3-colcon-common-extensions \
+    python3-pip \
+    python3-rosdep \
+    python3-vcstool \
+    sudo \
+    # For GUI
+    libx11-xcb1 libxcb1 libxcb-render0 libxcb-shm0 libxcb-xfixes0 libxcb-shape0 \
+    libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-util1 \
+    libxcb-xinerama0 libxcb-xkb1 libxkbcommon0 libxkbcommon-x11-0 \
+    libglu1-mesa libxi6 libsm6 libxrender1 libfontconfig1 \
+    # Clean up
+    && apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
 
-# Set up auto-source of workspace for ros user
-ARG WORKSPACE
-ENV ROS_DISTRO=humble
-RUN echo "if [ -f ${WORKSPACE}/install/setup.bash ]; then source ${WORKSPACE}/install/setup.bash; fi" >> /home/ros/.bashrc
+# Install pytest plugins required by setup.cfg and robot_control_gui/requirements.txt
+RUN python3 -m pip install --no-cache-dir \
+    pytest-timeout \
+    pytest-cov
 
-# Create minimal git config for ros user (environment variables will be expanded at runtime)
-RUN mkdir -p /home/ros && \
-    printf '%s\n' '[safe]' '    directory = *' '[credential]' '    helper = store' > /home/ros/.gitconfig && \
-    chown ros:ros /home/ros/.gitconfig && chmod 644 /home/ros/.gitconfig
+# Set up auto-source of workspace for ros 
+ARG USERNAME=ros
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
 
-# Add git identity setup to bashrc (so it runs when container starts)
-RUN echo '' >> /home/ros/.bashrc && \
-    echo '# Set git identity from environment variables' >> /home/ros/.bashrc && \
-    echo 'if [ -n "$GIT_AUTHOR_NAME" ]; then' >> /home/ros/.bashrc && \
-    echo '    git config --global user.name "$GIT_AUTHOR_NAME"' >> /home/ros/.bashrc && \
-    echo 'fi' >> /home/ros/.bashrc && \
-    echo 'if [ -n "$GIT_AUTHOR_EMAIL" ]; then' >> /home/ros/.bashrc && \
-    echo '    git config --global user.email "$GIT_AUTHOR_EMAIL"' >> /home/ros/.bashrc && \
-    echo 'fi' >> /home/ros/.bashrc && \
-    echo 'if [ -n "$GIT_COMMITTER_NAME" ]; then' >> /home/ros/.bashrc && \
-    echo '    git config --global committer.name "$GIT_COMMITTER_NAME"' >> /home/ros/.bashrc && \
-    echo 'fi' >> /home/ros/.bashrc && \
-    echo 'if [ -n "$GIT_COMMITTER_EMAIL" ]; then' >> /home/ros/.bashrc && \
-    echo '    git config --global committer.email "$GIT_COMMITTER_EMAIL"' >> /home/ros/.bashrc && \
-    echo 'fi' >> /home/ros/.bashrc && \
-    chown ros:ros /home/ros/.bashrc
+# Find and replace any user with matching UID
+RUN set -eux; \
+    existing_user=$(getent passwd "$USER_UID" | cut -d: -f1 || true); \
+    if [ -n "$existing_user" ]; then \
+    usermod -l $USERNAME -d /home/$USERNAME -m $existing_user && \
+    groupmod -n $USERNAME $existing_user && \
+    echo "Renamed $existing_user to $USERNAME"; \
+    else \
+    groupadd --gid $USER_GID $USERNAME && \
+    useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME && \
+    echo "Created new user $USERNAME"; \
+    fi
 
+# Ensure necessary directories and permissions
+RUN mkdir -p /home/$USERNAME /run/user/$USER_UID && \
+    chown -R $USER_UID:$USER_GID /home/$USERNAME /run/user/$USER_UID
+
+# Add sudo support for the non-root user
+RUN echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    && touch /home/$USERNAME/.sudo_as_admin_successful
+
+# Set up autocompletion for user
+RUN echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$USERNAME/.bashrc \
+    && echo "if [ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]; then source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash; fi" >> /home/$USERNAME/.bashrc \
+    && echo "if [ -f /usr/share/vcstool-completion/vcs.bash ]; then source /usr/share/vcstool-completion/vcs.bash; fi" >> /home/$USERNAME/.bashrc \
+    # Set up auto-source of workspace for user
+    && echo "if [ -f ${WORKSPACE}/install/setup.bash ]; then source ${WORKSPACE}/install/setup.bash; fi" >> /home/$USERNAME/.bashrc
+
+# Configure git safe.directory to avoid permission errors in container
+RUN git config --global --add safe.directory '*'
+
+# Set up python symlinks for vscode paths
+RUN PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')") \
+    && tgt="/opt/ros/${ROS_DISTRO}/lib/python${PYTHON_VERSION}/site-packages" \
+    && [ -d "$tgt" ] && ln -s "$tgt" "/opt/ros/${ROS_DISTRO}/lib/ros_site_packages"
+
+# Optional: Install Pico SDK if requested (disabled by default for CI)
+RUN if [ "$INSTALL_PICO_SDK" = "true" ]; then \
+    apt-get update && apt-get install -y --no-install-recommends \
+    gcc-arm-none-eabi \
+    binutils-arm-none-eabi \
+    gdb-multiarch && \
+    git clone --depth 1 https://github.com/raspberrypi/pico-sdk.git /opt/pico-sdk && \
+    cd /opt/pico-sdk && git submodule update --init && \
+    rm -rf /var/lib/apt/lists/*; \
+    fi
+
+ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
+# Set AMENT_TRACE_SETUP_FILES to prevent unbound variable errors
+ENV AMENT_TRACE_SETUP_FILES=""
+
+# Create workspace directory and set proper ownership
+RUN mkdir -p ${WORKSPACE} && \
+    chown -R $USER_UID:$USER_GID ${WORKSPACE}
+
+USER ros
+WORKDIR ${WORKSPACE}

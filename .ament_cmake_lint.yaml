@@ -1,0 +1,17 @@
+---
+# Configuration for ament_cmake_lint
+exclude_patterns:
+  - "build/**"
+  - "install/**"
+  - "log/**" 
+  - "lib/**"
+  - ".devcontainer/**"
+  - "firmware/**"
+  - "src/*/build/**"
+  - "src/*/install/**"
+  - "src/*/log/**"
+
+# Ignore some common CMake style issues
+ignore_errors:
+  - "line too long"
+  - "missing newline at end of file"

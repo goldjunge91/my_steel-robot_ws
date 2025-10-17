@@ -5,10 +5,17 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/opt/ros/humble/include/**"
+                // "${workspaceFolder}/firmware/**",
+                // "${workspaceFolder}/firmware/src/include/shared",
+                // "${env:PICO_SDK_PATH}/lib/FreeRTOS-Kernel/include/**",
+                // "${env:PICO_SDK_PATH}/lib/FreeRTOS-Kernel/portable/GCC/ARM_CM0/**",
+                // "${env:PICO_SDK_PATH}/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "compileCommands": [
+                "${workspaceFolder}/build/compile_commands.json"
+            ],
             "cStandard": "c99",
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-gcc-x64"

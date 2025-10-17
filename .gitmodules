@@ -1,0 +1,106 @@
+[submodule "src/robot"]
+	path = src/robot
+	url = https://github.com/goldjunge91/robot.git
+	branch = humble
+[submodule "src/mecabridge_hardware"]
+	path = src/mecabridge_hardware
+	url = https://github.com/goldjunge91/mecabridge_hardware.git
+	branch = main
+[submodule "src/serial"]
+	path = src/serial
+	url = https://github.com/joshnewans/serial
+	branch = newans_ros2
+[submodule "src/open_manipulator_x"]
+	path = src/open_manipulator_x
+	url = https://github.com/goldjunge91/open_manipulator_x.git
+	branch = main
+[submodule "src/robot_autonomy"]
+	path = src/robot_autonomy
+	url = https://github.com/goldjunge91/robot_autonomy.git
+	branch = main
+[submodule "src/robot_bringup"]
+	path = src/robot_bringup
+	url = https://github.com/goldjunge91/robot_bringup.git
+	branch = main
+[submodule "src/robot_controller"]
+	path = src/robot_controller
+	url = https://github.com/goldjunge91/robot_controller.git
+	branch = main
+[submodule "src/robot_description"]
+	path = src/robot_description
+	url = https://github.com/goldjunge91/robot_description.git
+	branch = main
+[submodule "src/robot_firmware"]
+	path = src/robot_firmware
+	url = https://github.com/goldjunge91/robot_firmware.git
+	branch = main
+[submodule "src/robot_gazebo"]
+	path = src/robot_gazebo
+	url = https://github.com/goldjunge91/robot_gazebo.git
+	branch = main
+[submodule "src/robot_hardware"]
+	path = src/robot_hardware
+	url = https://github.com/goldjunge91/robot_hardware.git
+	branch = main
+[submodule "src/robot_localization_tool"]
+	path = src/robot_localization_tool
+	url = https://github.com/goldjunge91/robot_localization.git
+	branch = main
+[submodule "src/robot_nerf_launcher"]
+	path = src/robot_nerf_launcher
+	url = https://github.com/goldjunge91/robot_nerf_launcher.git
+	branch = main
+[submodule "src/robot_utils"]
+	path = src/robot_utils
+	url = https://github.com/goldjunge91/robot_utils.git
+	branch = main
+[submodule "src/robot_vision"]
+	path = src/robot_vision
+	url = https://github.com/goldjunge91/robot_vision.git
+	branch = main
+[submodule "src/micro-ROS-Agent"]
+	path = src/micro-ROS-Agent
+	url = https://github.com/goldjunge91/robot-micro-ROS-Agent.git
+	branch = humble
+[submodule "src/robot_controllers"]
+	path = src/robot_controllers
+	url = https://github.com/goldjunge91/robot_controllers.git
+	branch = main
+[submodule "src/robot_hardware_interfaces"]
+	path = src/robot_hardware_interfaces
+	url = https://github.com/goldjunge91/robot_hardware_interfaces.git
+	branch = main
+[submodule "src/robot_gz_worlds"]
+	path = src/robot_gz_worlds
+	url = https://github.com/goldjunge91/robot_gz_worlds.git
+	branch = main
+[submodule "lib/FreeRTOS-Kernel"]
+        path = lib/FreeRTOS-Kernel
+        url = https://github.com/FreeRTOS/FreeRTOS-Kernel
+	ignore = dirty
+[submodule "lib/eigen"]
+        path = lib/eigen
+        url = https://gitlab.com/libeigen/eigen
+	ignore = dirty
+[submodule "lib/pico-distance-sensor"]
+        path = lib/pico-distance-sensor
+        url = https://github.com/dangarbri/pico-distance-sensor
+	ignore = dirty
+[submodule "lib/FreeRTOS"]
+	path = lib/FreeRTOS
+	url = https://github.com/FreeRTOS/FreeRTOS
+	branch = main
+	ignore = dirty
+[submodule "lib/micro_ros_raspberrypi_pico_sdk"]
+        path = lib/micro_ros_raspberrypi_pico_sdk
+        url = https://github.com/micro-ROS/micro_ros_raspberrypi_pico_sdk
+        branch = humble
+	ignore = dirty
+[submodule "robot_control_gui"]
+	path = robot_control_gui
+	url = https://github.com/goldjunge91/robot_control_gui.git
+	branch = main
+[submodule "robot_firmware"]
+	path = robot_firmware
+	url = https://github.com/goldjunge91/robot_firmware.git
+	branch = main

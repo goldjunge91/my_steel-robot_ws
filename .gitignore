@@ -1,4 +1,126 @@
-build/*
-install/*
-log/*
+# ### ROS 2 & Colcon Build-Artefakte ###
+# Ignoriere Build-, Install- und Log-Verzeichnisse überall im Projekt.
+build/
+install/
+log/
+build_*/
+build
+log
+install
 site/*
+.venv
+# ### Python-Artefakte ###
+__pycache__/
+*.pyc
+.pytest_cache/
+.pytest_cache
+/__pycache__/
+/__pycache__/*
+.docs/ROS2_Humble_docs/
+.env
+/.env
+/.env.*
+.env
+uros_ws
+*.log
+build_release
+*.db
+*.sqlite3
+build
+build_release
+build_debug
+debug
+release
+debug/*
+release/*
+
+# ### Kompilierte C/C++ Artefakte ###
+# Objektdateien, Bibliotheken und ausführbare Dateien
+*.o
+*.obj
+*.slo
+*.lo
+*.so
+*.dylib
+*.dll
+*.a
+*.la
+*.lai
+*.lib
+*.exe
+*.out
+*.app
+*.d
+
+# Vorkompilierte Header
+*.gch
+*.pch
+
+# ### IDE & Editor-Konfiguration ###
+.cproject
+.project
+.pydevproject
+.settings/
+
+# ### Logs & Datenbanken ###
+*.log
+*.db
+*.sqlite3
+
+# ### Generierte Dokumentation & Web-Artefakte ###
+/site/
+# Wenn dies automatisch generiert und groß ist, sonst die Zeile entfernen.
+/.docs/ROS2_Humble_docs/
+
+# ### OS-spezifische Dateien ###
+# macOS, Windows, etc.
+.DS_Store
+@eaDir
+
+# ### Node.js ###
+/node_modules/
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Ignore Mac system files
+.DS_store
+.DS_Store
+@eaDir
+
+# Ignore node_modules folder
+node_modules
+
+# Ignore files related to API keys
+*.env
+
+build
+.cproject
+.project
+.pydevproject
+.settings
+__pycache__
+*/install
+
+# ### ROS 2 & Colcon Build-Artefakte ###
+# Ignoriere Build-, Install- und Log-Verzeichnisse überall im Projekt.
+build/
+install/
+log/
+build_*/
+build*/
+_obsolet/# pixi environments
+.pixi/*
+!.pixi/config.toml

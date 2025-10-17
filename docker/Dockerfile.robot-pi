@@ -1,0 +1,252 @@
+# Multi-stage Dockerfile for my_steel robot deployment on Raspberry Pi 4B
+# Optimized for ARM64 architecture with ROS2 Humble
+# Build version: 2025-10-16 (includes micro_ros_agent from source)
+
+# ============================================================================
+# Stage 1: Builder - Compile ROS2 workspace
+# ============================================================================
+FROM ros:humble-ros-base AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    python3-colcon-common-extensions \
+    python3-rosdep \
+    build-essential \
+    cmake \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create workspace
+WORKDIR /ros2_ws
+
+# Copy source code
+COPY src/ src/
+
+# Initialize rosdep if not already done
+RUN rosdep update || true
+
+# Install dependencies for the packages we're building
+# Install ros2_control and controllers for robot_hardware_interfaces
+RUN apt-get update && apt-get install -y \
+    ros-humble-controller-interface \
+    ros-humble-hardware-interface \
+    ros-humble-ros2-control \
+    ros-humble-ros2-controllers \
+    ros-humble-robot-localization \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN rosdep install --from-paths src \
+    --ignore-src \
+    --rosdistro humble \
+    -y \
+    || true
+
+# Build packages in multiple steps to handle dependencies correctly
+# Note: micro_ros_agent will be built from source in src/micro-ROS-Agent
+
+# Step 1: Build micro-ROS-Agent (required for microros-agent service)
+# Note: micro_ros_agent package is in src/micro-ROS-Agent/micro_ros_agent/
+RUN . /opt/ros/humble/setup.sh && \
+    echo "=== Listing all packages ===" && \
+    colcon list --base-paths src && \
+    echo "=== Building micro_ros_agent ===" && \
+    colcon build \
+    --cmake-args -DCMAKE_BUILD_TYPE=Release \
+    --base-paths src/micro-ROS-Agent \
+    --merge-install
+
+# Step 2: Build husarion components (base dependency)
+RUN . /opt/ros/humble/setup.sh && \
+    colcon build \
+    --cmake-args -DCMAKE_BUILD_TYPE=Release \
+    --packages-select husarion_components_description \
+    --merge-install \
+    --continue-on-error
+
+# Step 3: Build open_manipulator_x packages (dependency for robot_description)
+RUN . /opt/ros/humble/setup.sh && \
+    colcon build \
+    --cmake-args -DCMAKE_BUILD_TYPE=Release \
+    --packages-select \
+    open_manipulator_x_description \
+    dynamixel_hardware_interface \
+    --merge-install \
+    --continue-on-error
+
+# Step 4: Build robot core packages
+RUN . /opt/ros/humble/setup.sh && \
+    colcon build \
+    --cmake-args -DCMAKE_BUILD_TYPE=Release \
+    --packages-select \
+    robot_description \
+    robot_hardware_interfaces \
+    --merge-install
+
+# Step 5: Build robot_utils (dependency for robot_controller)
+RUN . /opt/ros/humble/setup.sh && \
+    colcon build \
+    --cmake-args -DCMAKE_BUILD_TYPE=Release \
+    --packages-select robot_utils \
+    --merge-install \
+    --continue-on-error
+
+# Step 6: Build controller and localization packages
+RUN . /opt/ros/humble/setup.sh && \
+    colcon build \
+    --cmake-args -DCMAKE_BUILD_TYPE=Release \
+    --packages-select \
+    robot_controller \
+    robot_localization_tool \
+    --merge-install
+
+# Step 7: Build bringup package (depends on everything else)
+RUN . /opt/ros/humble/setup.sh && \
+    colcon build \
+    --cmake-args -DCMAKE_BUILD_TYPE=Release \
+    --packages-select robot_bringup \
+    --merge-install
+
+# ============================================================================
+# Stage 2: Runtime - Production image
+# ============================================================================
+FROM ros:humble-ros-base
+
+# Install runtime dependencies and system tools
+# Note: micro_ros_agent is built from source in src/micro-ROS-Agent
+RUN apt-get update && apt-get install -y \
+    ros-humble-usb-cam \
+    ros-humble-foxglove-bridge \
+    ros-humble-robot-state-publisher \
+    ros-humble-joint-state-publisher \
+    ros-humble-controller-manager \
+    ros-humble-ros2-control \
+    ros-humble-ros2-controllers \
+    ros-humble-robot-localization \
+    udev \
+    usbutils \
+    curl \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Tailscale
+RUN curl -fsSL https://tailscale.com/install.sh | sh
+
+# Create non-root robot user with necessary group memberships
+RUN useradd -m -s /bin/bash robot && \
+    usermod -aG dialout,video robot
+
+# Copy built workspace from builder stage
+COPY --from=builder /ros2_ws/install /ros2_ws/install
+
+# Create Tailscale startup script
+RUN mkdir -p /usr/local/bin && \
+    cat > /usr/local/bin/tailscale-start.sh << 'EOF'
+#!/bin/bash
+# Tailscale startup script
+# Connects to Tailscale VPN if TAILSCALE_AUTHKEY is provided
+
+if [ -n "$TAILSCALE_AUTHKEY" ]; then
+echo "Starting Tailscale daemon..."
+mkdir -p /var/lib/tailscale
+tailscaled --state=/var/lib/tailscale/tailscaled.state &
+
+# Wait for daemon to be ready
+sleep 2
+
+echo "Connecting to Tailscale network..."
+tailscale up \
+    --authkey="$TAILSCALE_AUTHKEY" \
+    --hostname="${TAILSCALE_HOSTNAME:-robot-xl}" \
+    --accept-routes \
+    --advertise-tags=tag:robot
+
+echo "Tailscale connected successfully"
+tailscale status
+else
+echo "TAILSCALE_AUTHKEY not set, skipping Tailscale setup"
+fi
+EOF
+
+# Make Tailscale script executable
+RUN chmod +x /usr/local/bin/tailscale-start.sh
+
+# Create entrypoint script with signal handling
+RUN cat > /usr/local/bin/entrypoint.sh << 'EOF'
+#!/bin/bash
+# Entrypoint script for robot container
+# Handles ROS2 environment setup and graceful shutdown
+
+set -e
+
+# Trap SIGTERM for graceful shutdown
+shutdown_handler() {
+echo "Received SIGTERM, initiating graceful shutdown..."
+
+# Send SIGINT to child process (ROS2 launch)
+if [ -n "$CHILD_PID" ]; then
+kill -INT "$CHILD_PID" 2>/dev/null || true
+
+# Wait up to 30 seconds for clean shutdown
+for i in {1..30}; do
+if ! kill -0 "$CHILD_PID" 2>/dev/null; then
+echo "Process shutdown complete"
+break
+fi
+sleep 1
+done
+
+# Force kill if still running
+if kill -0 "$CHILD_PID" 2>/dev/null; then
+echo "Timeout reached, forcing shutdown"
+kill -9 "$CHILD_PID" 2>/dev/null || true
+fi
+fi
+
+# Flush logs
+sync
+
+echo "Shutdown complete"
+exit 0
+}
+
+trap shutdown_handler SIGTERM SIGINT
+
+# Source ROS2 environment
+echo "Sourcing ROS2 environment..."
+source /opt/ros/humble/setup.bash
+source /ros2_ws/install/setup.bash
+
+# Execute command passed to container
+echo "Starting: $@"
+exec "$@" &
+CHILD_PID=$!
+
+# Wait for child process
+wait $CHILD_PID
+EOF
+
+# Make entrypoint executable
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Set working directory
+WORKDIR /ros2_ws
+
+# Create log directory
+RUN mkdir -p /var/log/robot && \
+    chown -R robot:robot /var/log/robot
+
+# Switch to non-root user for runtime
+USER robot
+
+# Set environment variables
+ENV ROS_DISTRO=humble
+ENV ROS_DOMAIN_ID=0
+ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+ENV ROS_LOG_DIR=/var/log/robot
+ENV ROBOT_MODEL_NAME=robot_xl
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Default command (can be overridden)
+CMD ["bash"]

@@ -1,0 +1,142 @@
+---
+name: Build Robot Pi Docker Image (GHCR)
+
+permissions:
+  contents: read
+  packages: write
+
+on:
+  push:
+    branches:
+      - main
+      - humble
+      - 001-feature-hal-mit
+    paths:
+      - 'docker/Dockerfile.robot-pi'
+      - 'docker/compose.robot-pi.yaml'
+      - 'src/**'
+      - '.github/workflows/docker-build-ghcr.yml'
+  workflow_dispatch:
+    inputs:
+      tag_suffix:
+        description: 'Optional tag suffix (e.g., "beta", "rc1")'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:latest
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from commit
+        id: version
+        run: |
+          # Get short commit SHA
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          
+          # Get current date in YYYYMMDD format
+          BUILD_DATE=$(date +%Y%m%d)
+          
+          # Get branch name
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          
+          # Construct version tag
+          VERSION_TAG="${BUILD_DATE}-${SHORT_SHA}"
+          
+          # Add optional suffix if provided
+          if [ -n "${{ inputs.tag_suffix }}" ]; then
+            VERSION_TAG="${VERSION_TAG}-${{ inputs.tag_suffix }}"
+          fi
+          
+          echo "version=${VERSION_TAG}" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
+          echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Generate Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=humble-arm64
+            type=raw,value=humble-arm64-${{ steps.version.outputs.version }}
+            type=raw,value=latest-arm64,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,prefix=humble-arm64-,format=short
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.robot-pi
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: |
+            org.opencontainers.image.title=my_steel Robot
+            org.opencontainers.image.description=ROS2 Humble robot software for Raspberry Pi 4B
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.created=${{ steps.version.outputs.build_date }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-arm64-v2
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-arm64-v2,mode=max
+          build-args: |
+            BUILD_DATE=${{ steps.version.outputs.build_date }}
+            VCS_REF=${{ steps.version.outputs.short_sha }}
+
+      - name: Generate build summary
+        run: |
+          echo "## Docker Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** ghcr.io/${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Platform:** linux/arm64" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ steps.version.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ steps.version.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tags" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pull Command" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ghcr.io/${{ github.repository }}:humble-arm64" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Verify image push success
+        run: |
+          echo "✅ Image build and push completed successfully"
+          echo "📦 Available images:"
+          echo "  - ghcr.io/${{ github.repository }}:humble-arm64"
+          echo "  - ghcr.io/${{ github.repository }}:humble-arm64-${{ steps.version.outputs.version }}"
+          echo ""
+          echo "🔍 To verify on ARM64 device:"
+          echo "  docker pull ghcr.io/${{ github.repository }}:humble-arm64"
+          echo ""
+          echo "Note: Image validation skipped - ARM64 image cannot run on AMD64 GitHub runner"
