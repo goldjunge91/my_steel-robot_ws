@@ -8,6 +8,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
+  export AMENT_TRACE_SETUP_FILES=""
+fi
+
 log_step() {
   echo -e "${BLUE}[BUILD]${NC} $1"
 }
@@ -40,6 +44,11 @@ safe_source() {
 ROS_DISTRO=${ROS_DISTRO:-humble}
 ROS_SETUP="/opt/ros/${ROS_DISTRO}/setup.bash"
 
+# Set AMENT_TRACE_SETUP_FILES to prevent unbound variable errors
+if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
+  export AMENT_TRACE_SETUP_FILES=""
+fi
+
 log_step "Sourcing ROS environment (${ROS_SETUP})"
 if safe_source "$ROS_SETUP"; then
   log_success "ROS environment sourced"
@@ -60,6 +69,20 @@ if ! command -v colcon >/dev/null 2>&1; then
   log_error "colcon nicht gefunden – bitte ROS 2 build tools installieren"
   exit 1
 fi
+
+# Ensure workspace directories exist and are writable
+for dir in build install log; do
+  if [ ! -d "$dir" ]; then
+    mkdir -p "$dir" || {
+      log_error "Cannot create directory $dir"
+      exit 1
+    }
+  fi
+  if [ ! -w "$dir" ]; then
+    log_error "Directory $dir is not writable"
+    exit 1
+  fi
+done
 
 BUILD_TYPE=${BUILD_TYPE:-RelWithDebInfo}
 log_step "Starte colcon build (BUILD_TYPE=${BUILD_TYPE})"

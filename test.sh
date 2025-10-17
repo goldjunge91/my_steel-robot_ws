@@ -11,7 +11,7 @@ NC='\033[0m' # No Color
 # GitHub Actions helpers (kept lightweight)
 github_summary() {
   if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
-    echo "$*" >> "$GITHUB_STEP_SUMMARY"
+    echo "$*" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
   fi
 }
 
@@ -45,6 +45,10 @@ github_warning() {
 
 # Timing helpers for consistent colored output
 start_time=$(date +%s)
+
+if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
+  export AMENT_TRACE_SETUP_FILES=""
+fi
 
 log_with_color() {
   local color="$1"
@@ -88,6 +92,7 @@ safe_source() {
 
 log_step "Starting test execution"
 
+# Set AMENT_TRACE_SETUP_FILES to prevent unbound variable errors
 if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
   export AMENT_TRACE_SETUP_FILES=""
 fi

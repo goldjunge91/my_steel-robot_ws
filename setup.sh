@@ -9,7 +9,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 github_summary() {
-  if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+  if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ] && [ -w "$(dirname "$GITHUB_STEP_SUMMARY")" ] 2>/dev/null; then
     echo "$*" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
   fi
 }

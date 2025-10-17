@@ -93,6 +93,12 @@ RUN if [ "$INSTALL_PICO_SDK" = "true" ]; then \
     fi
 
 ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
+# Set AMENT_TRACE_SETUP_FILES to prevent unbound variable errors
+ENV AMENT_TRACE_SETUP_FILES=""
+
+# Create workspace directory and set proper ownership
+RUN mkdir -p ${WORKSPACE} && \
+    chown -R $USER_UID:$USER_GID ${WORKSPACE}
 
 USER ros
-WORKDIR /home/ros
+WORKDIR ${WORKSPACE}
