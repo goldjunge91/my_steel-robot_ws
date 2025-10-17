@@ -36,11 +36,19 @@ github_annotation() {
 }
 
 github_error() {
-  github_annotation "error" "$1" "${2:-}" "${3:-}" "${4:-}"
+  local title="${1:-}"
+  local message="${2:-}"
+  local file="${3:-}"
+  local line="${4:-}"
+  github_annotation "error" "$title" "$message" "$file" "$line"
 }
 
 github_warning() {
-  github_annotation "warning" "$1" "${2:-}" "${3:-}" "${4:-}"
+  local title="${1:-}"
+  local message="${2:-}"
+  local file="${3:-}"
+  local line="${4:-}"
+  github_annotation "warning" "$title" "$message" "$file" "$line"
 }
 
 # Timing helpers for consistent colored output
