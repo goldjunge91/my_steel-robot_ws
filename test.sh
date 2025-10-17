@@ -52,28 +52,32 @@ start_time=$(date +%s)
 
 log_step() {
   local message="$1"
-  local current_time=$(date +%s)
+  local current_time
+  current_time=$(date +%s)
   local elapsed=$((current_time - start_time))
   echo -e "${BLUE}[TEST - ${elapsed}s]${NC} ${message}"
 }
 
 log_success() {
   local message="$1"
-  local current_time=$(date +%s)
+  local current_time
+  current_time=$(date +%s)
   local elapsed=$((current_time - start_time))
   echo -e "${GREEN}[SUCCESS - ${elapsed}s]${NC} ${message}"
 }
 
 log_warning() {
   local message="$1"
-  local current_time=$(date +%s)
+  local current_time
+  current_time=$(date +%s)
   local elapsed=$((current_time - start_time))
   echo -e "${YELLOW}[WARNING - ${elapsed}s]${NC} ${message}"
 }
 
 log_error() {
   local message="$1"
-  local current_time=$(date +%s)
+  local current_time
+  current_time=$(date +%s)
   local elapsed=$((current_time - start_time))
   echo -e "${RED}[ERROR - ${elapsed}s]${NC} ${message}"
 }
