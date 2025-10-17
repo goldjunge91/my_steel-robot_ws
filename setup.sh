@@ -251,15 +251,39 @@ main() {
       
       if command -v vcs >/dev/null 2>&1; then
         print_step "Importing repositories from src/ros2.repos..."
-        if vcs import src < src/ros2.repos; then
-          print_success "Repositories imported successfully"
-          # statt: local step_end=$(date +%s)
-          local step_end
-          step_end=$(date +%s)
-          print_duration $step_start $step_end
-        else
-          print_warning "Failed to import VCS repositories. Continuing anyway."
+        
+        # Check if repositories already exist (e.g., from GitHub Actions checkout)
+        existing_repos=()
+        if [ -f src/ros2.repos ]; then
+          # Parse YAML to find repository names
+          while IFS= read -r line; do
+            # Match lines like "  repo_name:" (repository entries)
+            if [[ "$line" =~ ^[[:space:]]+([^:[:space:]]+):[[:space:]]*$ ]]; then
+              repo_name="${BASH_REMATCH[1]}"
+              # Skip the "repositories:" line
+              if [ "$repo_name" != "repositories" ] && [ -d "src/$repo_name" ]; then
+                existing_repos+=("$repo_name")
+              fi
+            fi
+          done < src/ros2.repos
         fi
+        
+        if [ ${#existing_repos[@]} -gt 0 ]; then
+          print_step "Found existing repositories: ${existing_repos[*]}"
+          print_step "Skipping VCS import as repositories already exist (likely from checkout)"
+          print_success "Using existing repositories from workspace"
+        else
+          if vcs import src < src/ros2.repos; then
+            print_success "Repositories imported successfully"
+          else
+            print_warning "Failed to import VCS repositories. Continuing anyway."
+          fi
+        fi
+        
+        # statt: local step_end=$(date +%s)
+        local step_end
+        step_end=$(date +%s)
+        print_duration $step_start $step_end
       else
         print_error "Cannot import repositories: vcs command not available"
       fi

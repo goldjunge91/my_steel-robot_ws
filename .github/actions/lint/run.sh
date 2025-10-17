@@ -68,21 +68,19 @@ else
   print_warning "ROS setup script not found at $ROS_SETUP — continuing without sourcing ROS."
 fi
 
-# REMOVED: setup.sh call - not needed for linting
-# Linters only need ROS environment, not a full workspace build
-# The workspace is already checked out and ROS is sourced above
+# Linters work directly on source code without requiring workspace build
+print_info "Linting source code directly (no workspace build required)"
 
-print_info "Checking for workspace setup..."
-if [ -f "install/setup.bash" ]; then
-  print_info "Found workspace setup, sourcing install/setup.bash..."
-  if safe_source "install/setup.bash"; then
-    print_success "Workspace environment loaded"
-  else
-    print_warning "Failed to source workspace setup, continuing anyway..."
-  fi
-else
-  print_info "No install/setup.bash found, workspace may not be built yet"
+# Verify source directory exists
+if [ ! -d "src" ]; then
+  print_error "Source directory 'src/' not found"
+  print_error "Current directory: $(pwd)"
+  print_error "Directory contents:"
+  ls -la
+  exit 1
 fi
+
+print_success "Source directory found, proceeding with linting"
 
 # Validate LINTER environment variable
 if [ -z "${LINTER:-}" ]; then
