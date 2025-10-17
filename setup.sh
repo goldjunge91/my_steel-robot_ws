@@ -77,12 +77,37 @@ fi
 log_step "Aktualisiere apt Paketquellen"
 sudo apt-get update -y
 
+log_step "Stelle Schreibrechte für rosdep Cache sicher"
+if [ -n "${HOME:-}" ]; then
+  mkdir -p "$HOME/.ros"
+  if [ ! -w "$HOME/.ros" ]; then
+    sudo chown -R "$(id -u)":"$(id -g)" "$HOME/.ros"
+  fi
+else
+  log_warning "\$HOME nicht gesetzt – kann rosdep Cache-Pfad nicht prüfen"
+fi
+
 log_step "Aktualisiere rosdep-Datenbank"
+set +e
 rosdep update --rosdistro="$ROS_DISTRO"
+ROSDEP_UPDATE_RC=$?
+set -e
+if [ "$ROSDEP_UPDATE_RC" -ne 0 ]; then
+  log_warning "rosdep update schlug fehl (Exit-Code $ROSDEP_UPDATE_RC) – fahre fort, Abhängigkeiten könnten unvollständig sein"
+else
+  log_success "rosdep update abgeschlossen"
+fi
 
 log_step "Installiere Abhängigkeiten via rosdep"
+set +e
 rosdep install --from-paths src --ignore-src -y --rosdistro="$ROS_DISTRO"
-log_success "Abhängigkeiten installiert"
+ROSDEP_INSTALL_RC=$?
+set -e
+if [ "$ROSDEP_INSTALL_RC" -ne 0 ]; then
+  log_warning "rosdep install meldete Fehler (Exit-Code $ROSDEP_INSTALL_RC) – bitte fehlende Pakete manuell prüfen"
+else
+  log_success "Abhängigkeiten installiert"
+fi
 
 log_success "Setup abgeschlossen"
 
