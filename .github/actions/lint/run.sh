@@ -4,14 +4,9 @@ set -euo pipefail
 # Increase file descriptor limit FIRST to prevent "too many open files" errors
 ulimit -n 16384 2>/dev/null || ulimit -n 8192 2>/dev/null || ulimit -n 4096 2>/dev/null || echo "Warning: Could not increase file descriptor limit"
 
-# Aggressive cleanup to prevent file descriptor exhaustion
-echo "Performing aggressive cleanup to prevent file descriptor issues..."
-# Remove build artifacts that cause the most file descriptor usage
-rm -rf build install log htmlcov .pytest_cache 2>/dev/null || true
-# Clean up Python cache files
-find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
-find . -name "*.pyc" -delete 2>/dev/null || true
-find . -name "*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true
+# REMOVED: Aggressive cleanup - too slow for CI
+# The GitHub Actions cache handles build artifacts efficiently
+# Only clean if really necessary (out of space errors)
 
 # --- Color definitions for output ---
 GREEN='\033[0;32m'
@@ -42,23 +37,8 @@ git config --global --add safe.directory '*' 2>/dev/null || true
 
 print_info "Starting lint job for linter: ${LINTER:-<not set>}"
 
-# Run workspace validation if available
-if [ -f "./scripts/validate_workspace_structure.sh" ]; then
-  print_info "Running workspace validation..."
-  if timeout 30 ./scripts/validate_workspace_structure.sh 2>/dev/null; then
-    print_success "Workspace validation passed"
-  else
-    print_warning "Workspace validation failed or timed out, but continuing with linting..."
-    print_warning "This may be due to file descriptor limits or workspace structure problems"
-    # Basic fallback validation
-    if [ ! -d "src" ]; then
-      print_error "Critical: src/ directory does not exist"
-      exit 1
-    fi
-  fi
-else
-  print_info "Workspace validation script not found, skipping validation"
-fi
+# REMOVED: Workspace validation - too slow and not needed for linting
+# Linters work directly on src/ files without full workspace validation
 
 safe_source() {
   local file="$1"
@@ -88,23 +68,9 @@ else
   print_warning "ROS setup script not found at $ROS_SETUP — continuing without sourcing ROS."
 fi
 
-print_info "Running setup.sh to prepare workspace..."
-if timeout 300 ./setup.sh 2>/dev/null; then
-  print_success "setup.sh completed successfully"
-else
-  exit_code=$?
-  if [ $exit_code -eq 124 ]; then
-    print_error "setup.sh timed out after 5 minutes"
-  elif [ $exit_code -eq 126 ]; then
-    print_error "setup.sh failed due to file descriptor limits or permissions"
-    print_warning "This is likely due to system resource constraints"
-  else
-    print_error "setup.sh failed with exit code $exit_code"
-  fi
-  print_error "Cannot proceed with linting without proper workspace setup"
-  print_error "Check setup.sh output above for specific error details"
-  exit 1
-fi
+# REMOVED: setup.sh call - not needed for linting
+# Linters only need ROS environment, not a full workspace build
+# The workspace is already checked out and ROS is sourced above
 
 print_info "Checking for workspace setup..."
 if [ -f "install/setup.bash" ]; then
@@ -135,12 +101,8 @@ fi
 
 print_info "Running linter: $LINTER"
 
-# Clean up build artifacts that might cause "too many open files" errors
-if [ -d "build" ]; then
-  print_info "Cleaning up build artifacts to prevent file descriptor issues..."
-  find build/ -name "*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true
-  find build/ -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
-fi
+# REMOVED: Build artifact cleanup - handled by cache
+# REMOVED: File counting before linting - unnecessary overhead
 
 LINTER_CMD="ament_${LINTER}"
 print_info "Checking for linter command: $LINTER_CMD"
@@ -148,26 +110,7 @@ print_info "Checking for linter command: $LINTER_CMD"
 if command -v "$LINTER_CMD" >/dev/null 2>&1; then
   print_success "Found $LINTER_CMD, executing on src/ directory..."
   
-  # Count files to be linted for better user feedback
-  case "$LINTER" in
-    "flake8"|"pep257")
-      file_count=$(find src/ -name "*.py" | wc -l)
-      print_info "Found $file_count Python files to lint"
-      ;;
-    "cppcheck"|"cpplint"|"uncrustify")
-      file_count=$(find src/ \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.c" \) | wc -l)
-      print_info "Found $file_count C/C++ files to lint"
-      ;;
-    "lint_cmake")
-      file_count=$(find src/ -name "CMakeLists.txt" | wc -l)
-      print_info "Found $file_count CMakeLists.txt files to lint"
-      ;;
-    "xmllint")
-      file_count=$(find src/ \( -name "*.xml" -o -name "*.launch" -o -name "*.xacro" \) | wc -l)
-      print_info "Found $file_count XML files to lint"
-      ;;
-  esac
-  
+  # Run linter without expensive file counting
   if "$LINTER_CMD" src/; then
     print_success "$LINTER_CMD completed successfully - no issues found"
   else
@@ -184,49 +127,25 @@ else
   case "$LINTER" in
     "flake8"|"pep257")
       print_info "Running Python fallback check with compileall..."
-      file_count=$(find src/ -name "*.py" | wc -l)
-      if [ "$file_count" -gt 0 ]; then
-        print_info "Checking syntax of $file_count Python files..."
-        if python3 -m compileall src/ -q; then
-          print_success "Python syntax check passed"
-        else
-          print_warning "Python syntax check found issues"
-        fi
+      if python3 -m compileall src/ -q 2>/dev/null; then
+        print_success "Python syntax check passed"
       else
-        print_info "No Python files found to check"
+        print_warning "Python syntax check found issues"
       fi
       ;;
     "cppcheck"|"cpplint"|"uncrustify")
       print_info "Running C++ fallback check..."
-      file_count=$(find src/ \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.c" \) | wc -l)
-      if [ "$file_count" -gt 0 ]; then
-        print_info "Found $file_count C/C++ files, but no C++ linter available"
-        print_warning "Skipping C++ linting - install $LINTER_CMD for proper checking"
-        print_info "To install: sudo apt-get install $LINTER"
-      else
-        print_info "No C/C++ files found to lint"
-      fi
+      print_warning "Skipping C++ linting - install $LINTER_CMD for proper checking"
+      print_info "To install: sudo apt-get install $LINTER"
       ;;
     "lint_cmake")
       print_info "Running CMake fallback check..."
-      file_count=$(find src/ -name "CMakeLists.txt" | wc -l)
-      if [ "$file_count" -gt 0 ]; then
-        print_info "Found $file_count CMakeLists.txt files, but cmake linter not available"
-        print_warning "Skipping CMake linting - install $LINTER_CMD for proper checking"
-      else
-        print_info "No CMakeLists.txt files found to lint"
-      fi
+      print_warning "Skipping CMake linting - install $LINTER_CMD for proper checking"
       ;;
     "xmllint")
       print_info "Running XML fallback check..."
-      file_count=$(find src/ \( -name "*.xml" -o -name "*.launch" -o -name "*.xacro" \) | wc -l)
-      if [ "$file_count" -gt 0 ]; then
-        print_info "Found $file_count XML files, but xmllint not available"
-        print_warning "Skipping XML linting - install xmllint for proper checking"
-        print_info "To install: sudo apt-get install libxml2-utils"
-      else
-        print_info "No XML files found to lint"
-      fi
+      print_warning "Skipping XML linting - install xmllint for proper checking"
+      print_info "To install: sudo apt-get install libxml2-utils"
       ;;
     *)
       print_warning "No fallback available for linter: $LINTER"
