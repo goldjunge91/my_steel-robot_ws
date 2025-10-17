@@ -79,7 +79,9 @@ sudo apt-get update -y
 
 log_step "Stelle Schreibrechte für rosdep Cache sicher"
 if [ -n "${HOME:-}" ]; then
-  mkdir -p "$HOME/.ros"
+  if ! mkdir -p "$HOME/.ros"; then
+    sudo mkdir -p "$HOME/.ros"
+  fi
   if [ ! -w "$HOME/.ros" ]; then
     sudo chown -R "$(id -u)":"$(id -g)" "$HOME/.ros"
   fi
