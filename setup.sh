@@ -73,8 +73,7 @@ if [ -f "src/ros2.repos" ]; then
 else
   log_warning "Keine src/ros2.repos gefunden – überspringe VCS-Import"
 fi
-log_step "Aktualisiere apt Paketquellen"
-sudo apt-get update -y
+
 log_step "Aktualisiere apt Paketquellen"
 sudo apt-get update -y
 
@@ -103,7 +102,7 @@ fi
 
 log_step "Installiere Abhängigkeiten via rosdep"
 set +e
-rosdep install --from-paths src --ignore-src -y --rosdistro="$ROS_DISTRO"
+rosdep install --from-paths "$PWD/src" --ignore-src -y --rosdistro="$ROS_DISTRO"
 ROSDEP_INSTALL_RC=$?
 set -e
 if [ "$ROSDEP_INSTALL_RC" -ne 0 ]; then
