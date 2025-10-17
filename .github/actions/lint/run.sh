@@ -61,7 +61,17 @@ esac
 
 # Source ROS environment and run linter (following athackst approach)
 print_info "Sourcing ROS environment and running $LINTER..."
+
+# Set required ROS environment variable and source safely
+if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
+  AMENT_TRACE_SETUP_FILES=""
+fi
+export AMENT_TRACE_SETUP_FILES
+
+# Temporarily disable strict mode for ROS sourcing
+set +u
 source /opt/ros/$ROS_DISTRO/setup.bash
+set -u
 
 if ament_${LINTER} src/; then
     print_success "$LINTER completed successfully - no issues found"
