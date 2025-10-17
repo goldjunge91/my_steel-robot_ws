@@ -28,7 +28,7 @@ jobs:
             build
             install
             log
-          key: ${{ runner.os }}-colcon-${{ hashFiles('**/package.xml', 'src/ros2.repos') }}
+          key: ${{ runner.os }}-colcon-${{ hashFiles('**/package.xml') }}
           restore-keys: |
             ${{ runner.os }}-colcon-
       - name: Test
@@ -53,7 +53,7 @@ jobs:
             build
             install
             log
-          key: ${{ runner.os }}-colcon-${{ hashFiles('**/package.xml', 'src/ros2.repos') }}
+          key: ${{ runner.os }}-colcon-${{ hashFiles('**/package.xml') }}
           restore-keys: |
             ${{ runner.os }}-colcon-
       - name: Run linter
