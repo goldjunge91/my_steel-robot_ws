@@ -71,16 +71,36 @@ fi
 # Linters work directly on source code without requiring workspace build
 print_info "Linting source code directly (no workspace build required)"
 
+# Debug: Show current environment
+print_info "Current working directory: $(pwd)"
+print_info "GitHub workspace: ${GITHUB_WORKSPACE:-not set}"
+
+# In GitHub Actions Docker containers, the workspace is mounted at /github/workspace
+# Ensure we're in the correct directory
+if [ -d "/github/workspace" ]; then
+  print_info "Changing to GitHub Actions workspace: /github/workspace"
+  cd "/github/workspace"
+elif [ -n "${GITHUB_WORKSPACE}" ] && [ -d "${GITHUB_WORKSPACE}" ]; then
+  print_info "Changing to GitHub workspace: ${GITHUB_WORKSPACE}"
+  cd "${GITHUB_WORKSPACE}"
+fi
+
+print_info "Working directory after change: $(pwd)"
+
 # Verify source directory exists
 if [ ! -d "src" ]; then
   print_error "Source directory 'src/' not found"
   print_error "Current directory: $(pwd)"
   print_error "Directory contents:"
   ls -la
+  print_error "Looking for src in common locations:"
+  find / -maxdepth 3 -name "src" -type d 2>/dev/null | head -10 || true
   exit 1
 fi
 
-print_success "Source directory found, proceeding with linting"
+print_success "Source directory found at: $(pwd)/src"
+print_info "Source directory contents:"
+ls -la src/ | head -10
 
 # Validate LINTER environment variable
 if [ -z "${LINTER:-}" ]; then
@@ -108,7 +128,25 @@ print_info "Checking for linter command: $LINTER_CMD"
 if command -v "$LINTER_CMD" >/dev/null 2>&1; then
   print_success "Found $LINTER_CMD, executing on src/ directory..."
   
-  # Run linter without expensive file counting
+  # Debug: Show what files the linter will find
+  print_info "Files that $LINTER_CMD should find:"
+  case "$LINTER" in
+    "cppcheck"|"cpplint"|"uncrustify")
+      find src/ -name "*.cpp" -o -name "*.hpp" -o -name "*.c" -o -name "*.h" | head -5
+      ;;
+    "lint_cmake")
+      find src/ -name "CMakeLists.txt" -o -name "*.cmake" | head -5
+      ;;
+    "xmllint")
+      find src/ -name "*.xml" -o -name "*.launch" -o -name "*.urdf" -o -name "*.xacro" | head -5
+      ;;
+    "flake8"|"pep257")
+      find src/ -name "*.py" | head -5
+      ;;
+  esac
+  
+  # Run linter with full path and better error reporting
+  print_info "Executing: $LINTER_CMD src/"
   if "$LINTER_CMD" src/; then
     print_success "$LINTER_CMD completed successfully - no issues found"
   else
