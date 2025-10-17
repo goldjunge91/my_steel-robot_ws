@@ -196,272 +196,45 @@ verify_vcstool_in_path() {
   return 1
 }
 
-# --- Haupt-Workflow ---
-main() {
-    # statt: local script_start=$(date +%s)
-    local script_start
-    script_start=$(date +%s)
-    ROS_DISTRO=${ROS_DISTRO:-humble}
+# --- Main setup logic (simplified following athackst approach) ---
+ROS_DISTRO=${ROS_DISTRO:-humble}
 
-    print_header "ROS-Umgebung wird eingerichtet (Distribution: $ROS_DISTRO)"
-    # statt: local step_start=$(date +%s)
-    local step_start
-    step_start=$(date +%s)
-    
-    ROS_SETUP="/opt/ros/${ROS_DISTRO}/setup.bash"
-    if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
-      AMENT_TRACE_SETUP_FILES=""
-    fi
-    export AMENT_TRACE_SETUP_FILES
+print_header "ROS workspace setup (Distribution: $ROS_DISTRO)"
 
-    print_step "Sourcing ROS setup script from $ROS_SETUP..."
-    if safe_source "$ROS_SETUP"; then
-      print_success "ROS setup script loaded successfully"
-      if verify_ros_environment; then
-        # statt: local step_end=$(date +%s)
-        local step_end
-        step_end=$(date +%s)
-        print_duration "$step_start" "$step_end"
-      else
-        print_warning "ROS environment verification failed"
-      fi
+# Import VCS repositories if ros2.repos exists
+if [ -f "src/ros2.repos" ]; then
+    print_step "Importing repositories from src/ros2.repos..."
+    if vcs import src < src/ros2.repos; then
+        print_success "VCS repositories imported successfully"
     else
-      print_warning "ROS setup script not found at $ROS_SETUP. Continuing without ROS environment."
+        print_warning "VCS import failed, continuing anyway..."
     fi
+else
+    print_step "No src/ros2.repos found, skipping VCS import"
+fi
 
-    if [ -f src/ros2.repos ]; then
-      print_header "VCS Repositories werden importiert"
-      # statt: step_start=$(date +%s)
-      step_start=$(date +%s)
-      
-      if ! command -v vcs >/dev/null 2>&1; then
-        print_step "vcstool not found, installing..."
-        python3 -m pip install --upgrade pip >/dev/null 2>&1 || true
-        
-        if python3 -m pip install vcstool >/dev/null 2>&1; then
-          print_success "vcstool installed successfully"
-        else
-          print_error "Failed to install vcstool"
-        fi
-        
-        if ! verify_vcstool_in_path; then
-          print_error "vcstool installation failed or not in PATH"
-        fi
-      fi
-      
-      if command -v vcs >/dev/null 2>&1; then
-        print_step "Importing repositories from src/ros2.repos..."
-        
-        # Check if repositories already exist (e.g., from GitHub Actions checkout)
-        existing_repos=()
-        if [ -f src/ros2.repos ]; then
-          # Parse YAML to find repository names
-          while IFS= read -r line; do
-            # Match lines like "  repo_name:" (repository entries)
-            if [[ "$line" =~ ^[[:space:]]+([^:[:space:]]+):[[:space:]]*$ ]]; then
-              repo_name="${BASH_REMATCH[1]}"
-              # Skip the "repositories:" line
-              if [ "$repo_name" != "repositories" ] && [ -d "src/$repo_name" ]; then
-                existing_repos+=("$repo_name")
-              fi
-            fi
-          done < src/ros2.repos
-        fi
-        
-        if [ ${#existing_repos[@]} -gt 0 ]; then
-          print_step "Found existing repositories: ${existing_repos[*]}"
-          print_step "Skipping VCS import as repositories already exist (likely from checkout)"
-          print_success "Using existing repositories from workspace"
-        else
-          if vcs import src < src/ros2.repos; then
-            print_success "Repositories imported successfully"
-          else
-            print_warning "Failed to import VCS repositories. Continuing anyway."
-          fi
-        fi
-        
-        # statt: local step_end=$(date +%s)
-        local step_end
-        step_end=$(date +%s)
-        print_duration $step_start $step_end
-      else
-        print_error "Cannot import repositories: vcs command not available"
-      fi
-    else
-      print_step "No 'src/ros2.repos' file found, skipping VCS import"
-    fi
+# Update package lists and rosdep (following athackst approach)
+print_step "Updating package lists..."
+sudo apt-get update
 
-    if command -v rosdep >/dev/null 2>&1; then
-      print_header "Abhängigkeiten mit rosdep werden installiert"
-      step_start=$(date +%s)
-      
-      if command -v apt-get >/dev/null 2>&1 && [ -z "${APT_UPDATED:-}" ]; then
-        print_step "Waiting for apt lock and updating package lists..."
-        
-        if wait_for_apt_lock 300; then
-          if retry_command 3 5 sudo apt-get update -y -qq; then
-            print_success "Package lists updated successfully"
-            export APT_UPDATED=1
-          else
-            print_warning "'apt-get update' failed after retries. Continuing anyway."
-          fi
-        else
-          print_error "Failed to acquire apt lock. Skipping apt-get update."
-        fi
-      fi
+print_step "Updating rosdep..."
+rosdep update --rosdistro=$ROS_DISTRO
 
-      print_step "Updating rosdep cache..."
-      if retry_command 3 5 sudo rosdep update --rosdistro="$ROS_DISTRO"; then
-        print_success "rosdep cache updated successfully"
-      else
-        print_warning "'rosdep update' failed after retries. Attempting to continue with existing cache."
-      fi
+print_step "Installing dependencies with rosdep..."
+if rosdep install --from-paths src --ignore-src -y --rosdistro=$ROS_DISTRO; then
+    print_success "Dependencies installed successfully"
+else
+    print_warning "Some dependencies failed to install, continuing anyway..."
+fi
 
-      print_step "Ensuring critical apt dependencies are installed..."
-      local extra_pkgs=(
-        "ros-${ROS_DISTRO}-micro-ros-msgs"
-      )
-      for pkg in "${extra_pkgs[@]}"; do
-        if dpkg -s "$pkg" >/dev/null 2>&1; then
-          print_success "$pkg already installed"
-        else
-          print_step "Installing $pkg..."
-          if retry_command 3 5 sudo apt-get install -y "$pkg"; then
-            print_success "$pkg installed successfully"
-          else
-            print_warning "Failed to install $pkg; downstream builds may fail."
-          fi
-        fi
-      done
-      
-      print_step "Installing dependencies with rosdep..."
-      
-      # First, try to install dependencies and capture detailed output
-      rosdep_output=$(sudo rosdep install --from-paths src --ignore-src -y --rosdistro="$ROS_DISTRO" 2>&1)
-      rosdep_exit_code=$?
-      
-      if [ $rosdep_exit_code -eq 0 ]; then
-        print_success "rosdep dependencies installed successfully"
-        # statt: local step_end=$(date +%s)
-        local step_end
-        step_end=$(date +%s)
-        print_duration $step_start $step_end
-      else
-        print_warning "'rosdep install' failed with exit code $rosdep_exit_code"
-        
-        # Parse the output to identify specific failed packages
-        failed_packages=()
-        if echo "$rosdep_output" | grep -q "ERROR: the following rosdeps failed to install"; then
-          print_warning "Analyzing failed dependencies..."
-          
-          # Extract failed package names from rosdep output
-          while IFS= read -r line; do
-            if [[ "$line" =~ apt:.*command.*\[(apt-get install -y ([^]]+))\].*failed ]]; then
-              failed_pkg="${BASH_REMATCH[1]}"
-              failed_packages+=("$failed_pkg")
-              print_warning "  ✗ Failed to install: $failed_pkg"
-            fi
-          done <<< "$rosdep_output"
-          
-          # Check if failed packages are known problematic ones
-          known_problematic_packages=(
-            "ros-humble-gazebo-ros2-control"  # Often missing in Humble
-            "ros-humble-gazebo-ros-control"   # Legacy Gazebo Classic
-            "ros-humble-gazebo-plugins"       # Sometimes unavailable
-          )
-          
-          critical_failures=()
-          non_critical_failures=()
-          
-          for failed_pkg in "${failed_packages[@]}"; do
-            is_known_problematic=false
-            for known_pkg in "${known_problematic_packages[@]}"; do
-              if [[ "$failed_pkg" == "$known_pkg" ]]; then
-                is_known_problematic=true
-                non_critical_failures+=("$failed_pkg")
-                break
-              fi
-            done
-            
-            if [ "$is_known_problematic" = false ]; then
-              critical_failures+=("$failed_pkg")
-            fi
-          done
-          
-          if [ ${#non_critical_failures[@]} -gt 0 ]; then
-            print_warning "Known problematic packages (simulation-only, can be ignored for hardware builds):"
-            for pkg in "${non_critical_failures[@]}"; do
-              print_warning "  ⚠ $pkg (often missing in ROS2 Humble repositories)"
-            done
-          fi
-          
-          if [ ${#critical_failures[@]} -gt 0 ]; then
-            print_error "Critical package installation failures:"
-            for pkg in "${critical_failures[@]}"; do
-              print_error "  ✗ $pkg"
-            done
-          fi
-          
-          # Try to install alternative packages for known problematic ones
-          print_step "Attempting to install alternative packages..."
-          alternative_packages=(
-            "ros-${ROS_DISTRO}-gz-ros2-control"     # New Gazebo (Garden/Fortress)
-            "ros-${ROS_DISTRO}-ros-gz-sim"          # Gazebo simulation
-            "ros-${ROS_DISTRO}-ros-gz-bridge"       # Gazebo bridge
-          )
-          
-          for alt_pkg in "${alternative_packages[@]}"; do
-            if sudo apt-get install -y "$alt_pkg" >/dev/null 2>&1; then
-              print_success "Installed alternative package: $alt_pkg"
-            else
-              print_step "Alternative package not available: $alt_pkg"
-            fi
-          done
-          
-        else
-          print_warning "rosdep failed but no specific package failures identified"
-          echo "$rosdep_output" | head -20  # Show first 20 lines of output for debugging
-        fi
-        
-        print_warning "Continuing with available dependencies..."
-        print_warning "Some simulation features may not work if Gazebo packages are missing"
-      fi
-    else
-      print_error "rosdep is not available; skipping dependency resolution."
-    fi
+print_success "Setup completed successfully"
 
-    # statt: local script_end=$(date +%s)
-    local script_end
-    script_end=$(date +%s)
-    echo ""
-    print_success "Setup script completed"
-    print_duration $script_start $script_end
-    
-    # GitHub Actions summary for setup completion
-    if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
-      local total_duration=$((script_end - script_start))
-      github_summary "## ✅ Setup Completed"
-      github_summary ""
-      github_summary "**Duration:** ${total_duration}s"
-      github_summary "**ROS Distribution:** $ROS_DISTRO"
-      github_summary ""
-      github_summary "### Setup Steps Completed"
-      github_summary "- ✅ ROS environment sourced"
-      if [ -f src/ros2.repos ]; then
-        github_summary "- ✅ VCS repositories imported"
-      fi
-      github_summary "- ✅ Dependencies resolved with rosdep"
-      github_summary ""
-      github_notice "Setup Complete" "ROS2 workspace setup completed successfully"
-    fi
-    
-    # Gib immer den Exit-Code 0 zurück, um die CI/CD-Pipeline nicht zu blockieren.
-    print_success "Setup script completed - always returning success for CI/CD"
-    exit 0
-}
-
-# Starte die Hauptfunktion des Skripts
-main
+# GitHub Actions summary
+if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
+    github_summary "## ✅ Setup Completed"
+    github_summary "**ROS Distribution:** $ROS_DISTRO"
+    github_notice "Setup Complete" "ROS2 workspace setup completed successfully"
+fi
 
 
 # #!/bin/bash
