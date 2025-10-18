@@ -37,11 +37,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Skip dynamixel_hardware_interface because no ARM64 binary exists in upstream apt repo
-RUN rosdep install --from-paths src \
+RUN apt-get update && \
+    rosdep install --from-paths src \
     --ignore-src \
     --rosdistro humble \
     --skip-keys "dynamixel_hardware_interface" \
-    -y
+    -y && \
+    rm -rf /var/lib/apt/lists/*
 
 # Build packages in multiple steps to handle dependencies correctly
 # Note: micro_ros_agent will be built from source in src/micro-ROS-Agent

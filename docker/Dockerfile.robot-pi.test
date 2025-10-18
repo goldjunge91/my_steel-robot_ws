@@ -33,6 +33,7 @@ RUN vcs import src < "${VCS_FILE}"
 
 RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
     sudo rosdep update && \
+    sudo apt-get update && \
     sudo rosdep install --from-paths src \
       --ignore-src \
       --rosdistro humble \
