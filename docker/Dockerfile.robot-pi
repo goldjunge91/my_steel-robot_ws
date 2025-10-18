@@ -41,7 +41,7 @@ RUN apt-get update && \
     rosdep install --from-paths src \
     --ignore-src \
     --rosdistro humble \
-    --skip-keys "dynamixel_hardware_interface laser_filters xacro" \
+    --skip-keys "dynamixel_hardware_interface laser_filters xacro gazebo_ros gazebo_ros2_control" \
     -y && \
     rm -rf /var/lib/apt/lists/*
 

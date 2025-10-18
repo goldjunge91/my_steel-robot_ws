@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     python3-rosdep \
     python3-vcstool \
     sudo \
-  && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -s /bin/bash robot && \
     usermod -aG sudo robot && \
@@ -35,10 +35,10 @@ RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep
     sudo rosdep update && \
     sudo apt-get update && \
     sudo rosdep install --from-paths src \
-      --ignore-src \
-      --rosdistro humble \
-      --default-yes \
-      --skip-keys "laser_filters xacro dynamixel_hardware_interface"
+    --ignore-src \
+    --rosdistro humble \
+    --default-yes \
+    --skip-keys "laser_filters xacro dynamixel_hardware_interface gazebo_ros gazebo_ros2_control"
 
 RUN . /opt/ros/humble/setup.sh && \
     chmod +x build.sh && \
