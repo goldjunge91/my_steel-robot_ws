@@ -131,92 +131,77 @@ RUN useradd -m -s /bin/bash robot && \
 # Copy built workspace from builder stage
 COPY --from=builder /ros2_ws/install /ros2_ws/install
 
-# Create Tailscale startup script
+# Create Tailscale startup script (runs only when credentials are provided)
 RUN mkdir -p /usr/local/bin && \
-    cat > /usr/local/bin/tailscale-start.sh << 'EOF'
+    cat <<'EOF' >/usr/local/bin/tailscale-start.sh
 #!/bin/bash
-# Tailscale startup script
-# Connects to Tailscale VPN if TAILSCALE_AUTHKEY is provided
+set -euo pipefail
 
-# if [ -n "$TAILSCALE_AUTHKEY" ]; then
-# echo "Starting Tailscale daemon..."
-# mkdir -p /var/lib/tailscale
-# tailscaled --state=/var/lib/tailscale/tailscaled.state &
+# Skip when no auth key or when running as non-root (tailscale needs CAP_SYS_ADMIN)
+if [ -z "${TAILSCALE_AUTHKEY:-}" ]; then
+  echo "[tailscale] No auth key provided, skipping Tailscale setup"
+  exit 0
+fi
 
-# # Wait for daemon to be ready
-# sleep 2
+if [ "$(id -u)" -ne 0 ]; then
+  echo "[tailscale] Not running as root, skipping Tailscale setup"
+  exit 0
+fi
 
-# echo "Connecting to Tailscale network..."
-# tailscale up \
-#     --authkey="$TAILSCALE_AUTHKEY" \
-#     --hostname="${TAILSCALE_HOSTNAME:-robot-xl}" \
-#     --accept-routes \
-#     --advertise-tags=tag:robot
+echo "[tailscale] Starting tailscaled daemon..."
+mkdir -p /var/lib/tailscale
+tailscaled --state=/var/lib/tailscale/tailscaled.state >/var/log/robot/tailscaled.log 2>&1 &
 
-# echo "Tailscale connected successfully"
-# tailscale status
-# else
-# echo "TAILSCALE_AUTHKEY not set, skipping Tailscale setup"
-# fi
-# EOF
+# Give the daemon a moment to come up
+for _ in $(seq 1 10); do
+  if tailscale status >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
 
-# # Make Tailscale script executable
-# RUN chmod +x /usr/local/bin/tailscale-start.sh
+echo "[tailscale] Bringing interface up..."
+tailscale up \
+  --authkey="${TAILSCALE_AUTHKEY}" \
+  --hostname="${TAILSCALE_HOSTNAME:-robot-xl}" \
+  ${TAILSCALE_SUBNET_ROUTES:+--advertise-routes="${TAILSCALE_SUBNET_ROUTES}"} \
+  --accept-routes \
+  --reset
 
-# # Create entrypoint script with signal handling
-# RUN cat > /usr/local/bin/entrypoint.sh << 'EOF'
-# #!/bin/bash
-# # Entrypoint script for robot container
-# # Handles ROS2 environment setup and graceful shutdown
+echo "[tailscale] Connected"
+EOF
 
-# set -e
+RUN chmod +x /usr/local/bin/tailscale-start.sh
 
-# # Trap SIGTERM for graceful shutdown
-# shutdown_handler() {
-# echo "Received SIGTERM, initiating graceful shutdown..."
+# Create entrypoint script with ROS environment setup and graceful shutdown
+RUN cat <<'EOF' >/usr/local/bin/entrypoint.sh
+#!/bin/bash
+set -euo pipefail
 
-# # Send SIGINT to child process (ROS2 launch)
-# if [ -n "$CHILD_PID" ]; then
-# kill -INT "$CHILD_PID" 2>/dev/null || true
+shutdown_handler() {
+  echo "[entrypoint] Received termination signal, stopping child process..."
+  if [ -n "${CHILD_PID:-}" ] && kill -0 "${CHILD_PID}" 2>/dev/null; then
+    kill -TERM "${CHILD_PID}" 2>/dev/null || true
+    wait "${CHILD_PID}" 2>/dev/null || true
+  fi
+  echo "[entrypoint] Shutdown complete"
+  exit 0
+}
 
-# # Wait up to 30 seconds for clean shutdown
-# for i in {1..30}; do
-# if ! kill -0 "$CHILD_PID" 2>/dev/null; then
-# echo "Process shutdown complete"
-# break
-# fi
-# sleep 1
-# done
+trap shutdown_handler SIGINT SIGTERM
 
-# # Force kill if still running
-# if kill -0 "$CHILD_PID" 2>/dev/null; then
-# echo "Timeout reached, forcing shutdown"
-# kill -9 "$CHILD_PID" 2>/dev/null || true
-# fi
-# fi
+echo "[entrypoint] Sourcing ROS environments"
+source /opt/ros/humble/setup.bash
+if [ -f /ros2_ws/install/setup.bash ]; then
+  source /ros2_ws/install/setup.bash
+fi
 
-# # Flush logs
-# sync
+# Start Tailscale when possible (runs as background task)
+/usr/local/bin/tailscale-start.sh || true
 
-# echo "Shutdown complete"
-# exit 0
-# }
-
-# trap shutdown_handler SIGTERM SIGINT
-
-# # Source ROS2 environment
-# echo "Sourcing ROS2 environment..."
-# source /opt/ros/humble/setup.bash
-# source /ros2_ws/install/setup.bash
-
-# # Execute command passed to container
-# echo "Starting: $@"
-# exec "$@" &
-# CHILD_PID=$!
-
-# # Wait for child process
-# wait $CHILD_PID
-# EOF
+echo "[entrypoint] Executing command: $*"
+exec "$@"
+EOF
 
 # Make entrypoint executable
 RUN chmod +x /usr/local/bin/entrypoint.sh

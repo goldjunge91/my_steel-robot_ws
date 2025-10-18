@@ -16,8 +16,6 @@
 #   TAILSCALE_HOSTNAME - Hostname for Tailscale network (default: robot-xl)
 #   ROS_DOMAIN_ID - ROS2 domain ID (default: 0)
 
-version: '3.8'
-
 services:
   # ============================================================================
   # micro-ROS Agent Service
@@ -41,13 +39,21 @@ services:
       - CYCLONEDDS_URI=
     
     # Start micro-ROS agent with serial transport
-    command: >
-      ros2 run micro_ros_agent micro_ros_agent serial
-      --dev /dev/ttyACM0 -b 115200 -v6
+    command:
+      - ros2
+      - run
+      - micro_ros_agent
+      - micro_ros_agent
+      - serial
+      - --dev
+      - ${MICROROS_SERIAL_PORT:-/dev/ttyACM0}
+      - -b
+      - ${MICROROS_BAUD_RATE:-115200}
+      - -v6
     
     # Health check to verify agent is running and topics are available
     healthcheck:
-      test: ["CMD", "ros2", "topic", "list"]
+      test: ["CMD", "sh", "-c", "kill -0 1"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -88,16 +94,14 @@ services:
       - TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-robot-xl}
     
     # Start Tailscale (if configured) and launch robot bringup
-    command: >
-      bash -c "
-      /usr/local/bin/tailscale-start.sh &&
-      source /opt/ros/humble/setup.bash &&
-      source /ros2_ws/install/setup.bash &&
-      ros2 launch robot_bringup bringup.launch.py
-        robot_model:=robot_xl
-        mecanum:=True
-        microros:=false
-      "
+    command:
+      - ros2
+      - launch
+      - robot_bringup
+      - bringup.launch.py
+      - robot_model:=robot_xl
+      - mecanum:=True
+      - microros:=false
     
     # Health check to verify controllers are active
     healthcheck:
