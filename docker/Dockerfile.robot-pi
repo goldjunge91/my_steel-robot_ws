@@ -44,15 +44,12 @@ RUN rosdep install --from-paths src \
 # Build packages in multiple steps to handle dependencies correctly
 # Note: micro_ros_agent will be built from source in src/micro-ROS-Agent
 
-# Step 1: Build micro-ROS-Agent (required for microros-agent service)
-# Note: micro_ros_agent package is in src/micro-ROS-Agent/micro_ros_agent/
 RUN . /opt/ros/humble/setup.sh && \
     echo "=== Listing all packages ===" && \
     colcon list --base-paths src && \
     echo "=== Building micro_ros_agent ===" && \
     colcon build \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
-    --base-paths src/micro-ROS-Agent \
     --merge-install
 
 # Step 2: Build husarion components (base dependency)
@@ -96,7 +93,6 @@ RUN . /opt/ros/humble/setup.sh && \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
     --packages-select \
     robot_controller \
-    robot_localization_tool \
     --merge-install
 
 # Step 7: Build bringup package (depends on everything else)
@@ -112,7 +108,6 @@ RUN . /opt/ros/humble/setup.sh && \
 FROM ros:humble-ros-base
 
 # Install runtime dependencies and system tools
-# Note: micro_ros_agent is built from source in src/micro-ROS-Agent
 RUN apt-get update && apt-get install -y \
     ros-humble-usb-cam \
     ros-humble-foxglove-bridge \
@@ -120,8 +115,6 @@ RUN apt-get update && apt-get install -y \
     ros-humble-joint-state-publisher \
     ros-humble-controller-manager \
     ros-humble-ros2-control \
-    ros-humble-ros2-controllers \
-    ros-humble-robot-localization \
     udev \
     usbutils \
     curl \
@@ -145,85 +138,85 @@ RUN mkdir -p /usr/local/bin && \
 # Tailscale startup script
 # Connects to Tailscale VPN if TAILSCALE_AUTHKEY is provided
 
-if [ -n "$TAILSCALE_AUTHKEY" ]; then
-echo "Starting Tailscale daemon..."
-mkdir -p /var/lib/tailscale
-tailscaled --state=/var/lib/tailscale/tailscaled.state &
+# if [ -n "$TAILSCALE_AUTHKEY" ]; then
+# echo "Starting Tailscale daemon..."
+# mkdir -p /var/lib/tailscale
+# tailscaled --state=/var/lib/tailscale/tailscaled.state &
 
-# Wait for daemon to be ready
-sleep 2
+# # Wait for daemon to be ready
+# sleep 2
 
-echo "Connecting to Tailscale network..."
-tailscale up \
-    --authkey="$TAILSCALE_AUTHKEY" \
-    --hostname="${TAILSCALE_HOSTNAME:-robot-xl}" \
-    --accept-routes \
-    --advertise-tags=tag:robot
+# echo "Connecting to Tailscale network..."
+# tailscale up \
+#     --authkey="$TAILSCALE_AUTHKEY" \
+#     --hostname="${TAILSCALE_HOSTNAME:-robot-xl}" \
+#     --accept-routes \
+#     --advertise-tags=tag:robot
 
-echo "Tailscale connected successfully"
-tailscale status
-else
-echo "TAILSCALE_AUTHKEY not set, skipping Tailscale setup"
-fi
-EOF
+# echo "Tailscale connected successfully"
+# tailscale status
+# else
+# echo "TAILSCALE_AUTHKEY not set, skipping Tailscale setup"
+# fi
+# EOF
 
-# Make Tailscale script executable
-RUN chmod +x /usr/local/bin/tailscale-start.sh
+# # Make Tailscale script executable
+# RUN chmod +x /usr/local/bin/tailscale-start.sh
 
-# Create entrypoint script with signal handling
-RUN cat > /usr/local/bin/entrypoint.sh << 'EOF'
-#!/bin/bash
-# Entrypoint script for robot container
-# Handles ROS2 environment setup and graceful shutdown
+# # Create entrypoint script with signal handling
+# RUN cat > /usr/local/bin/entrypoint.sh << 'EOF'
+# #!/bin/bash
+# # Entrypoint script for robot container
+# # Handles ROS2 environment setup and graceful shutdown
 
-set -e
+# set -e
 
-# Trap SIGTERM for graceful shutdown
-shutdown_handler() {
-echo "Received SIGTERM, initiating graceful shutdown..."
+# # Trap SIGTERM for graceful shutdown
+# shutdown_handler() {
+# echo "Received SIGTERM, initiating graceful shutdown..."
 
-# Send SIGINT to child process (ROS2 launch)
-if [ -n "$CHILD_PID" ]; then
-kill -INT "$CHILD_PID" 2>/dev/null || true
+# # Send SIGINT to child process (ROS2 launch)
+# if [ -n "$CHILD_PID" ]; then
+# kill -INT "$CHILD_PID" 2>/dev/null || true
 
-# Wait up to 30 seconds for clean shutdown
-for i in {1..30}; do
-if ! kill -0 "$CHILD_PID" 2>/dev/null; then
-echo "Process shutdown complete"
-break
-fi
-sleep 1
-done
+# # Wait up to 30 seconds for clean shutdown
+# for i in {1..30}; do
+# if ! kill -0 "$CHILD_PID" 2>/dev/null; then
+# echo "Process shutdown complete"
+# break
+# fi
+# sleep 1
+# done
 
-# Force kill if still running
-if kill -0 "$CHILD_PID" 2>/dev/null; then
-echo "Timeout reached, forcing shutdown"
-kill -9 "$CHILD_PID" 2>/dev/null || true
-fi
-fi
+# # Force kill if still running
+# if kill -0 "$CHILD_PID" 2>/dev/null; then
+# echo "Timeout reached, forcing shutdown"
+# kill -9 "$CHILD_PID" 2>/dev/null || true
+# fi
+# fi
 
-# Flush logs
-sync
+# # Flush logs
+# sync
 
-echo "Shutdown complete"
-exit 0
-}
+# echo "Shutdown complete"
+# exit 0
+# }
 
-trap shutdown_handler SIGTERM SIGINT
+# trap shutdown_handler SIGTERM SIGINT
 
-# Source ROS2 environment
-echo "Sourcing ROS2 environment..."
-source /opt/ros/humble/setup.bash
-source /ros2_ws/install/setup.bash
+# # Source ROS2 environment
+# echo "Sourcing ROS2 environment..."
+# source /opt/ros/humble/setup.bash
+# source /ros2_ws/install/setup.bash
 
-# Execute command passed to container
-echo "Starting: $@"
-exec "$@" &
-CHILD_PID=$!
+# # Execute command passed to container
+# echo "Starting: $@"
+# exec "$@" &
+# CHILD_PID=$!
 
-# Wait for child process
-wait $CHILD_PID
-EOF
+# # Wait for child process
+# wait $CHILD_PID
+# EOF
 
 # Make entrypoint executable
 RUN chmod +x /usr/local/bin/entrypoint.sh
