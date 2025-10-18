@@ -37,7 +37,7 @@ RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep
       --ignore-src \
       --rosdistro humble \
       --default-yes \
-      --skip-keys "laser_filters xacro"
+      --skip-keys "laser_filters xacro dynamixel_hardware_interface"
 
 RUN . /opt/ros/humble/setup.sh && \
     chmod +x build.sh && \

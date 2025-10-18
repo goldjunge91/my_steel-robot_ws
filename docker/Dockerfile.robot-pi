@@ -36,9 +36,11 @@ RUN apt-get update && apt-get install -y \
     ros-humble-robot-localization \
     && rm -rf /var/lib/apt/lists/*
 
+# Skip dynamixel_hardware_interface because no ARM64 binary exists in upstream apt repo
 RUN rosdep install --from-paths src \
     --ignore-src \
     --rosdistro humble \
+    --skip-keys "dynamixel_hardware_interface" \
     -y
 
 # Build packages in multiple steps to handle dependencies correctly
@@ -66,7 +68,6 @@ RUN . /opt/ros/humble/setup.sh && \
     --cmake-args -DCMAKE_BUILD_TYPE=Release \
     --packages-select \
     open_manipulator_x_description \
-    dynamixel_hardware_interface \
     --merge-install \
     --continue-on-error
 
