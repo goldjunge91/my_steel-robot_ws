@@ -1,0 +1,111 @@
+---
+name: Build Robot Pi Test Image
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - 'docker/Dockerfile.robot-pi.test'
+      - 'docker/compose.robot-pi.test.yaml'
+      - 'docker/README.md'
+      - 'build.sh'
+      - 'src/**'
+      - '.github/workflows/docker-build-robot-pi-test.yml'
+  push:
+    branches:
+      - main
+      - humble
+    paths:
+      - 'docker/Dockerfile.robot-pi.test'
+      - 'docker/compose.robot-pi.test.yaml'
+      - 'docker/README.md'
+      - 'build.sh'
+      - 'src/**'
+      - '.github/workflows/docker-build-robot-pi-test.yml'
+  workflow_dispatch:
+
+jobs:
+  build-test-image:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+      actions: read
+
+    steps:
+      - name: Check Docker Hub credentials
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "⚠️  Missing DOCKERHUB_USERNAME and/or DOCKERHUB_TOKEN secrets. Skipping build."
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "## Robot Pi Test Image (CI build)" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "⚠️  Skipped because Docker Hub credentials are not configured." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "To enable this workflow:" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Add DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets in the repository settings." >> "$GITHUB_STEP_SUMMARY"
+            echo "- Ensure the Docker Hub repository exists (e.g. ${GITHUB_REPOSITORY_OWNER}/robot)." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "✅ Docker Hub credentials found for ${{ secrets.DOCKERHUB_USERNAME }}"
+          fi
+
+      - name: Checkout repository
+        if: steps.check-secrets.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        if: steps.check-secrets.outputs.skip != 'true'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        if: steps.check-secrets.outputs.skip != 'true'
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: steps.check-secrets.outputs.skip != 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build robot-pi test image (arm64)
+        if: steps.check-secrets.outputs.skip != 'true'
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.robot-pi.test
+          platforms: linux/arm64
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/robot:pi-test-ci
+          labels: |
+            org.opencontainers.image.title=my_steel Robot Test Image
+            org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Summarize build result
+        if: steps.check-secrets.outputs.skip != 'true'
+        run: |
+          {
+            echo "## Robot Pi Test Image (CI build)"
+            echo ""
+            if [ "${{ job.status }}" = "success" ]; then
+              echo "✅ Build completed successfully."
+            else
+              echo "❌ Build failed. Check the logs above for details."
+            fi
+            echo ""
+            echo "- Dockerfile: \`docker/Dockerfile.robot-pi.test\`"
+            echo "- Platform: \`linux/arm64\`"
+            echo "- Pushed tag: \`${{ secrets.DOCKERHUB_USERNAME }}/robot:pi-test-ci\`"
+          } >> "$GITHUB_STEP_SUMMARY"
