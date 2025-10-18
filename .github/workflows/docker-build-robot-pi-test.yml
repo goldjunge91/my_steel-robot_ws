@@ -7,23 +7,24 @@ permissions:
 on:
   pull_request:
     paths:
-      - 'docker/Dockerfile.robot-pi.test'
-      - 'docker/compose.robot-pi.test.yaml'
-      - 'docker/README.md'
-      - 'build.sh'
-      - 'src/**'
-      - '.github/workflows/docker-build-robot-pi-test.yml'
+      - "docker/Dockerfile.robot-pi.test"
+      - "docker/compose.robot-pi.test.yaml"
+      - "docker/README.md"
+      - "build.sh"
+      - "src/**"
+      - ".github/workflows/docker-build-robot-pi-test.yml"
   push:
     branches:
       - main
       - humble
+      - feat_CI_CD
     paths:
-      - 'docker/Dockerfile.robot-pi.test'
-      - 'docker/compose.robot-pi.test.yaml'
-      - 'docker/README.md'
-      - 'build.sh'
-      - 'src/**'
-      - '.github/workflows/docker-build-robot-pi-test.yml'
+      - "docker/Dockerfile.robot-pi.test"
+      - "docker/compose.robot-pi.test.yaml"
+      - "docker/README.md"
+      - "build.sh"
+      - "src/**"
+      - ".github/workflows/docker-build-robot-pi-test.yml"
   workflow_dispatch:
 
 jobs:
