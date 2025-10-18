@@ -32,14 +32,14 @@ RUN apt-get update && apt-get install -y \
     ros-humble-hardware-interface \
     ros-humble-ros2-control \
     ros-humble-ros2-controllers \
+    ros-humble-moveit-msgs \
     ros-humble-robot-localization \
     && rm -rf /var/lib/apt/lists/*
 
 RUN rosdep install --from-paths src \
     --ignore-src \
     --rosdistro humble \
-    -y \
-    || true
+    -y
 
 # Build packages in multiple steps to handle dependencies correctly
 # Note: micro_ros_agent will be built from source in src/micro-ROS-Agent

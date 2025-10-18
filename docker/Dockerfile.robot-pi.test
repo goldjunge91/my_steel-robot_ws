@@ -1,0 +1,50 @@
+FROM ros:humble-ros-base
+
+ARG REPO_URL=https://github.com/goldjunge91/my_steel-robot_ws.git
+ARG REPO_BRANCH=humble
+ARG VCS_FILE=src/ros2.repos
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    python3-colcon-common-extensions \
+    python3-rosdep \
+    python3-vcstool \
+    sudo \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -s /bin/bash robot && \
+    usermod -aG sudo robot && \
+    echo "robot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    mkdir -p /home/robot/workspace && \
+    chown -R robot:robot /home/robot
+
+USER robot
+WORKDIR /home/robot/workspace
+
+RUN git clone --branch "${REPO_BRANCH}" --depth 1 "${REPO_URL}" my_steel-robot_ws
+
+WORKDIR /home/robot/workspace/my_steel-robot_ws
+
+RUN vcs import src < "${VCS_FILE}"
+
+RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
+    sudo rosdep update && \
+    sudo rosdep install --from-paths src \
+      --ignore-src \
+      --rosdistro humble \
+      --default-yes \
+      --skip-keys "laser_filters xacro"
+
+RUN . /opt/ros/humble/setup.sh && \
+    chmod +x build.sh && \
+    ./build.sh
+
+ENV ROS_DISTRO=humble \
+    ROS_DOMAIN_ID=0 \
+    RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+
+CMD ["bash","-lc","source /opt/ros/humble/setup.bash && source /home/robot/workspace/my_steel-robot_ws/install/setup.bash && bash"]

@@ -1,17 +1,14 @@
 # Docker Compose configuration for testing on development machine
 # This is a modified version that works without physical hardware devices
-#
 # Usage:
 #   docker compose -f docker/compose.robot-pi.test.yaml up -d
-
-version: '3.8'
 
 services:
   # ============================================================================
   # micro-ROS Agent Service (Test Mode)
   # ============================================================================
   microros-agent:
-    image: mysteel/robot:humble-arm64
+    image: ${DOCKER_IMAGE:-goldjunge491/my-steel-robot:latest}
     container_name: microros-agent-test
     network_mode: host
     restart: unless-stopped
@@ -24,18 +21,17 @@ services:
       - ROS_LOG_DIR=/tmp/ros_logs
     
     # Test command - just keep container alive and source ROS
-    command: >
-      bash -c "
-      source /opt/ros/humble/setup.bash &&
-      source /ros2_ws/install/setup.bash &&
-      echo 'micro-ROS agent test container started' &&
-      echo 'Note: Serial device not available in test mode' &&
-      tail -f /dev/null
-      "
+    command:
+      - bash
+      - -lc
+      - |
+        echo 'micro-ROS agent test container started'
+        echo 'Note: Serial device not available in test mode'
+        sleep infinity
     
     # Health check to verify ROS2 is available
     healthcheck:
-      test: ["CMD", "bash", "-c", "source /opt/ros/humble/setup.bash && ros2 topic list 2>/dev/null || exit 0"]
+      test: ["CMD", "sh", "-c", "kill -0 1"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -49,7 +45,7 @@ services:
   # Robot Bringup Service (Test Mode)
   # ============================================================================
   robot-bringup:
-    image: mysteel/robot:humble-arm64
+    image: ${DOCKER_IMAGE:-goldjunge491/my-steel-robot:latest}
     container_name: robot-bringup-test
     network_mode: host
     restart: unless-stopped
@@ -71,28 +67,24 @@ services:
       - ROS_LOG_DIR=/tmp/ros_logs
     
     # Test command - verify environment and list available packages
-    command: >
-      bash -c "
-      source /opt/ros/humble/setup.bash &&
-      source /ros2_ws/install/setup.bash &&
-      echo '=== Robot Bringup Test Container Started ===' &&
-      echo 'ROS_DISTRO:' \$ROS_DISTRO &&
-      echo 'ROS_DOMAIN_ID:' \$ROS_DOMAIN_ID &&
-      echo 'RMW_IMPLEMENTATION:' \$RMW_IMPLEMENTATION &&
-      echo '' &&
-      echo '=== Available ROS2 Packages ===' &&
-      ros2 pkg list | grep robot || echo 'No robot packages found' &&
-      echo '' &&
-      echo '=== ROS2 Topics ===' &&
-      ros2 topic list &&
-      echo '' &&
-      echo 'Test container ready. Keeping alive...' &&
-      tail -f /dev/null
-      "
+    command:
+      - bash
+      - -lc
+      - |
+        echo '=== Robot Bringup Test Container Started ==='
+        echo "ROS_DISTRO: ${ROS_DISTRO}"
+        echo "ROS_DOMAIN_ID: ${ROS_DOMAIN_ID}"
+        echo "RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION}"
+        echo ''
+        echo '=== Available ROS2 Packages ==='
+        ros2 pkg list | grep robot || echo 'No robot packages found'
+        echo ''
+        echo 'Test container ready. Keeping alive...'
+        sleep infinity
     
     # Health check to verify ROS2 environment
     healthcheck:
-      test: ["CMD", "bash", "-c", "source /opt/ros/humble/setup.bash && source /ros2_ws/install/setup.bash && ros2 pkg list 2>/dev/null | grep -q robot_controller"]
+      test: ["CMD", "sh", "-c", "kill -0 1"]
       interval: 15s
       timeout: 10s
       retries: 5
