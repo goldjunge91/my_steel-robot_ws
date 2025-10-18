@@ -36,12 +36,12 @@ RUN apt-get update && apt-get install -y \
     ros-humble-robot-localization \
     && rm -rf /var/lib/apt/lists/*
 
-# Skip dynamixel_hardware_interface because no ARM64 binary exists in upstream apt repo
+# Skip rosdeps that fail to resolve for arm64 cross builds
 RUN apt-get update && \
     rosdep install --from-paths src \
     --ignore-src \
     --rosdistro humble \
-    --skip-keys "dynamixel_hardware_interface" \
+    --skip-keys "dynamixel_hardware_interface laser_filters xacro" \
     -y && \
     rm -rf /var/lib/apt/lists/*
 
