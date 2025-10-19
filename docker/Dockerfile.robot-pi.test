@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     git \
     python3-pip \
     python3-colcon-common-extensions \
+    python3-colcon-mixin \
     python3-rosdep \
     python3-vcstool \
     ros-humble-builtin-interfaces \
@@ -35,11 +36,22 @@ WORKDIR /home/robot/workspace/my_steel-robot_ws
 
 RUN vcs import src < "${VCS_FILE}"
 
+ARG COLCON_MIXINS=release
+ARG COLCON_PARALLEL_WORKERS=""
+ARG COLCON_PACKAGES_SELECT=""
+ARG COLCON_PACKAGES_UP_TO=""
+ARG COLCON_BUILD_EXTRA_ARGS=""
+ENV COLCON_MIXINS=${COLCON_MIXINS} \
+    COLCON_PARALLEL_WORKERS=${COLCON_PARALLEL_WORKERS} \
+    COLCON_PACKAGES_SELECT=${COLCON_PACKAGES_SELECT} \
+    COLCON_PACKAGES_UP_TO=${COLCON_PACKAGES_UP_TO} \
+    COLCON_BUILD_EXTRA_ARGS=${COLCON_BUILD_EXTRA_ARGS}
+
 RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
     sudo rosdep update && \
     sudo apt-get update && \
     sudo rosdep install --from-paths src \
-    --ignore-src \
+      --ignore-src \
     --rosdistro humble \
     --default-yes \
     --skip-keys "laser_filters xacro dynamixel_hardware_interface gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod"

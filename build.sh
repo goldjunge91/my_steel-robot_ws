@@ -16,6 +16,10 @@ log_step() {
   echo -e "${BLUE}[BUILD]${NC} $1"
 }
 
+log_info() {
+  echo -e "${BLUE}[INFO]${NC} $1"
+}
+
 log_success() {
   echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
@@ -122,7 +126,63 @@ for dir in build install log; do
 done
 
 BUILD_TYPE=${BUILD_TYPE:-RelWithDebInfo}
+COLCON_MIXINS=${COLCON_MIXINS:-release}
+COLCON_PARALLEL_WORKERS=${COLCON_PARALLEL_WORKERS:-$(nproc)}
+COLCON_PACKAGES_SELECT=${COLCON_PACKAGES_SELECT:-}
+COLCON_PACKAGES_UP_TO=${COLCON_PACKAGES_UP_TO:-}
+COLCON_BUILD_EXTRA_ARGS=${COLCON_BUILD_EXTRA_ARGS:-}
+
+# Ensure requested mixins are available
+ensure_colcon_mixins() {
+  if [ -z "$COLCON_MIXINS" ]; then
+    return 0
+  fi
+
+  if ! command -v colcon >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! command -v colcon-mixin >/dev/null 2>&1 && ! colcon mixin -h >/dev/null 2>&1; then
+    log_warning "colcon mixin plugin nicht verfügbar – überspringe Mixins"
+    COLCON_MIXINS=""
+    return 0
+  fi
+
+  if ! colcon mixin show default >/dev/null 2>&1; then
+    log_step "Registriere colcon Standard-Mixins"
+    colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml >/dev/null 2>&1 || true
+  fi
+
+  log_step "Aktualisiere colcon Mixins"
+  colcon mixin update default >/dev/null 2>&1 || true
+
+  for mixin in $COLCON_MIXINS; do
+    if ! colcon mixin show "$mixin" >/dev/null 2>&1; then
+      log_warning "colcon Mixin '$mixin' unbekannt – entferne aus Liste"
+      COLCON_MIXINS=$(
+        for item in $COLCON_MIXINS; do
+          if [ "$item" != "$mixin" ]; then
+            printf "%s " "$item"
+          fi
+        done | sed 's/[[:space:]]*$//'
+      )
+    fi
+  done
+}
+
+ensure_colcon_mixins
+
 log_step "Starte colcon build (BUILD_TYPE=${BUILD_TYPE})"
+log_info "colcon parallel workers: ${COLCON_PARALLEL_WORKERS}"
+if [ -n "$COLCON_MIXINS" ]; then
+  log_info "colcon mixins: ${COLCON_MIXINS}"
+fi
+if [ -n "$COLCON_PACKAGES_SELECT" ]; then
+  log_info "Pakete (select): ${COLCON_PACKAGES_SELECT}"
+fi
+if [ -n "$COLCON_PACKAGES_UP_TO" ]; then
+  log_info "Pakete (up-to): ${COLCON_PACKAGES_UP_TO}"
+fi
 
 # Record start time for GitHub Actions summary
 start_time=$(date +%s)
@@ -131,6 +191,11 @@ set +e
 colcon build \
   --merge-install \
   --symlink-install \
+  --parallel-workers "${COLCON_PARALLEL_WORKERS}" \
+  ${COLCON_MIXINS:+--mixin ${COLCON_MIXINS}} \
+  ${COLCON_PACKAGES_SELECT:+--packages-select ${COLCON_PACKAGES_SELECT}} \
+  ${COLCON_PACKAGES_UP_TO:+--packages-up-to ${COLCON_PACKAGES_UP_TO}} \
+  ${COLCON_BUILD_EXTRA_ARGS} \
   --cmake-args \
     "-DCMAKE_BUILD_TYPE=${BUILD_TYPE}" \
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=On" \
