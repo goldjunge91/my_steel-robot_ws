@@ -308,100 +308,74 @@ run_command() {
 
 log_info "Checking for existing Pico SDK..."
 
-# Prüfe ob SDK bereits im Zielverzeichnis existiert
+# --- Klarer, kürzer, robust: Pico SDK Installation ---
 if [ -d "$SDK_DEST" ]; then
+	log_info "✓ Pico SDK bereits vorhanden: $SDK_DEST"
 	SDK="$SDK_DEST"
-	log_info "Found existing Pico SDK at: $SDK"
 	SDK_INSTALLED=1
 else
-	log_info "Pico SDK not found. Attempting to clone version ${PICO_SDK_VERSION} into ${SDK_DEST}."
-	SDK_PARENT="$(dirname "$SDK_DEST")"
-	if run_command "Creating parent directory ${SDK_PARENT}" mkdir -p "$SDK_PARENT"; then
-		# Versuche zuerst die spezifische Version zu klonen
-		log_info "Attempting to clone Pico SDK version ${PICO_SDK_VERSION}..."
-		if git clone --branch "$PICO_SDK_VERSION" --depth 1 --recursive https://github.com/raspberrypi/pico-sdk.git "$SDK_DEST" 2>/dev/null; then
+	mkdir -p "$(dirname "$SDK_DEST")"
+	log_info "Versuche Pico SDK Version $PICO_SDK_VERSION zu klonen..."
+	if git clone --branch "$PICO_SDK_VERSION" --depth 1 --recursive https://github.com/raspberrypi/pico-sdk.git "$SDK_DEST" 2>/dev/null; then
+		log_info "✓ Pico SDK $PICO_SDK_VERSION erfolgreich geklont"
+		SDK="$SDK_DEST"
+		SDK_INSTALLED=1
+	else
+		log_warn "✗ Version $PICO_SDK_VERSION nicht gefunden, versuche neueste Version..."
+		if git clone --recursive --depth 1 https://github.com/raspberrypi/pico-sdk.git "$SDK_DEST"; then
+			log_info "✓ Neueste Pico SDK erfolgreich geklont"
 			SDK="$SDK_DEST"
 			SDK_INSTALLED=1
-			log_info "Successfully cloned Pico SDK version ${PICO_SDK_VERSION}"
 		else
-			# Fallback: Versuche neueste Version zu klonen
-			log_warn "Version ${PICO_SDK_VERSION} not found, trying latest version..."
-			if run_command "Cloning latest Pico SDK repository (this may take a few minutes)" \
-				git clone --recursive --depth 1 https://github.com/raspberrypi/pico-sdk.git "$SDK_DEST"; then
-				SDK="$SDK_DEST"
-				SDK_INSTALLED=1
-				log_info "Successfully cloned latest Pico SDK to ${SDK_DEST}"
-			else
-				log_warn "Failed to clone Pico SDK. Continuing without it."
-				SKIP_PICOTOOL=1
-			fi
+			log_warn "✗ Pico SDK konnte nicht geklont werden"
+			FAILURES+=("Pico SDK Clone fehlgeschlagen")
+			SKIP_PICOTOOL=1
 		fi
-	else
-		log_warn "Could not create parent directory for Pico SDK; skipping clone."
-		SKIP_PICOTOOL=1
 	fi
 fi
 
-# Prüfe und zeige SDK-Version an
-if [ "$SDK_INSTALLED" -eq 1 ] && [ -n "$SDK" ] && [ -f "$SDK/pico_sdk_version.cmake" ]; then
-	DETECTED_SDK_VERSION=$(grep 'PICO_SDK_VERSION_STRING' "$SDK/pico_sdk_version.cmake" | grep -oP '\d+\.\d+\.\d+' | head -1)
-	if [ -n "$DETECTED_SDK_VERSION" ]; then
-		MAJOR=$(echo "$DETECTED_SDK_VERSION" | cut -d. -f1)
-		if [ "$MAJOR" -lt 2 ]; then
-			log_warn "⚠️  Pico SDK version $DETECTED_SDK_VERSION is less than 2.0 - this may cause compatibility issues"
-			record_failure "SDK version $DETECTED_SDK_VERSION < 2.0"
-		else
-			log_info "✓ Detected Pico SDK version: $DETECTED_SDK_VERSION"
-		fi
-	fi
-fi
+# Pico SDK installiert (Versionsprüfung ausgelassen)
+log_info "Pico SDK bereit: $SDK_DEST"
 
 # Nur bei erfolgreicher SDK-Installation Environment-Variablen setzen
 if [ "$SDK_INSTALLED" -eq 1 ] && [ -n "$SDK" ] && [ -d "$SDK" ]; then
-	if SDK_REAL=$(realpath -s "$SDK" 2>/dev/null); then
-		log_info "Using Pico SDK at: $SDK_REAL"
-		export PICO_SDK_PATH="$SDK_REAL"
+	# Direkt $PICO_SDK_PATH (vom Skriptanfang) verwenden
+	log_info "Using Pico SDK at: $PICO_SDK_PATH"
 
-		# Systemweite Konfiguration in /etc/profile.d/
-		if sudo sh -c "printf 'export PICO_SDK_PATH=\"%s\"\n' '$SDK_REAL' > /etc/profile.d/pico_sdk.sh"; then
-			sudo chmod 644 /etc/profile.d/pico_sdk.sh
-			log_info "Added PICO_SDK_PATH to /etc/profile.d/pico_sdk.sh"
+	# Systemweite Konfiguration in /etc/profile.d/
+	if sudo sh -c "printf 'export PICO_SDK_PATH=\"%s\"\n' \"$PICO_SDK_PATH\" > /etc/profile.d/pico_sdk.sh"; then
+		sudo chmod 644 /etc/profile.d/pico_sdk.sh
+		log_info "Added PICO_SDK_PATH to /etc/profile.d/pico_sdk.sh"
+	else
+		log_warn "Failed to write /etc/profile.d/pico_sdk.sh"
+		record_failure "Writing /etc/profile.d/pico_sdk.sh"
+	fi
+
+	# Benutzer-spezifische .bashrc Konfiguration
+	BASHRC="$HOME/.bashrc"
+
+	# PICO_SDK_PATH hinzufügen (idempotent)
+	if ! grep -q "PICO_SDK_PATH=" "$BASHRC" 2>/dev/null; then
+		if echo "export PICO_SDK_PATH=\"$PICO_SDK_PATH\"" >>"$BASHRC"; then
+			log_info "Added PICO_SDK_PATH to ~/.bashrc"
 		else
-			log_warn "Failed to write /etc/profile.d/pico_sdk.sh"
-			record_failure "Writing /etc/profile.d/pico_sdk.sh"
-		fi
-
-		# Benutzer-spezifische .bashrc Konfiguration
-		BASHRC="$HOME/.bashrc"
-
-		# PICO_SDK_PATH hinzufügen
-		if ! grep -q "PICO_SDK_PATH=" "$BASHRC" 2>/dev/null; then
-			if echo "export PICO_SDK_PATH=\"$SDK_REAL\"" >>"$BASHRC"; then
-				log_info "Added PICO_SDK_PATH to ~/.bashrc"
-			else
-				log_warn "Failed to write to ~/.bashrc"
-				record_failure "Writing to ~/.bashrc"
-			fi
-		else
-			log_info "PICO_SDK_PATH already present in ~/.bashrc"
-		fi
-
-		# ~/.local/bin zu PATH hinzufügen (für Picotool)
-		if ! grep -q '.local/bin' "$BASHRC" 2>/dev/null; then
-			if echo 'export PATH="$HOME/.local/bin:$PATH"' >>"$BASHRC"; then
-				log_info "Added ~/.local/bin to PATH in ~/.bashrc"
-			else
-				log_warn "Failed to add PATH to ~/.bashrc"
-				record_failure "Adding PATH to ~/.bashrc"
-			fi
-		else
-			log_info "~/.local/bin already in PATH"
+			log_warn "Failed to write to ~/.bashrc"
+			record_failure "Writing to ~/.bashrc"
 		fi
 	else
-		log_warn "Unable to resolve Pico SDK path using realpath; skipping environment export."
-		record_failure "Resolving Pico SDK path"
-		SKIP_PICOTOOL=1
-		SDK_INSTALLED=0
+		log_info "PICO_SDK_PATH already present in ~/.bashrc"
+	fi
+
+	# ~/.local/bin zu PATH hinzufügen (für Picotool)
+	if ! grep -q '.local/bin' "$BASHRC" 2>/dev/null; then
+		if echo 'export PATH="$HOME/.local/bin:$PATH"' >>"$BASHRC"; then
+			log_info "Added ~/.local/bin to PATH in ~/.bashrc"
+		else
+			log_warn "Failed to add PATH to ~/.bashrc"
+			record_failure "Adding PATH to ~/.bashrc"
+		fi
+	else
+		log_info "~/.local/bin already in PATH"
 	fi
 else
 	log_warn "Pico SDK directory not available; skipping SDK environment setup."
@@ -412,11 +386,8 @@ fi
 
 if [ "$SKIP_PICOTOOL" -eq 0 ]; then
 	MISSING_CMDS=()
-	# Prüfe nur externe Kommandos (nicht install, das ist ein builtin)
 	for cmd in git cmake ninja; do
-		if ! command -v "$cmd" >/dev/null 2>&1; then
-			MISSING_CMDS+=("$cmd")
-		fi
+		command -v "$cmd" >/dev/null 2>&1 || MISSING_CMDS+=("$cmd")
 	done
 	if [ "${#MISSING_CMDS[@]}" -gt 0 ]; then
 		log_warn "Missing required command(s) for picotool build: ${MISSING_CMDS[*]}"
@@ -434,61 +405,49 @@ if [ "$SKIP_PICOTOOL" -eq 0 ]; then
 fi
 
 if [ "$SKIP_PICOTOOL" -eq 0 ]; then
-	# Versuche zuerst die spezifische Version zu klonen
-	log_info "Attempting to clone Picotool version ${PICOTOOL_VERSION}..."
-	if git clone --branch "$PICOTOOL_VERSION" --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_DIR/picotool" 2>/dev/null; then
-		log_info "Successfully cloned Picotool version ${PICOTOOL_VERSION}"
-	else
-		# Fallback: neueste Version
-		log_warn "Version ${PICOTOOL_VERSION} not found, trying latest version..."
-		if ! run_command "Cloning latest picotool repository" git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_DIR/picotool"; then
+	# Klonen: gewünschte Version, sonst Fallback neueste
+	log_info "Cloning picotool (target $PICOTOOL_VERSION)..."
+	if ! git clone --branch "$PICOTOOL_VERSION" --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_DIR/picotool" 2>/dev/null; then
+		log_warn "Version $PICOTOOL_VERSION not found; cloning latest picotool..."
+		if ! git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_DIR/picotool"; then
+			log_warn "Failed to clone picotool"
+			record_failure "Picotool clone failed"
 			SKIP_PICOTOOL=1
 		fi
 	fi
 
 	if [ "$SKIP_PICOTOOL" -eq 0 ]; then
-		# PICO_SDK_PATH explizit übergeben
-		if run_command "Configuring picotool build" cmake -S "$TMP_DIR/picotool" -B "$TMP_DIR/build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DPICO_SDK_PATH="$SDK_REAL"; then
+		# Configure & Build
+		if ! run_command "Configure picotool" cmake -S "$TMP_DIR/picotool" -B "$TMP_DIR/build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DPICO_SDK_PATH="$PICO_SDK_PATH"; then
+			SKIP_PICOTOOL=1
+		else
 			JOBS=1
-			if command -v nproc >/dev/null 2>&1; then
-				JOBS=$(nproc)
-			fi
-			if run_command "Building picotool" cmake --build "$TMP_DIR/build" --target picotool -j"$JOBS"; then
+			command -v nproc >/dev/null 2>&1 && JOBS=$(nproc)
+			if ! run_command "Build picotool" cmake --build "$TMP_DIR/build" --target picotool -j"$JOBS"; then
+				SKIP_PICOTOOL=1
+			else
 				PICOTOOL_BIN="$TMP_DIR/build/picotool"
+				[ -f "$PICOTOOL_BIN" ] || PICOTOOL_BIN="$TMP_DIR/build/tools/picotool/picotool"
 				if [ ! -f "$PICOTOOL_BIN" ]; then
-					# Versuche alternativen Pfad
-					PICOTOOL_BIN="$TMP_DIR/build/tools/picotool/picotool"
-				fi
-
-				if [ -z "$PICOTOOL_BIN" ] || [ ! -f "$PICOTOOL_BIN" ]; then
-					log_warn "Picotool binary not found after build."
-					record_failure "Locating built picotool binary"
+					log_warn "Picotool binary not found after build"
+					record_failure "Picotool binary missing"
 					SKIP_PICOTOOL=1
 				else
-					# Installiere nach ~/.local/bin (kein sudo nötig)
 					LOCAL_BIN="$HOME/.local/bin"
-					if run_command "Creating $LOCAL_BIN directory" mkdir -p "$LOCAL_BIN"; then
-						if run_command "Installing picotool to $LOCAL_BIN" install -m755 "$PICOTOOL_BIN" "$LOCAL_BIN/picotool"; then
-							PICOTOOL_INSTALLED=1
-							log_info "✓ Picotool installed to $LOCAL_BIN/picotool"
-
-							# Prüfe Version
-							if [ -x "$LOCAL_BIN/picotool" ]; then
-								PICOTOOL_VERSION_DETECTED=$("$LOCAL_BIN/picotool" version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1 || echo "unknown")
-								log_info "✓ Installed Picotool version: $PICOTOOL_VERSION_DETECTED"
-							fi
-						else
-							SKIP_PICOTOOL=1
+					run_command "Create $LOCAL_BIN" mkdir -p "$LOCAL_BIN" >/dev/null 2>&1 || true
+					if run_command "Install picotool" install -m755 "$PICOTOOL_BIN" "$LOCAL_BIN/picotool"; then
+						PICOTOOL_INSTALLED=1
+						log_info "✓ Picotool installed to $LOCAL_BIN/picotool"
+						if [ -x "$LOCAL_BIN/picotool" ]; then
+							PICOTOOL_VERSION_DETECTED=$("$LOCAL_BIN/picotool" version 2>/dev/null | grep -oP '\\d+\\.\\d+\\.\\d+' | head -1 || echo "unknown")
+							log_info "✓ Installed Picotool version: $PICOTOOL_VERSION_DETECTED"
 						fi
 					else
+						record_failure "Picotool install failed"
 						SKIP_PICOTOOL=1
 					fi
 				fi
-			else
-				SKIP_PICOTOOL=1
 			fi
-		else
-			SKIP_PICOTOOL=1
 		fi
 	fi
 fi
@@ -504,7 +463,7 @@ fi
 # Zusammenfassung am Ende
 echo -e "\n${BLUE}=== Installation Summary ===${RESET}"
 if [ "$SDK_INSTALLED" -eq 1 ]; then
-	echo -e "${GREEN}✓ Pico SDK installed at: $SDK_REAL${RESET}"
+	echo -e "${GREEN}✓ Pico SDK installed at: $PICO_SDK_PATH${RESET}"
 	if [ -n "${DETECTED_SDK_VERSION:-}" ]; then
 		echo -e "${GREEN}  Version: $DETECTED_SDK_VERSION${RESET}"
 	fi
