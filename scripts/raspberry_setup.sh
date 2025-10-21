@@ -301,8 +301,25 @@ else
 	echo -e "${RED}$(date): Docker Compose-Fehler${RESET}" >>errors.log
 	# trap 'echo "${RED}$(date): Fehler bei Compose-Prüfung auf $LINENO${RESET}" >> errors.log' ERR
 fi
+###############################################################################
+# Zeitzone Europe/Berlin (idempotent)
+###############################################################################
+echo -e "${BLUE}[STEP] Zeitzone: Europe/Berlin${RESET}"
+CURRENT_TZ=$(timedatectl show --property=Timezone --value 2>/dev/null || echo "")
+if [ "$CURRENT_TZ" != "Europe/Berlin" ]; then
+	sudo timedatectl set-timezone Europe/Berlin
+	sudo sed -i '/^TZ=/d' /etc/environment 2>/dev/null || true
+	echo 'TZ=Europe/Berlin' | sudo tee -a /etc/environment >/dev/null
+	echo -e "${GREEN}✓ Zeitzone auf Europe/Berlin gesetzt${RESET}"
+	echo "$(date): Zeitzone auf Europe/Berlin gesetzt" >>setup.log
+else
+	echo -e "${GREEN}✓ Zeitzone bereits Europe/Berlin${RESET}"
+fi
 
-# Optionale Installation für ROS2
+###############################################################################
+# ROS2 Humble Installation (optional)
+# https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#
+###############################################################################
 echo -e "${BLUE}[ABFRAGE] Soll ros-humble-desktop installiert werden? (y/n)${RESET}"
 read -r response
 if [[ "$response" =~ ^[Yy]$ ]]; then
@@ -331,21 +348,6 @@ if [[ "$response" =~ ^[Yy]$ ]]; then
 	fi
 else
 	echo -e "${BLUE}Überspringe ros-humble-desktop${RESET}"
-fi
-
-###############################################################################
-# Zeitzone Europe/Berlin (idempotent)
-###############################################################################
-echo -e "${BLUE}[STEP] Zeitzone: Europe/Berlin${RESET}"
-CURRENT_TZ=$(timedatectl show --property=Timezone --value 2>/dev/null || echo "")
-if [ "$CURRENT_TZ" != "Europe/Berlin" ]; then
-	sudo timedatectl set-timezone Europe/Berlin
-	sudo sed -i '/^TZ=/d' /etc/environment 2>/dev/null || true
-	echo 'TZ=Europe/Berlin' | sudo tee -a /etc/environment >/dev/null
-	echo -e "${GREEN}✓ Zeitzone auf Europe/Berlin gesetzt${RESET}"
-	echo "$(date): Zeitzone auf Europe/Berlin gesetzt" >>setup.log
-else
-	echo -e "${GREEN}✓ Zeitzone bereits Europe/Berlin${RESET}"
 fi
 
 ###############################################################################

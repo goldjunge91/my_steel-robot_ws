@@ -9,38 +9,38 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 github_summary() {
-  if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ] && [ -w "$(dirname "$GITHUB_STEP_SUMMARY")" ] 2>/dev/null; then
-    echo "$*" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
-  fi
+	if [ "${GITHUB_ACTIONS:-false}" = "true" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ] && [ -w "$(dirname "$GITHUB_STEP_SUMMARY")" ] 2>/dev/null; then
+		echo "$*" >>"$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+	fi
 }
 
 github_notice() {
-  if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
-    echo "::notice title=${1}::${2}"
-  fi
+	if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
+		echo "::notice title=${1}::${2}"
+	fi
 }
 
 log_step() {
-  echo -e "${BLUE}[SETUP]${NC} $1"
+	echo -e "${BLUE}[SETUP]${NC} $1"
 }
 
 log_success() {
-  echo -e "${GREEN}[SUCCESS]${NC} $1"
+	echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
 log_warning() {
-  echo -e "${YELLOW}[WARNING]${NC} $1" >&2
+	echo -e "${YELLOW}[WARNING]${NC} $1" >&2
 }
 
 log_error() {
-  echo -e "${RED}[ERROR]${NC} $1" >&2
+	echo -e "${RED}[ERROR]${NC} $1" >&2
 }
 
 require_cmd() {
-  if ! command -v "$1" >/dev/null 2>&1; then
-    log_error "Command '$1' not found in PATH"
-    exit 1
-  fi
+	if ! command -v "$1" >/dev/null 2>&1; then
+		log_error "Command '$1' not found in PATH"
+		exit 1
+	fi
 }
 
 ROS_DISTRO=${ROS_DISTRO:-humble}
@@ -50,37 +50,46 @@ require_cmd rosdep
 require_cmd sudo
 require_cmd vcs
 
+# Hilfsfunktion: benutze sudo nur wenn nicht root
+run_sudo() {
+	if [ "$(id -u)" -eq 0 ]; then
+		"$@"
+	else
+		sudo "$@"
+	fi
+}
+
 if [ ! -w "." ]; then
-  log_step "Passe Besitzrechte im Workspace an"
-  sudo chown "$(id -u)":"$(id -g)" .
+	log_step "Passe Besitzrechte im Workspace an"
+	sudo chown "$(id -u)":"$(id -g)" .
 fi
 
 if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
-  export AMENT_TRACE_SETUP_FILES=""
+	export AMENT_TRACE_SETUP_FILES=""
 fi
 
 mkdir -p src
 if [ ! -w src ]; then
-  log_warning "src/ ist nicht beschreibbar – versuche Besitzrechte anzupassen"
-  sudo chown -R "$(id -u)":"$(id -g)" src
+	log_warning "src/ ist nicht beschreibbar – versuche Besitzrechte anzupassen"
+	sudo chown -R "$(id -u)":"$(id -g)" src
 fi
 
 if [ ! -w src ]; then
-  log_error "src/ bleibt nicht beschreibbar – breche ab"
-  exit 1
+	log_error "src/ bleibt nicht beschreibbar – breche ab"
+	exit 1
 fi
 
 if [ -f "src/ros2.repos" ]; then
-  log_step "Importiere Repositories aus src/ros2.repos"
-  if command -v envsubst >/dev/null 2>&1; then
-    envsubst < src/ros2.repos | vcs import src
-  else
-    log_warning "envsubst nicht gefunden – ros2.repos wird ohne Variablenersetzung importiert"
-    vcs import src < src/ros2.repos
-  fi
-  log_success "Repositories importiert"
+	log_step "Importiere Repositories aus src/ros2.repos"
+	if command -v envsubst >/dev/null 2>&1; then
+		envsubst <src/ros2.repos | vcs import src
+	else
+		log_warning "envsubst nicht gefunden – ros2.repos wird ohne Variablenersetzung importiert"
+		vcs import src <src/ros2.repos
+	fi
+	log_success "Repositories importiert"
 else
-  log_warning "Keine src/ros2.repos gefunden – überspringe VCS-Import"
+	log_warning "Keine src/ros2.repos gefunden – überspringe VCS-Import"
 fi
 
 log_step "Aktualisiere apt Paketquellen"
@@ -90,17 +99,17 @@ log_step "Konfiguriere ROS Cache-Verzeichnis"
 ros_home="${ROS_HOME:-$PWD/.ros}"
 
 if ! mkdir -p "$ros_home" 2>/dev/null; then
-  log_warning "Kann $ros_home nicht anlegen – wechsle auf temporären Pfad"
-  ros_home="$(mktemp -d /tmp/ros_home.XXXXXX)"
+	log_warning "Kann $ros_home nicht anlegen – wechsle auf temporären Pfad"
+	ros_home="$(mktemp -d /tmp/ros_home.XXXXXX)"
 fi
 
 if [ ! -w "$ros_home" ]; then
-  if command -v sudo >/dev/null 2>&1 && sudo chown -R "$(id -u)":"$(id -g)" "$ros_home" 2>/dev/null; then
-    :
-  else
-    log_warning "$ros_home bleibt schreibgeschützt – nutze temporäres Verzeichnis"
-    ros_home="$(mktemp -d /tmp/ros_home.XXXXXX)"
-  fi
+	if command -v sudo >/dev/null 2>&1 && sudo chown -R "$(id -u)":"$(id -g)" "$ros_home" 2>/dev/null; then
+		:
+	else
+		log_warning "$ros_home bleibt schreibgeschützt – nutze temporäres Verzeichnis"
+		ros_home="$(mktemp -d /tmp/ros_home.XXXXXX)"
+	fi
 fi
 
 export ROS_HOME="$ros_home"
@@ -112,9 +121,27 @@ rosdep update --rosdistro="$ROS_DISTRO"
 ROSDEP_UPDATE_RC=$?
 set -e
 if [ "$ROSDEP_UPDATE_RC" -ne 0 ]; then
-  log_warning "rosdep update schlug fehl (Exit-Code $ROSDEP_UPDATE_RC) – fahre fort, Abhängigkeiten könnten unvollständig sein"
+	# Wenn rosdep noch nicht initialisiert ist, versuche init + update
+	if [ ! -d "/etc/ros/rosdep/sources.list.d" ] || [ -z "$(ls -A /etc/ros/rosdep/sources.list.d 2>/dev/null || true)" ]; then
+		log_warning "rosdep scheint nicht initialisiert – versuche 'rosdep init' und erneutes Update"
+		set +e
+		if run_sudo rosdep init; then
+			rosdep update --rosdistro="$ROS_DISTRO"
+			ROSDEP_UPDATE_RC=$?
+			if [ "$ROSDEP_UPDATE_RC" -eq 0 ]; then
+				log_success "rosdep init + update abgeschlossen"
+			else
+				log_warning "rosdep update nach init schlug fehl (Exit-Code $ROSDEP_UPDATE_RC)"
+			fi
+		else
+			log_warning "sudo rosdep init fehlgeschlagen – bitte manuell ausführen (sudo rosdep init)"
+		fi
+		set -e
+	else
+		log_warning "rosdep update schlug fehl (Exit-Code $ROSDEP_UPDATE_RC) – fahre fort, Abhängigkeiten könnten unvollständig sein"
+	fi
 else
-  log_success "rosdep update abgeschlossen"
+	log_success "rosdep update abgeschlossen"
 fi
 
 log_step "Installiere Abhängigkeiten via rosdep"
@@ -123,15 +150,45 @@ rosdep install --from-paths "$PWD/src" --ignore-src -y --rosdistro="$ROS_DISTRO"
 ROSDEP_INSTALL_RC=$?
 set -e
 if [ "$ROSDEP_INSTALL_RC" -ne 0 ]; then
-  log_warning "rosdep install meldete Fehler (Exit-Code $ROSDEP_INSTALL_RC) – bitte fehlende Pakete manuell prüfen"
+	# Wenn rosdep nicht initialisiert war, init + update + retry
+	if [ ! -d "/etc/ros/rosdep/sources.list.d" ] || [ -z "$(ls -A /etc/ros/rosdep/sources.list.d 2>/dev/null || true)" ]; then
+		log_warning "rosdep scheint nicht initialisiert – versuche 'rosdep init' + 'rosdep update' und erneute Installation"
+		set +e
+		if run_sudo rosdep init; then
+			rosdep update --rosdistro="$ROS_DISTRO"
+			rosdep install --from-paths "$PWD/src" --ignore-src -y --rosdistro="$ROS_DISTRO"
+			ROSDEP_INSTALL_RC=$?
+		else
+			log_warning "sudo rosdep init fehlgeschlagen – bitte manuell ausführen (sudo rosdep init && rosdep update)"
+		fi
+		set -e
+		if [ "$ROSDEP_INSTALL_RC" -ne 0 ]; then
+			log_warning "rosdep install verweigert weiterhin (Exit-Code $ROSDEP_INSTALL_RC) – bitte fehlende Pakete manuell prüfen"
+		else
+			log_success "Abhängigkeiten installiert"
+		fi
+	else
+		# Andernfalls versuche Update und erneuten Install-Versuch
+		log_warning "rosdep install schlug fehl – versuche 'rosdep update' und erneute Installation"
+		set +e
+		rosdep update --rosdistro="$ROS_DISTRO"
+		rosdep install --from-paths "$PWD/src" --ignore-src -y --rosdistro="$ROS_DISTRO"
+		ROSDEP_INSTALL_RC=$?
+		set -e
+		if [ "$ROSDEP_INSTALL_RC" -ne 0 ]; then
+			log_warning "rosdep install meldete Fehler (Exit-Code $ROSDEP_INSTALL_RC) – bitte fehlende Pakete manuell prüfen"
+		else
+			log_success "Abhängigkeiten installiert"
+		fi
+	fi
 else
-  log_success "Abhängigkeiten installiert"
+	log_success "Abhängigkeiten installiert"
 fi
 
 log_success "Setup abgeschlossen"
 
 if [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
-  github_summary "## ✅ Setup Completed" || true
-  github_summary "**ROS Distribution:** $ROS_DISTRO" || true
-  github_notice "Setup Complete" "ROS2 workspace setup completed successfully" || true
+	github_summary "## ✅ Setup Completed" || true
+	github_summary "**ROS Distribution:** $ROS_DISTRO" || true
+	github_notice "Setup Complete" "ROS2 workspace setup completed successfully" || true
 fi
