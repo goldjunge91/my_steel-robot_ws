@@ -1,54 +1,51 @@
 # syntax=docker/dockerfile:1.6
 
 ARG ROS_DISTRO=humble
-ARG FROM_IMAGE=ros:${ROS_DISTRO}-ros-base
+ARG FROM_IMAGE=ros:${ROS_DISTRO}
 ARG OVERLAY_WS=/opt/ros/overlay_ws
+ARG RUN_WS=/home/robot/workspace
 
-SHELL ["/bin/bash", "-c"]
-
-FROM ${FROM_IMAGE} AS cacher
+# multi-stage for caching
+FROM $FROM_IMAGE AS cacher
 ARG ROS_DISTRO
 ARG OVERLAY_WS
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN set -eux; \
-    if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then \
-    rosdep init; \
-    fi; \
-    rosdep update --rosdistro "${ROS_DISTRO}"; \
-    cat <<'EOF' >/etc/apt/apt.conf.d/docker-clean && apt-get update
+# overwrite defaults to persist minimal cache
+RUN rosdep update --rosdistro "$ROS_DISTRO" && \
+    cat <<'EOF' > /etc/apt/apt.conf.d/docker-clean && apt-get update
 APT::Install-Recommends "false";
 APT::Install-Suggests "false";
 EOF
 
-WORKDIR ${OVERLAY_WS}
-
+# clone overlay source
+WORKDIR $OVERLAY_WS
 COPY . .
-
-RUN set -eux; \
-    mkdir -p src; \
+RUN mkdir -p src && \
     if [ -f src/ros2.repos ]; then \
-    vcs import src < src/ros2.repos; \
+      vcs import src < src/ros2.repos; \
     fi
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+# derive build/exec dependencies
+RUN --mount=type=cache,target=/etc/apt/apt.conf.d \
     --mount=type=cache,target=/var/lib/apt/lists \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
     bash -e <<'EOF'
 set -eux
 skip_keys="laser_filters xacro dynamixel_hardware_interface gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod"
-declare -A dep_types=(["build"]="" ["exec"]="--dependency-types=exec")
-for type in "${!dep_types[@]}"; do
-  TYPE_NAME="$type"
+declare -A types=(["exec"]="--dependency-types=exec" ["build"]="")
+for type in "${!types[@]}"; do
+  TYPE="$type" \
   rosdep install -y \
     --from-paths src \
     --ignore-src \
-    --rosdistro "${ROS_DISTRO}" \
+    --rosdistro "$ROS_DISTRO" \
     --reinstall \
     --simulate \
-    ${dep_types[$type]} \
-    --skip-keys "${skip_keys}" \
-  | TYPE="$TYPE_NAME" python3 - <<'PY'
-import shlex, sys, os
+    ${types[$type]} \
+    --skip-keys "$skip_keys" \
+  | python3 - <<'PY'
+import os, shlex, sys
 pkgs = set()
 for line in sys.stdin:
     if "apt-get install" not in line:
@@ -62,12 +59,10 @@ for line in sys.stdin:
         if token.startswith("-"):
             continue
         pkgs.add(token)
-if pkgs:
-    with open(f"/tmp/{os.environ['TYPE']}_debs.txt", "w", encoding="utf-8") as fh:
-        for pkg in sorted(pkgs):
-            fh.write(pkg + "\n")
-else:
-    open(f"/tmp/{os.environ['TYPE']}_debs.txt", "w", encoding="utf-8").close()
+target = f"/tmp/{os.environ['TYPE']}_debs.txt"
+with open(target, "w", encoding="utf-8") as fh:
+    for pkg in sorted(pkgs):
+        fh.write(pkg + "\n")
 PY
 done
 for file in /tmp/*_debs.txt; do
@@ -75,112 +70,82 @@ for file in /tmp/*_debs.txt; do
 done
 EOF
 
-FROM ${FROM_IMAGE} AS builder
+# multi-stage for building
+FROM $FROM_IMAGE AS builder
 ARG ROS_DISTRO
 ARG OVERLAY_WS
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-    build-essential \
-    cmake \
-    git \
-    python3-colcon-common-extensions \
-    python3-colcon-mixin \
-    python3-rosdep \
-    python3-vcstool; \
-    rm -rf /var/lib/apt/lists/*
-
-COPY --from=cacher /tmp/build_debs.txt /tmp/build_deps.txt
-
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+# install build dependencies
+COPY --from=cacher /tmp/build_debs.txt /tmp/build_debs.txt
+RUN --mount=type=cache,target=/etc/apt/apt.conf.d \
     --mount=type=cache,target=/var/lib/apt/lists \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
     bash -e <<'EOF'
 set -eux
-if [ -s /tmp/build_deps.txt ]; then
-  apt-get update
-  xargs -r -a /tmp/build_deps.txt apt-get install -y --no-install-recommends
+apt-get update
+apt-get install -y --no-install-recommends \
+  build-essential \
+  cmake \
+  git \
+  python3-colcon-common-extensions \
+  python3-colcon-mixin \
+  python3-rosdep \
+  python3-vcstool
+if [ -s /tmp/build_debs.txt ]; then
+  xargs -r -a /tmp/build_debs.txt apt-get install -y --no-install-recommends
 fi
 rm -rf /var/lib/apt/lists/*
 EOF
 
-WORKDIR ${OVERLAY_WS}
-
-COPY --from=cacher ${OVERLAY_WS}/ ${OVERLAY_WS}/
-
-RUN set -eux; \
-    if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then \
-    rosdep init; \
-    fi; \
-    rosdep update --rosdistro "${ROS_DISTRO}"
-
-RUN set -eux; \
-    . /opt/ros/${ROS_DISTRO}/setup.sh; \
+# build overlay source
+WORKDIR $OVERLAY_WS
+COPY --from=cacher $OVERLAY_WS/ .
+RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
     colcon build \
-    --merge-install \
-    --symlink-install \
-    --cmake-args \
-    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
-    -DCMAKE_CXX_FLAGS=-Wall\ -Wextra\ -Wpedantic
+      --merge-install \
+      --symlink-install \
+      --cmake-args \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
+        -DCMAKE_CXX_FLAGS=-Wall\ -Wextra\ -Wpedantic
 
-RUN set -eux; \
-    lib_target="$(find /opt/ros/${ROS_DISTRO}/lib -maxdepth 2 -name 'libbuiltin_interfaces__rosidl_generator_c.so' | head -n1)"; \
-    if [ -z "${lib_target}" ]; then \
-    echo "builtin_interfaces shared library not found under /opt/ros/${ROS_DISTRO}/lib" >&2; \
-    exit 1; \
-    fi; \
-    if [ "${lib_target}" != "/opt/ros/${ROS_DISTRO}/lib/libbuiltin_interfaces__rosidl_generator_c.so" ]; then \
-    ln -sf "${lib_target}" "/opt/ros/${ROS_DISTRO}/lib/libbuiltin_interfaces__rosidl_generator_c.so"; \
-    fi; \
-    ldconfig
-
-FROM ${FROM_IMAGE}-ros-core AS runner
-ARG ROS_DISTRO
+# multi-stage for running
+FROM $FROM_IMAGE-ros-core AS runner
 ARG OVERLAY_WS
+ARG RUN_WS
+ARG ROS_DISTRO
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-    python3-rosdep \
-    python3-vcstool; \
-    rm -rf /var/lib/apt/lists/*
-
-COPY --from=cacher /tmp/exec_debs.txt /tmp/exec_deps.txt
-
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+# install exec dependencies
+COPY --from=cacher /tmp/exec_debs.txt /tmp/exec_debs.txt
+RUN --mount=type=cache,target=/etc/apt/apt.conf.d \
     --mount=type=cache,target=/var/lib/apt/lists \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
     bash -e <<'EOF'
 set -eux
-if [ -s /tmp/exec_deps.txt ]; then
-  apt-get update
-  xargs -r -a /tmp/exec_deps.txt apt-get install -y --no-install-recommends
+apt-get update
+apt-get install -y --no-install-recommends python3-rosdep python3-vcstool
+if [ -s /tmp/exec_debs.txt ]; then
+  xargs -r -a /tmp/exec_debs.txt apt-get install -y --no-install-recommends
 fi
 rm -rf /var/lib/apt/lists/*
 EOF
 
-ARG RUN_WS=/home/robot/workspace
-WORKDIR ${RUN_WS}
+# setup overlay install
+ENV OVERLAY_WS=$OVERLAY_WS
+WORKDIR $OVERLAY_WS
+COPY --from=builder $OVERLAY_WS/install $OVERLAY_WS/install
+RUN sed --in-place --expression \
+      '$isource "$OVERLAY_WS/install/setup.bash"' \
+      /ros_entrypoint.sh
 
-COPY --from=builder ${OVERLAY_WS}/install ./install
-
-RUN set -eux; \
-    useradd -m -s /bin/bash robot; \
-    chown -R robot:robot "${RUN_WS}"
-
-ENV ROS_DISTRO=${ROS_DISTRO} \
+# switch to runtime workspace
+WORKDIR $RUN_WS
+ENV ROS_DISTRO=$ROS_DISTRO \
     ROS_DOMAIN_ID=0 \
     RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+RUN mkdir -p "$RUN_WS"
 
-RUN set -eux; \
-    printf '\nsource /opt/ros/%s/setup.bash\n' "${ROS_DISTRO}" >> /ros_entrypoint.sh; \
-    printf 'source %s/install/setup.bash\n' "${RUN_WS}" >> /ros_entrypoint.sh
-
-USER robot
-WORKDIR ${RUN_WS}
-
-CMD ["bash"]
-
+# run launch file / shell
 CMD ["bash"]
