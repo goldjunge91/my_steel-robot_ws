@@ -102,16 +102,16 @@ jobs:
         id: build-ci
         uses: docker/build-push-action@v5
         with:
-        builder: ${{ steps.buildx.outputs.name }}
-        context: .
-        file: docker/Dockerfile.robot-pi.test
-        platforms: linux/arm64
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/robot:pi-test-ci
-        labels: |
-          org.opencontainers.image.title=my_steel Robot Test Image
-          org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
-          org.opencontainers.image.revision=${{ github.sha }}
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: docker/Dockerfile.robot-pi.test
+          platforms: linux/arm64
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/robot:pi-test-ci
+          labels: |
+            org.opencontainers.image.title=my_steel Robot Test Image
+            org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
+            org.opencontainers.image.revision=${{ github.sha }}
 
         # with:
         #   context: .
