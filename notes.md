@@ -1,6 +1,7 @@
 colcon build --symlink-install --merge-install --event-handlers console_direct+
 cd /home/pi/workspace/ros2_dev_ws/my_steel-robot_ws
 bash scripts/start_robot.sh 
+# Micro-ROS Agent manuell starten
 ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0
 ros2 run foxglove_bridge foxglove_bridge --port 8765
 
@@ -27,3 +28,44 @@ docker buildx build \
   --push \
   .
 ```
+
+
+docker compose -f docker/compose.robot-pi.test.yaml down -v
+docker compose -f docker/compose.robot-pi.test.yaml up -d
+
+# interaktive Shell in laufendem Container (Compose)
+docker compose exec -it microros-agent /bin/bash
+
+# fallback, falls kein bash
+docker compose exec -it microros-agent /bin/sh
+
+# direkte docker exec Varianten
+docker exec -it microros-agent /bin/bash
+docker exec -it microros-agent /bin/sh
+
+# als anderer User (root oder UID)
+docker exec -it -u root microros-agent /bin/bash
+docker exec -it -u 1000 microros-agent id
+
+# Nicht-interaktive Befehle
+docker exec microros-agent ls -la /var/log/robot
+docker exec microros-agent sh -c 'ros2 topic list'
+
+# Befehl im Hintergrund (detached)
+docker exec -d microros-agent sh -c 'long_running_cmd &'
+
+# Umgebungsvariablen setzen
+docker exec -e ROS_DOMAIN_ID=1 microros-agent env | grep ROS_DOMAIN_ID
+docker exec --env-file ./env.list microros-agent env
+
+# Arbeitsverzeichnis setzen
+docker exec -w /home/ros microros-agent bash -lc 'pwd && ls'
+
+# Container-ID dynamisch auswählen
+docker exec -it $(docker ps -qf "name=microros-agent") /bin/bash
+
+# eigene Trenn-Tasten für detach
+docker exec --detach-keys="ctrl-x" -it microros-agent /bin/bash
+
+# alias: gleicher Befehl mit "docker container exec"
+docker container exec -it microros-agent /bin/bash

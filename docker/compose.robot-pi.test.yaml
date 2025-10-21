@@ -12,31 +12,55 @@ services:
     container_name: microros-agent-test
     network_mode: host
     restart: unless-stopped
-    
+
     # ROS2 environment configuration
     environment:
       - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
       - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
       - CYCLONEDDS_URI=
       - ROS_LOG_DIR=/tmp/ros_logs
-    
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
     # Test command - just keep container alive and source ROS
     command:
       - bash
       - -lc
       - |
-        echo 'micro-ROS agent test container started'
-        echo 'Note: Serial device not available in test mode'
+        echo '=== Micro-ROS Agent Test Container Started ==='
+        echo "ROS_DISTRO: ${ROS_DISTRO}"
+        echo "ROS_DOMAIN_ID: ${ROS_DOMAIN_ID}"
+        echo "RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION}"
+        echo ''
+        echo '=== Available ROS2 Packages ==='
+        ros2 pkg list | grep micro_ros || echo 'No micro_ros packages found'
+        echo ''
+        echo 'Test container ready. Keeping alive...'
         sleep infinity
-    
+        source /home/robot/workspace/my_steel-robot_ws/install/setup.bash
+        if [ -f /home/robot/workspace/my_steel-robot_ws/install/setup.bash ]; then
+          source /home/robot/workspace/my_steel-robot_ws/install/setup.bash
+
+        fi
+        exec ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200 -v6
+
     # Health check to verify ROS2 is available
+    # healthcheck:
+    #   test: ["CMD", "sh", "-c", "kill -0 1"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 3
+    #   start_period: 30s
     healthcheck:
-      test: ["CMD", "sh", "-c", "kill -0 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "bash -lc 'pgrep -f micro_ros_agent >/dev/null || exit 1'",
+        ]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
       start_period: 30s
-    
+
     # Persistent log storage
     volumes:
       - /var/log/robot:/var/log/robot
@@ -49,23 +73,23 @@ services:
     container_name: robot-bringup-test
     network_mode: host
     restart: unless-stopped
-    
+
     # Wait for micro-ROS agent to be healthy before starting
     depends_on:
       microros-agent:
         condition: service_healthy
-    
+
     # ROS2 environment configuration
     environment:
       - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
       - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
       - CYCLONEDDS_URI=
       - ROBOT_MODEL_NAME=robot_xl
-      - ROS_LOCALHOST_ONLY=0
+      - ROS_LOCALHOST_ONLY=10
       - TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY:-}
       - TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-robot-xl-test}
       - ROS_LOG_DIR=/tmp/ros_logs
-    
+
     # Test command - verify environment and list available packages
     command:
       - bash
@@ -81,7 +105,7 @@ services:
         echo ''
         echo 'Test container ready. Keeping alive...'
         sleep infinity
-    
+
     # Health check to verify ROS2 environment
     healthcheck:
       test: ["CMD", "sh", "-c", "kill -0 1"]
@@ -89,7 +113,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
-    
+
     # Persistent storage for logs and configuration
     volumes:
       - /var/log/robot:/var/log/robot

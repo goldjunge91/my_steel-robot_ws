@@ -8,7 +8,9 @@
 FROM ros:humble-ros-base AS builder
 
 # Install build dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends \
+  ca-certificates \
   python3-colcon-common-extensions \
   python3-colcon-mixin \
   python3-rosdep \
@@ -19,7 +21,9 @@ RUN apt-get update && apt-get install -y \
   ros-humble-builtin-interfaces \
   ros-humble-rosidl-runtime-c \
   ros-humble-rosidl-generator-c \
-  && rm -rf /var/lib/apt/lists/*
+  && apt-get autoremove -y \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Create workspace
 WORKDIR /ros2_ws
@@ -50,7 +54,7 @@ RUN apt-get update && apt-get install -y \
   ros-humble-ros2-controllers \
   ros-humble-moveit-msgs \
   ros-humble-robot-localization \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Skip rosdeps that fail to resolve for arm64 cross builds
 RUN apt-get update && \
@@ -59,7 +63,7 @@ RUN apt-get update && \
   --rosdistro humble \
   --skip-keys "dynamixel_hardware_interface laser_filters xacro gazebo_ros gazebo_ros2_control" \
   -y && \
-  rm -rf /var/lib/apt/lists/*
+  rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Build packages in multiple steps to handle dependencies correctly
 # Note: micro_ros_agent will be built from source in src/micro-ROS-Agent
@@ -124,10 +128,13 @@ RUN . /opt/ros/humble/setup.sh && \
 # ============================================================================
 # Stage 2: Runtime - Production image
 # ============================================================================
-FROM ros:humble-ros-base
+FROM ros:humble-ros-core
 
 # Install runtime dependencies and system tools
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+  apt-get upgrade -y && \
+  apt-get install -y --no-install-recommends \
+  ca-certificates \
   ros-humble-usb-cam \
   v4l-utils \
   libv4l-0 \
@@ -140,7 +147,9 @@ RUN apt-get update && apt-get install -y \
   usbutils \
   curl \
   gnupg \
-  && rm -rf /var/lib/apt/lists/*
+  && apt-get autoremove -y \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Install Tailscale
 RUN curl -fsSL https://tailscale.com/install.sh | sh
