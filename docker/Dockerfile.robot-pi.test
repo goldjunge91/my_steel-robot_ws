@@ -6,7 +6,9 @@ ARG VCS_FILE=src/ros2.repos
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
     git \
@@ -17,9 +19,27 @@ RUN apt-get update && apt-get install -y \
     python3-vcstool \
     ros-humble-builtin-interfaces \
     ros-humble-rosidl-runtime-c \
-    ros-humble-rosidl-generator-c \
-    sudo \
-    && rm -rf /var/lib/apt/lists/*
+    ros-humble-rosidl-generator-c; \
+    lib_candidates="$(find /opt/ros/humble/lib -maxdepth 2 -name 'libbuiltin_interfaces__rosidl_generator_c.so' -print)"; \
+    if [ -z "$lib_candidates" ]; then \
+    echo "builtin_interfaces library missing after initial install, retrying..." >&2; \
+    apt-get install -y --no-install-recommends \
+    ros-humble-rosidl-runtime-c \
+    ros-humble-rosidl-generator-c; \
+    lib_candidates="$(find /opt/ros/humble/lib -maxdepth 2 -name 'libbuiltin_interfaces__rosidl_generator_c.so' -print)"; \
+    fi; \
+    if [ -n "$lib_candidates" ]; then \
+    lib_target="$(echo "$lib_candidates" | head -n1)"; \
+    if [ "$lib_target" != "/opt/ros/humble/lib/libbuiltin_interfaces__rosidl_generator_c.so" ]; then \
+    ln -sf "$lib_target" /opt/ros/humble/lib/libbuiltin_interfaces__rosidl_generator_c.so; \
+    fi; \
+    else \
+    echo "builtin_interfaces shared library not found under /opt/ros/humble/lib" >&2; \
+    exit 1; \
+    fi; \
+    ldconfig; \
+    rm -rf /var/lib/apt/lists/*
+
 
 RUN useradd -m -s /bin/bash robot && \
     usermod -aG sudo robot && \
@@ -51,7 +71,7 @@ RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep
     sudo rosdep update && \
     sudo apt-get update && \
     sudo rosdep install --from-paths src \
-      --ignore-src \
+    --ignore-src \
     --rosdistro humble \
     --default-yes \
     --skip-keys "laser_filters xacro dynamixel_hardware_interface gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod"
