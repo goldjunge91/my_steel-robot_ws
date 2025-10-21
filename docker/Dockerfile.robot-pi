@@ -61,7 +61,7 @@ RUN apt-get update && \
   rosdep install --from-paths src \
   --ignore-src \
   --rosdistro humble \
-  --skip-keys "dynamixel_hardware_interface laser_filters xacro gazebo_ros gazebo_ros2_control" \
+  --skip-keys "dynamixel_hardware_interface laser_filters gz_ros2_control ros_gz_sim ros_gz_bridge" \
   -y && \
   rm -rf /var/lib/apt/lists/* /tmp/*
 
@@ -125,6 +125,13 @@ RUN . /opt/ros/humble/setup.sh && \
   --packages-select robot_bringup \
   --merge-install
 
+# Step 8: Build umbrella package to install configs/launch files
+RUN . /opt/ros/humble/setup.sh && \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --packages-select robot \
+  --merge-install
+
 # ============================================================================
 # Stage 2: Runtime - Production image
 # ============================================================================
@@ -160,6 +167,7 @@ RUN useradd -m -s /bin/bash robot && \
 
 # Copy built workspace from builder stage
 COPY --from=builder /ros2_ws/install /ros2_ws/install
+COPY --from=builder /ros2_ws/src /ros2_ws/src
 
 # Create Tailscale startup script (runs only when credentials are provided)
 RUN mkdir -p /usr/local/bin && \
