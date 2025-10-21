@@ -14,9 +14,9 @@ set -m || true
 # Destination for Pico SDK (fixed location in home directory)
 SDK_DEST="$HOME/pico-sdk"
 export PICO_SDK_PATH="$SDK_DEST"
-# Versions-Spezifikation (2.0.0 oder höher)
-PICO_SDK_VERSION="2.0.0" # Minimum Version 2.0
-PICOTOOL_VERSION="2.0.0" # Minimum Version 2.0
+
+PICO_SDK_VERSION="2.0.0"
+PICOTOOL_VERSION="2.0.0"
 FAILURES=()
 SKIP_PICOTOOL=0
 PICOTOOL_INSTALLED=0
@@ -29,6 +29,7 @@ GREEN='\033[32m'
 BLUE='\033[34m'
 RESET='\033[0m'
 
+# Cleanup funktion zum Abbrechen bei ctrl+c
 cleanup() {
 	echo -e "\n${RED}Abbruch durch Signal. Stoppe Kindprozesse...${RESET}"
 	pgid="$(ps -o pgid= $$ | tr -d '[:space:]')"
@@ -44,6 +45,7 @@ trap cleanup INT TERM
 # echo -e "${BLUE}[STEP] Beispiel Ausgabe${RESET}". <-- hganze zeile farblich
 # echo -e "${GREEN}✓ Erfolgreich: Beispiel Ausgabe${RESET}"
 # echo -e "${RED}✗ Fehler: Beispiel Ausgabe fehlgeschlagen${RESET}"
+
 # Funktion für Installation und Prüfung
 # Warte bis apt frei ist (verhindert Lock-Konflikte)
 wait_for_apt() {
@@ -54,6 +56,7 @@ wait_for_apt() {
 	done
 }
 
+# Install funktion benötigt paketname als Argument
 install_and_check() {
 	local package=$1
 	echo -e "${BLUE}[STEP] $package installieren${RESET}"
@@ -64,7 +67,7 @@ install_and_check() {
 		echo "$(date): $package bereits installiert" >>setup.log
 		return 0
 	fi
-
+	# Installiere Paket
 	wait_for_apt
 	if sudo apt install -y "$package" 2>&1 | tee -a apt_install.log; then
 		# Nach Installation nochmal prüfen
@@ -489,5 +492,5 @@ else
 	log_info "Completed all steps without errors."
 fi
 
-echo "--- install_picotool_and_sdk.sh: done ---"
+echo "${GREEN}--- install_picotool_and_sdk.sh: done ---${RESET}"
 exit 0
