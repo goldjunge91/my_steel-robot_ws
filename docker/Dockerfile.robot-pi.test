@@ -1,7 +1,17 @@
 # Multi-stage build optimized for ROS2 Humble Robot Pi deployment
+# This Dockerfile creates a production-ready ROS2 robot image with:
+# - Stage 1 (cacher): Install dependencies and fetch source code
+# - Stage 2 (builder): Compile the robot workspace 
+# - Stage 3 (final): Minimal runtime image with compiled robot
+
 ARG FROM_IMAGE=ros:humble-ros-base
 ARG OVERLAY_WS=/home/robot/workspace/my_steel-robot_ws
-# Stage 1: Dependency caching and resolution
+
+# ============================================================================
+# Stage 1: Dependency caching and source code preparation
+# Purpose: Install all build dependencies and fetch source code
+# This stage is heavily cached to speed up rebuilds
+# ============================================================================
 FROM $FROM_IMAGE AS cacher
 ARG OVERLAY_WS
 ARG REPO_URL=https://github.com/goldjunge91/my_steel-robot_ws.git
@@ -9,7 +19,12 @@ ARG REPO_BRANCH=humble
 ARG VCS_FILE=src/ros2.repos
 
 ENV DEBIAN_FRONTEND=noninteractive
-# Optimize apt caching and disable recommends for smaller image
+
+
+# Configure apt for optimal Docker builds and update rosdep
+# --mount=type=cache: Persist apt cache between builds for faster rebuilds
+# rosdep update: Refresh ROS package database
+# APT::Install-Recommends "false": Skip recommended packages to reduce image size
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   rosdep update --rosdistro $ROS_DISTRO && \
@@ -19,6 +34,11 @@ APT::Install-Suggests "false";
 EOF
 
 
+# Install build dependencies and proven ROS2 packages
+# Build tools: build-essential, cmake, git for compilation
+# ROS2 tools: colcon for building, rosdep for dependencies, vcstool for VCS
+# System libs: SSL, YAML, spdlog for various robot components
+# ROS2 packages: Manually tested packages that rosdep often misses
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get install -y --no-install-recommends \
@@ -56,6 +76,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   rm -rf /var/lib/apt/lists/*
 
 # Create robot user for security best practices
+# useradd -m: Create home directory
+# usermod -aG sudo: Add to sudo group for package installation
+# NOPASSWD: Allow sudo without password for convenience
+# chown: Give robot user ownership of workspace
 RUN useradd -m -s /bin/bash robot && \
   usermod -aG sudo robot && \
   echo "robot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
@@ -67,6 +91,8 @@ WORKDIR $OVERLAY_WS
 
 
 # Clone repository and import VCS dependencies
+# git clone --depth 1: Shallow clone for faster download
+# vcs import: Import all repositories defined in ros2.repos
 RUN git clone --branch "${REPO_BRANCH}" --depth 1 "${REPO_URL}" . && \
   vcs import src < "${VCS_FILE}"
 
@@ -91,10 +117,16 @@ done
 EOF
 
 
-# Stage 2: Build environment with dependencies  
+# ============================================================================
+# Stage 2: Build environment - Compile the robot workspace
+# Purpose: Install additional dependencies and build all ROS2 packages
+# Inherits all dependencies and source code from cacher stage
+# ============================================================================
 FROM cacher AS builder
 
-# Install additional dependencies with rosdep
+# Install additional runtime dependencies discovered by rosdep
+# This analyzes all package.xml files and installs missing dependencies
+# Skip keys are packages that fail on ARM64 or are not needed for robot
 RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
   sudo rosdep update && \
   sudo apt-get update && \
@@ -107,7 +139,14 @@ RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep
 ARG COLCON_PARALLEL_WORKERS=2
 ENV COLCON_PARALLEL_WORKERS=${COLCON_PARALLEL_WORKERS}
 
+# Build robot packages in dependency order
+# Step-by-step approach ensures proper dependency resolution
 RUN echo "Start step by step build"
+# Step 1: Build micro_ros_agent (critical for Pico communication)
+# source setup.bash: Load ROS2 environment
+# --parallel-workers 1: Single thread to avoid race conditions in micro-ROS
+# --packages-up-to: Build package and all its dependencies
+# --merge-install: Combine install spaces for smaller image
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   echo '=== Listing all packages ===' && \
   colcon list --base-paths src && \
@@ -120,8 +159,10 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
   --merge-install"
 
 
-# Step 3: Build open_manipulator_x packages (dependency for robot_description)
-RUN echo "[STEP 3] Build open_manipulator_x_description"
+# Step 2: Build open_manipulator_x_description (robot arm URDF)
+# --packages-select: Build only this specific package
+# --continue-on-error: Don't fail build if this optional package fails
+RUN echo "[STEP 2] Build open_manipulator_x_description"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
@@ -139,7 +180,11 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
 #   --continue-on-error
 # #
 
-RUN echo "[STEP 4] Build robot_description robot_hardware_interfaces packages"
+# Step 3: Build core robot packages (URDF + hardware interface)
+# robot_description: Robot URDF model and meshes
+# robot_hardware_interfaces: ros2_control hardware plugin for Pico
+# --symlink-install: Create symlinks for faster development iteration
+RUN echo "[STEP 3] Build robot_description robot_hardware_interfaces packages"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
@@ -149,8 +194,8 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
   --symlink-install \
   --continue-on-error"
 
-# Step 5: Build robot_utils 
-RUN echo "[STEP 5] Build robot_utils"
+# Step 4: Build robot_utils (helper functions and tools)
+RUN echo "[STEP 4] Build robot_utils"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
@@ -160,7 +205,9 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
   --symlink-install \
   --continue-on-error"
 
-# Step 6: Build controller and localization packages
+# Step 5: Build robot_controller (ros2_control configuration)
+# Contains controller configs for mecanum drive and manipulator
+RUN echo "[STEP 5] Build robot_controller"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
@@ -170,7 +217,9 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
   --merge-install \
   --symlink-install"
 
-# Step 7: Build bringup package (depends on everything else)
+# Step 6: Build robot_bringup (main launch package)
+# Contains launch files that start the complete robot system
+RUN echo "[STEP 6] Build robot_bringup"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
@@ -179,7 +228,9 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
   --merge-install \
   --symlink-install"
 
-# Step 8: Build umbrella package to install configs/launch files
+# Step 7: Build umbrella package (meta-package for complete robot)
+# Installs all configurations and makes robot command available
+RUN echo "[STEP 7] Build robot umbrella package"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
@@ -202,47 +253,52 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
 #   # ./setup.sh && \
 #   ./build.sh
 
-# --- Stage: final (runtime image) ---------------
-FROM ros:humble-ros-base AS final
+# ============================================================================
+# Stage 3: Final runtime image - Production-ready robot container
+# Purpose: Minimal image with only runtime dependencies and compiled robot
+# Starts fresh from base image to exclude build tools and temporary files
+# ============================================================================
+FROM $FROM_IMAGE AS final
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install runtime dependencies (all ros-humble packages needed at runtime)
+# Install runtime system libraries (no ROS packages - they come from workspace)
+# python3-colcon: For potential runtime rebuilds
+# v4l-utils: Video4Linux camera support
+# libasio/libyaml/libspdlog: System libraries for robot components
+# udev/usbutils: USB device management for Pico and camera
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  ros-humble-ros2-control \
-  ros-humble-ros2-controllers \
-  ros-humble-controller-manager \
-  ros-humble-robot-state-publisher \
-  ros-humble-joint-state-publisher \
-  ros-humble-foxglove-bridge \
-  ros-humble-xacro \
-  ros-humble-usb-cam \
+  python3-colcon-common-extensions \
+  python3-pip \
   v4l-utils \
   libv4l-0 \
   libasio-dev \
   libtinyxml2-dev \
   libyaml-cpp-dev \
   libspdlog-dev \
+  udev \
+  usbutils \
   && rm -rf /var/lib/apt/lists/*
 
-# Copy complete workspace (src, build, install) for full ROS2 development
+# Copy complete workspace from builder stage
+# Includes: src/ (source code), build/ (build cache), install/ (compiled packages)
+# This provides full ROS2 development capabilities in the runtime image
 COPY --from=builder /home/robot/workspace/my_steel-robot_ws /home/robot/workspace/my_steel-robot_ws
 
-# set user + workdir (if you prefer a non-root runtime)
+# Create non-root user for security best practices
+# Fresh user creation (no sudo needed in runtime)
+# chown: Give robot user ownership of copied workspace
 RUN useradd -m -s /bin/bash robot && \
   chown -R robot:robot /home/robot
 
 USER robot
 WORKDIR /home/robot/workspace/my_steel-robot_ws
 
+# Set ROS2 environment variables for runtime
 ENV ROS_DISTRO=humble \
   ROS_DOMAIN_ID=0 \
   RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 
+# Default command sources both ROS2 base and robot workspace
+# This makes all robot packages available: micro_ros_agent, robot_bringup, etc.
 CMD ["bash","-lc","source /opt/ros/humble/setup.bash && source /home/robot/workspace/my_steel-robot_ws/install/setup.bash && bash"]
-
-# ENV ROS_DISTRO=humble \
-#   ROS_DOMAIN_ID=0 \
-#   RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-
-# CMD ["bash","-lc","source /opt/ros/humble/setup.bash && source /home/robot/workspace/my_steel-robot_ws/install/setup.bash && bash"]

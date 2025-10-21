@@ -28,6 +28,24 @@ docker buildx build \
   --push \
   .
 ```
+# Schneller Build (nutzt Cache)
+docker build -f docker/Dockerfile.robot-pi.test -t robot-test:latest .
+
+# Mit BuildKit für bessere Performance
+DOCKER_BUILDKIT=1 docker build -f docker/Dockerfile.robot-pi.test -t robot-test:latest .
+
+# Container starten
+docker run -it --rm robot-test:latest bash
+
+# Im Container - alles in einem Command:
+source /opt/ros/humble/setup.bash && \
+source /home/robot/workspace/my_steel-robot_ws/install/setup.bash && \
+echo "=== ROS2 Packages ===" && \
+ros2 pkg list | grep -E "(micro_ros|robot)" && \
+echo "=== Workspace Structure ===" && \
+ls -la /home/robot/workspace/my_steel-robot_ws/ && \
+echo "=== Install Directory ===" && \
+ls -la /home/robot/workspace/my_steel-robot_ws/install/
 
 
 docker compose -f docker/compose.robot-pi.test.yaml down -v
