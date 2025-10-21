@@ -13,6 +13,10 @@ ARG OVERLAY_WS=/home/robot/workspace/my_steel-robot_ws
 # This stage is heavily cached to speed up rebuilds
 # ============================================================================
 FROM $FROM_IMAGE AS cacher
+
+RUN echo -e "\033[1;96m============================================================================\033[0m"
+RUN echo -e "\033[1;96m🔧 STAGE 1: Dependency caching and source code preparation\033[0m"
+RUN echo -e "\033[1;96m============================================================================\033[0m"
 ARG OVERLAY_WS
 ARG REPO_URL=https://github.com/goldjunge91/my_steel-robot_ws.git
 ARG REPO_BRANCH=humble
@@ -127,6 +131,10 @@ EOF
 # Inherits all dependencies and source code from cacher stage
 # ============================================================================
 FROM cacher AS builder
+
+RUN echo -e "\033[1;93m============================================================================\033[0m"
+RUN echo -e "\033[1;93m🏗️  STAGE 2: Build environment - Compile the robot workspace\033[0m"
+RUN echo -e "\033[1;93m============================================================================\033[0m"
 
 # Install additional runtime dependencies discovered by rosdep
 # This analyzes all package.xml files and installs missing dependencies
@@ -267,6 +275,10 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
 # Starts fresh from base image to exclude build tools and temporary files
 # ============================================================================
 FROM $FROM_IMAGE AS final
+
+RUN echo -e "\033[1;92m============================================================================\033[0m"
+RUN echo -e "\033[1;92m🚀 STAGE 3: Final runtime image - Production-ready robot container\033[0m"
+RUN echo -e "\033[1;92m============================================================================\033[0m"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
