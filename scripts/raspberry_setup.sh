@@ -57,37 +57,119 @@ wait_for_apt() {
 }
 
 # Install funktion benötigt paketname als Argument
-install_and_check() {
-	local package=$1
-	echo -e "${BLUE}[STEP] $package installieren${RESET}"
+# install_and_check() {
+# 	local package=$1
+# 	echo -e "${BLUE}[STEP] $package installieren${RESET}"
 
-	# Prüfe zuerst, ob Paket bereits installiert ist
-	if dpkg -l 2>/dev/null | grep -qE "^ii\s+$package\s"; then
-		echo -e "${GREEN}✓ $package bereits installiert${RESET}"
-		echo "$(date): $package bereits installiert" >>setup.log
+# 	# Prüfe zuerst, ob Paket bereits installiert ist
+# 	if dpkg -l 2>/dev/null | grep -qE "^ii\s+$package\s"; then
+# 		echo -e "${GREEN}✓ $package bereits installiert${RESET}"
+# 		echo "$(date): $package bereits installiert" >>setup.log
+# 		return 0
+# 	fi
+# 	# Installiere Paket
+# 	wait_for_apt
+# 	if sudo apt install -y "$package" 2>&1 | tee -a apt_install.log; then
+# 		# Nach Installation nochmal prüfen
+# 		if dpkg -l 2>/dev/null | grep -qE "^ii\s+$package(\s|:)"; then
+# 			echo -e "${GREEN}✓ $package erfolgreich installiert${RESET}"
+# 			echo "$(date): $package erfolgreich installiert" >>setup.log
+# 			return 0
+# 		else
+# 			# Bei Meta-Paketen: prüfe ob apt-Befehl erfolgreich war
+# 			if grep -qE "(is already the newest version|newly installed)" apt_install.log; then
+# 				echo -e "${GREEN}✓ $package erfolgreich installiert${RESET}"
+# 				echo "$(date): $package erfolgreich installiert" >>setup.log
+# 				return 0
+# 			fi
+# 		fi
+# 	fi
+
+# 	echo -e "${RED}✗ $package Installation fehlgeschlagen${RESET}"
+# 	echo "$(date): $package Installation fehlgeschlagen" >>errors.log
+# 	return 1
+# }
+install_and_check() {
+	local packages=("$@")
+	echo -e "${BLUE}[STEP] ${packages[*]} installieren${RESET}"
+
+	# Laufzeit-Cache initialisieren (verhindert doppelte Prüfungen)
+	if [ -z "${INSTALL_CACHE+x}" ]; then
+		INSTALL_CACHE=""
+	fi
+
+	local missing=()
+	local pkg
+	for pkg in "${packages[@]}"; do
+		# Wenn bereits im Cache, überspringen
+		if [[ " $INSTALL_CACHE " == *" $pkg "* ]]; then
+			echo -e "${GREEN}✓ $pkg bereits geprüft (Cache)${RESET}"
+			continue
+		fi
+
+		# Prüfe ob Paket bereits installiert ist
+		if dpkg -l 2>/dev/null | grep -qE "^ii\s+$pkg(\s|:)"; then
+			echo -e "${GREEN}✓ $pkg bereits installiert${RESET}"
+			echo "$(date): $pkg bereits installiert" >>setup.log
+			INSTALL_CACHE="$INSTALL_CACHE $pkg"
+		else
+			missing+=("$pkg")
+		fi
+	done
+
+	# Nichts zu tun
+	if [ ${#missing[@]} -eq 0 ]; then
 		return 0
 	fi
-	# Installiere Paket
-	wait_for_apt
-	if sudo apt install -y "$package" 2>&1 | tee -a apt_install.log; then
-		# Nach Installation nochmal prüfen
-		if dpkg -l 2>/dev/null | grep -qE "^ii\s+$package(\s|:)"; then
-			echo -e "${GREEN}✓ $package erfolgreich installiert${RESET}"
-			echo "$(date): $package erfolgreich installiert" >>setup.log
-			return 0
-		else
-			# Bei Meta-Paketen: prüfe ob apt-Befehl erfolgreich war
-			if grep -qE "(is already the newest version|newly installed)" apt_install.log; then
-				echo -e "${GREEN}✓ $package erfolgreich installiert${RESET}"
-				echo "$(date): $package erfolgreich installiert" >>setup.log
-				return 0
-			fi
-		fi
-	fi
 
-	echo -e "${RED}✗ $package Installation fehlgeschlagen${RESET}"
-	echo "$(date): $package Installation fehlgeschlagen" >>errors.log
-	return 1
+	# Batch-Installation der fehlenden Pakete
+	wait_for_apt
+	if sudo apt install -y "${missing[@]}" 2>&1 | tee -a apt_install.log; then
+		local failed=()
+		for pkg in "${missing[@]}"; do
+			if dpkg -l 2>/dev/null | grep -qE "^ii\s+$pkg(\s|:)"; then
+				echo -e "${GREEN}✓ $pkg erfolgreich installiert${RESET}"
+				echo "$(date): $pkg erfolgreich installiert" >>setup.log
+				INSTALL_CACHE="$INSTALL_CACHE $pkg"
+			else
+				# Meta-Paket-Fallback prüfen
+				if grep -qE "(is already the newest version|newly installed)" apt_install.log; then
+					echo -e "${GREEN}✓ $pkg scheint installiert (Meta/keine Aktion)${RESET}"
+					echo "$(date): $pkg installiert (Meta/keine Aktion)" >>setup.log
+					INSTALL_CACHE="$INSTALL_CACHE $pkg"
+				else
+					echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
+					echo "$(date): $pkg Installation fehlgeschlagen" >>errors.log
+					failed+=("$pkg")
+				fi
+			fi
+		done
+
+		[ ${#failed[@]} -eq 0 ]
+		return $?
+	else
+		# Wenn Batch fehlschlägt: Einzelinstallation für bessere Diagnose
+		echo -e "${RED}✗ Batch-Installation fehlgeschlagen, versuche Einzelinstallation${RESET}"
+		for pkg in "${missing[@]}"; do
+			wait_for_apt
+			if sudo apt install -y "$pkg" 2>&1 | tee -a apt_install.log; then
+				if dpkg -l 2>/dev/null | grep -qE "^ii\s+$pkg(\s|:)"; then
+					echo -e "${GREEN}✓ $pkg erfolgreich installiert${RESET}"
+					echo "$(date): $pkg erfolgreich installiert" >>setup.log
+					INSTALL_CACHE="$INSTALL_CACHE $pkg"
+				else
+					echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
+					echo "$(date): $pkg Installation fehlgeschlagen" >>errors.log
+					return 1
+				fi
+			else
+				echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
+				echo "$(date): $pkg Installation fehlgeschlagen" >>errors.log
+				return 1
+			fi
+		done
+		return 0
+	fi
 }
 
 ###############################################################################
@@ -149,33 +231,43 @@ else
 	echo -e "${GREEN}✓ Alle essentiellen Pakete erfolgreich installiert${RESET}"
 fi
 
-# sudo apt install -y ca-certificates curl gnupg
-# # Add GPG Key
-# echo -e "${BLUE}[STEP] GPG-Schlüssel hinzufügen${RESET}"
-# sudo install -m 0755 -d /etc/apt/keyrings
-# curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
-# 	sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-# # Add Docker Repository for Ubuntu
-# echo -e "${BLUE}[STEP] Docker-Repository hinzufügen${RESET}"
-# echo \
-# 	"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-#   https://download.docker.com/linux/ubuntu \
-#   $(lsb_release -cs) stable" |
-# 	sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+sudo apt install -y ca-certificates curl gnupg
+# Add GPG Key
+echo -e "${BLUE}[STEP] GPG-Schlüssel hinzufügen${RESET}"
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
+	sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+# Add Docker Repository for Ubuntu
+echo -e "${BLUE}[STEP] Docker-Repository hinzufügen${RESET}"
+echo \
+	"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" |
+	sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 
 # Update
 echo -e "${BLUE}[STEP] Paketlisten aktualisieren${RESET}"
 sudo apt update
+echo -e "${GREEN}[DONE] Paketlisten aktualisiert${RESET}"
 
 ###############################################################################
 # Docker + Docker Compose
 ###############################################################################
 echo -e "${BLUE}[STEP] Docker installieren${RESET}"
-# # sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-# install_and_check "docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
+# sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+# install_and_check "docker-ce"
+# install_and_check "docker-ce-cli"
+# install_and_check "containerd.io"
+# install_and_check "docker-buildx-plugin"
+# install_and_check "docker-compose-plugin"
+docker_pkgs=(sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
 wait_for_apt
-install_and_check "docker.io"
-install_and_check "docker-compose-plugin"
+for pkg in docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; do
+	install_and_check "$pkg"
+done
+wait_for_apt
+# install_and_check "docker.io"
+# install_and_check "docker-compose-plugin"
 
 # Checking Docker installation
 echo -e "${BLUE}[STEP] Docker-Installation prüfen${RESET}"
@@ -184,7 +276,7 @@ if docker --version &>/dev/null; then
 	# Erfolg loggen
 	echo -e "${GREEN}$(date): Docker-Prüfung erfolgreich${RESET}" >>setup.log
 	# Docker-Dienst aktivieren
-	sudo systemctl enable --now docker
+	# sudo systemctl enable --now docker
 	# Benutzer in Gruppen (ab- und wieder anmelden, oder 'newgrp' nutzen)
 	sudo usermod -aG docker,dialout,video,plugdev,gpio,i2c,spi $USER
 else
@@ -268,50 +360,31 @@ echo "$(date): Setup abgeschlossen" >>setup.log
 # Pico SDK 2.0.x + Picotool
 ###############################################################################
 echo -e "${BLUE}[STEP] Pico SDK Abhängigkeiten installieren${RESET}"
-# Installiere alle benötigten Pakete für Pico SDK und Picotool
-# libusb-1.0-0-dev und pkg-config sind für Picotool erforderlich
-for pkg in build-essential cmake ninja-build gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib libusb-1.0-0-dev pkg-config; do
-	install_and_check "$pkg"
+
+# Prüfe, ob alle benötigten Pakete bereits installiert sind
+PICO_PKGS=(build-essential cmake ninja-build gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib libusb-1.0-0-dev pkg-config)
+ALREADY_INSTALLED=()
+NEED_INSTALL=()
+for pkg in "${PICO_PKGS[@]}"; do
+	if dpkg -l 2>/dev/null | grep -qE "^ii\s+$pkg\s"; then
+		ALREADY_INSTALLED+=("$pkg")
+	else
+		NEED_INSTALL+=("$pkg")
+	fi
 done
 
-echo -e "${BLUE}[STEP] >>> --- install_picotool_and_sdk.sh: start ---${RESET}"
+if [ ${#ALREADY_INSTALLED[@]} -gt 0 ]; then
+	echo -e "${GREEN}✓ Bereits installiert: ${ALREADY_INSTALLED[*]}${RESET}"
+fi
+if [ ${#NEED_INSTALL[@]} -gt 0 ]; then
+	for pkg in "${NEED_INSTALL[@]}"; do
+		install_and_check "$pkg"
+	done
+else
+	echo -e "${GREEN}✓ Alle Pico SDK Abhängigkeiten sind bereits installiert${RESET}"
+fi
 
-log_info() {
-	printf "${BLUE}[INFO] %s${RESET}\n" "$*"
-}
-
-log_warn() {
-	printf "${RED}[WARN] %s${RESET}\n" "$*" >&2
-}
-
-record_failure() {
-	FAILURES+=("$1")
-}
-
-cleanup_sdk() {
-	if [ -n "${TMP_DIR:-}" ] && [ -d "${TMP_DIR}" ]; then
-		rm -rf "${TMP_DIR}"
-	fi
-}
-trap cleanup_sdk EXIT
-
-run_command() {
-	local desc="$1"
-	shift
-	log_info "$desc"
-	if "$@"; then
-		return 0
-	else
-		local rc=$?
-		log_warn "$desc failed (exit $rc); continuing."
-		record_failure "$desc (exit $rc)"
-		return $rc
-	fi
-}
-
-log_info "Checking for existing Pico SDK..."
-
-# --- Klarer, kürzer, robust: Pico SDK Installation ---
+# --- Pico SDK Installation nur, wenn nicht vorhanden ---
 if [ -d "$SDK_DEST" ]; then
 	log_info "✓ Pico SDK bereits vorhanden: $SDK_DEST"
 	SDK="$SDK_DEST"
@@ -387,7 +460,12 @@ else
 	SDK_INSTALLED=0
 fi
 
-if [ "$SKIP_PICOTOOL" -eq 0 ]; then
+# --- Picotool Installation nur, wenn nicht vorhanden ---
+if command -v picotool >/dev/null 2>&1; then
+	log_info "✓ Picotool bereits installiert: $(command -v picotool)"
+	PICOTOOL_INSTALLED=1
+	SKIP_PICOTOOL=1
+else
 	MISSING_CMDS=()
 	for cmd in git cmake ninja; do
 		command -v "$cmd" >/dev/null 2>&1 || MISSING_CMDS+=("$cmd")
@@ -457,6 +535,11 @@ fi
 
 if [ "$PICOTOOL_INSTALLED" -eq 1 ]; then
 	log_info "Picotool installed successfully."
+	# PATH für aktuelle Session setzen, falls ~/.local/bin nicht enthalten
+	if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+		export PATH="$HOME/.local/bin:$PATH"
+		log_info "PATH für aktuelle Session ergänzt: $HOME/.local/bin"
+	fi
 elif [ "$SKIP_PICOTOOL" -eq 1 ]; then
 	log_warn "Picotool installation skipped or incomplete due to earlier issues."
 else
@@ -492,5 +575,5 @@ else
 	log_info "Completed all steps without errors."
 fi
 
-echo "${GREEN}--- install_picotool_and_sdk.sh: done ---${RESET}"
+echo -e "${GREEN}--- install_picotool_and_sdk.sh: done ---${RESET}"
 exit 0
