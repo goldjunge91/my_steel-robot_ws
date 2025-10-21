@@ -306,7 +306,29 @@ fi
 echo -e "${BLUE}[ABFRAGE] Soll ros-humble-desktop installiert werden? (y/n)${RESET}"
 read -r response
 if [[ "$response" =~ ^[Yy]$ ]]; then
-	install_and_check "ros-humble-desktop" # Für ROS2
+	sudo apt update
+	wait_for_apt
+	export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
+	curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
+	sudo dpkg -i /tmp/ros2-apt-source.deb
+	wait_for_apt
+	sudo apt update
+	wait_for_apt
+	echo -e "${BLUE}[ROS2 Base Install]${RESET}"
+	install_and_check "ros-humble-ros-base" # Für ROS2
+	if [ $? -eq 0 ]; then
+		echo -e "${GREEN}✓ ros-humble-ros-base installiert${RESET}"
+	else
+		echo -e "${RED}✗ ros-humble-ros-base Installation fehlgeschlagen${RESET}"
+	fi
+	wait_for_apt
+	echo -e "${BLUE}[ROS2 Base dev tools] installiere dev tools${RESET}"
+	install_and_check "ros-dev-tools" # Für ROS2
+	if [ $? -eq 0 ]; then
+		echo -e "${GREEN}✓ ros-dev-tools installiert${RESET}"
+	else
+		echo -e "${RED}✗ ros-dev-tools Installation fehlgeschlagen${RESET}"
+	fi
 else
 	echo -e "${BLUE}Überspringe ros-humble-desktop${RESET}"
 fi
