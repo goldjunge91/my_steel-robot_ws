@@ -25,11 +25,17 @@ RUN apt-get update && \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/*
 
-# Create workspace
-WORKDIR /ros2_ws
+# Create workspace (consistent with compose.yaml)
+WORKDIR /home/robot/workspace/my_steel-robot_ws
 
-# Copy source code
-COPY src/ src/
+# Clone source code (consistent with .test approach)
+ARG REPO_URL=https://github.com/goldjunge91/my_steel-robot_ws.git
+ARG REPO_BRANCH=humble
+ARG VCS_FILE=src/ros2.repos
+
+RUN git clone --branch "${REPO_BRANCH}" --depth 1 "${REPO_URL}" . && \
+  python3 -m pip install vcstool && \
+  vcs import src < "${VCS_FILE}"
 
 ARG COLCON_MIXINS=release
 ARG COLCON_PARALLEL_WORKERS=""
@@ -45,15 +51,30 @@ ENV COLCON_MIXINS=${COLCON_MIXINS} \
 # Initialize rosdep if not already done
 RUN rosdep update || true
 
-# Install dependencies for the packages we're building
-# Install ros2_control and controllers for robot_hardware_interfaces
+# Install your proven manual dependencies (from .test file)
 RUN apt-get update && apt-get install -y \
-  ros-humble-controller-interface \
+  libssl-dev \
+  pkg-config \
+  ros-humble-builtin-interfaces \
   ros-humble-hardware-interface \
   ros-humble-ros2-control \
   ros-humble-ros2-controllers \
   ros-humble-moveit-msgs \
   ros-humble-robot-localization \
+  ros-humble-usb-cam \
+  v4l-utils \
+  libv4l-0 \
+  libasio-dev \
+  libtinyxml2-dev \
+  libyaml-cpp-dev \
+  libspdlog-dev \
+  ros-humble-foxglove-bridge \
+  ros-humble-robot-state-publisher \
+  ros-humble-xacro \
+  ros-humble-joint-state-publisher \
+  ros-humble-controller-manager \
+  ros-humble-rosidl-runtime-c \
+  ros-humble-rosidl-generator-c \
   && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Skip rosdeps that fail to resolve for arm64 cross builds
@@ -165,9 +186,9 @@ RUN curl -fsSL https://tailscale.com/install.sh | sh
 RUN useradd -m -s /bin/bash robot && \
   usermod -aG dialout,video robot
 
-# Copy built workspace from builder stage
-COPY --from=builder /ros2_ws/install /ros2_ws/install
-COPY --from=builder /ros2_ws/src /ros2_ws/src
+# Copy built workspace from builder stage (consistent paths)
+COPY --from=builder /home/robot/workspace/my_steel-robot_ws/install /home/robot/workspace/my_steel-robot_ws/install
+COPY --from=builder /home/robot/workspace/my_steel-robot_ws/src /home/robot/workspace/my_steel-robot_ws/src
 
 # Create Tailscale startup script (runs only when credentials are provided)
 RUN mkdir -p /usr/local/bin && \
@@ -230,8 +251,8 @@ trap shutdown_handler SIGINT SIGTERM
 
 echo "[entrypoint] Sourcing ROS environments"
 source /opt/ros/humble/setup.bash
-if [ -f /ros2_ws/install/setup.bash ]; then
-  source /ros2_ws/install/setup.bash
+if [ -f /home/robot/workspace/my_steel-robot_ws/install/setup.bash ]; then
+  source /home/robot/workspace/my_steel-robot_ws/install/setup.bash
 fi
 
 # Start Tailscale when possible (runs as background task)
@@ -244,8 +265,8 @@ EOF
 # Make entrypoint executable
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Set working directory
-WORKDIR /ros2_ws
+# Set working directory (consistent with compose.yaml)
+WORKDIR /home/robot/workspace/my_steel-robot_ws
 
 # Create log directory
 RUN mkdir -p /var/log/robot && \

@@ -1,15 +1,36 @@
-FROM ros:humble-ros-base AS base
-
+# Multi-stage build optimized for ROS2 Humble Robot Pi deployment
+ARG FROM_IMAGE=ros:humble-ros-base
+ARG OVERLAY_WS=/home/robot/workspace/my_steel-robot_ws
+# Stage 1: Dependency caching and resolution
+FROM $FROM_IMAGE AS cacher
+ARG OVERLAY_WS
 ARG REPO_URL=https://github.com/goldjunge91/my_steel-robot_ws.git
 ARG REPO_BRANCH=humble
 ARG VCS_FILE=src/ros2.repos
 
 ENV DEBIAN_FRONTEND=noninteractive
+# Optimize apt caching and disable recommends for smaller image
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  rosdep update --rosdistro $ROS_DISTRO && \
+  cat <<EOF > /etc/apt/apt.conf.d/docker-clean && apt-get update
+APT::Install-Recommends "false";
+APT::Install-Suggests "false";
+EOF
 
-RUN set -eux; \
-  apt-get update; \
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get install -y --no-install-recommends \
   build-essential \
+  cmake \
+  git \
+  ca-certificates \
+  python3-pip \
+  python3-colcon-common-extensions \
+  python3-colcon-mixin \
+  python3-rosdep \
+  python3-vcstool \
   libssl-dev \
   pkg-config \
   cmake \
@@ -19,6 +40,7 @@ RUN set -eux; \
   python3-colcon-mixin \
   python3-rosdep \
   python3-vcstool \
+  ca-certificates \
   ros-humble-builtin-interfaces \
   ros-humble-hardware-interface \
   ros-humble-ros2-control \
@@ -41,80 +63,48 @@ RUN set -eux; \
   ros-humble-ros2-control \
   ros-humble-rosidl-runtime-c \
   ros-humble-rosidl-generator-c; \
-  # lib_candidates="$(find /opt/ros/humble/lib -maxdepth 2 -name 'libbuiltin_interfaces__rosidl_generator_c.so' -print)"; \
-  # if [ -z "$lib_candidates" ]; then \
-  # echo "builtin_interfaces library missing after initial install, retrying..." >&2; \
-  # apt-get install -y --no-install-recommends \
-  # ros-humble-rosidl-runtime-c \
-  # ros-humble-rosidl-generator-c; \
-  # lib_candidates="$(find /opt/ros/humble/lib -maxdepth 2 -name 'libbuiltin_interfaces__rosidl_generator_c.so' -print)"; \
-  # fi; \
-  # if [ -n "$lib_candidates" ]; then \
-  # lib_target="$(echo "$lib_candidates" | head -n1)"; \
-  # if [ "$lib_target" != "/opt/ros/humble/lib/libbuiltin_interfaces__rosidl_generator_c.so" ]; then \
-  # ln -sf "$lib_target" /opt/ros/humble/lib/libbuiltin_interfaces__rosidl_generator_c.so; \
-  # fi; \
-  # else \
-  # echo "builtin_interfaces shared library not found under /opt/ros/humble/lib" >&2; \
-  # exit 1; \
-  # fi; \
-  # ldconfig; \
-  rm -rf /var/lib/apt/lists/*
-# --- Stage: deps (after apt install) ----------
-FROM base AS deps
-
-# Copy over required config and set up user tooling
-ARG REPO_URL
-ARG REPO_BRANCH
-ARG VCS_FILE
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Repeat non-changing apt steps quickly using cache (no need to re-run job-specific stuff)
-RUN set -eux; \
-  apt-get update; \
-  apt-get install -y --no-install-recommends \
-  python3-pip python3-colcon-common-extensions python3-colcon-mixin \
-  python3-rosdep python3-vcstool; \
   rm -rf /var/lib/apt/lists/*
 
-# Ensure bash is the shell for subsequent RUN bash -c commands (already used explicitly),
-SHELL ["/bin/bash", "-lc"]
-
+# Create robot user for security best practices
 RUN useradd -m -s /bin/bash robot && \
   usermod -aG sudo robot && \
   echo "robot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
-  mkdir -p /home/robot/workspace && \
+  mkdir -p $OVERLAY_WS && \
   chown -R robot:robot /home/robot
 
 USER robot
-WORKDIR /home/robot/workspace
+WORKDIR $OVERLAY_WS
 
-RUN git clone --branch "${REPO_BRANCH}" --depth 1 "${REPO_URL}" my_steel-robot_ws
 
-WORKDIR /home/robot/workspace/my_steel-robot_ws
+# Clone repository and import VCS dependencies
+RUN git clone --branch "${REPO_BRANCH}" --depth 1 "${REPO_URL}" . && \
+  vcs import src < "${VCS_FILE}"
 
-RUN vcs import src < "${VCS_FILE}"
+# Derive build and runtime dependencies using rosdep
+RUN bash -e <<'EOF'
+declare -A types=(
+  [exec]="--dependency-types=exec"
+  [build]="")
+for type in "${!types[@]}"; do
+  rosdep install -y \
+    --from-paths src \
+    --ignore-src \
+    --reinstall \
+    --simulate \
+    --rosdistro $ROS_DISTRO \
+    ${types[$type]} \
+    --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod" \
+    | grep 'apt-get install' \
+    | awk '{gsub(/'\''/,"",$4); print $4}' \
+    | sort -u > /tmp/${type}_debs.txt
+done
+EOF
 
-# --- Stage: src (checkout + rosdep) -------------
-FROM deps AS src
 
-# Clone repo and import VCS (already done in deps stage, just ensure we're in the right directory)
-ARG REPO_URL
-ARG REPO_BRANCH
-ARG VCS_FILE
-WORKDIR /home/robot/workspace/my_steel-robot_ws
+# Stage 2: Build environment with dependencies  
+FROM cacher AS builder
 
-ARG COLCON_MIXINS=release
-ARG COLCON_PARALLEL_WORKERS="2"
-ARG COLCON_PACKAGES_SELECT=""
-ARG COLCON_PACKAGES_UP_TO=""
-ARG COLCON_BUILD_EXTRA_ARGS=""
-ENV COLCON_MIXINS=${COLCON_MIXINS} \
-  COLCON_PARALLEL_WORKERS=${COLCON_PARALLEL_WORKERS} \
-  COLCON_PACKAGES_SELECT=${COLCON_PACKAGES_SELECT} \
-  COLCON_PACKAGES_UP_TO=${COLCON_PACKAGES_UP_TO} \
-  COLCON_BUILD_EXTRA_ARGS=${COLCON_BUILD_EXTRA_ARGS}
-
+# Install additional dependencies with rosdep
 RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
   sudo rosdep update && \
   sudo apt-get update && \
@@ -123,12 +113,6 @@ RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep
   --rosdistro humble \
   --default-yes \
   --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod"
-
-# --- Stage: builder (do colcon builds) ----------
-FROM src AS builder
-
-USER robot
-WORKDIR /home/robot/workspace/my_steel-robot_ws
 
 ARG COLCON_PARALLEL_WORKERS=2
 ENV COLCON_PARALLEL_WORKERS=${COLCON_PARALLEL_WORKERS}
@@ -147,23 +131,6 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
   --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON \
   --merge-install"
 
-
-# RUN echo "Build micro_ros_agent"
-# RUN . /opt/ros/humble/setup.sh && \
-#   colcon build \
-#   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-#   --packages-select \
-#   micro-ros-agent \
-#   --merge-install 
-
-# Step 2: Build components (base dependency)
-# RUN . /opt/ros/humble/setup.sh && \
-#   colcon build \
-#   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-#   --packages-select husarion_components_description \
-#   --merge-install \
-#   --symlink-install \
-#   --continue-on-error
 
 # Step 3: Build open_manipulator_x packages (dependency for robot_description)
 RUN echo "[STEP 3] Build open_manipulator_x_description"
@@ -250,8 +217,8 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
 # --- Stage: final (runtime image) ---------------
 FROM ros:humble-ros-base AS final
 
-# copy built install folder from builder stage
-COPY --from=builder /home/robot/workspace/my_steel-robot_ws/install /home/robot/workspace/my_steel-robot_ws/install
+# Copy complete workspace (src, build, install) for full ROS2 development
+COPY --from=builder /home/robot/workspace/my_steel-robot_ws /home/robot/workspace/my_steel-robot_ws
 
 # set user + workdir (if you prefer a non-root runtime)
 RUN useradd -m -s /bin/bash robot && \
