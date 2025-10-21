@@ -45,20 +45,38 @@ for type in "${!types[@]}"; do
     --skip-keys "$skip_keys" \
   | python3 - "$type" <<'PY'
 import shlex, sys
+
+def tokenize(line: str) -> list[str]:
+    lexer = shlex.shlex(line, posix=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ''
+    return list(lexer)
+
 type_name = sys.argv[1] if len(sys.argv) > 1 else "deps"
 pkgs = set()
-for line in sys.stdin:
-    if "apt-get install" not in line:
+
+for raw_line in sys.stdin:
+    stripped = raw_line.strip()
+    if "apt-get" not in stripped:
         continue
-    parts = shlex.split(line)
+    tokens = tokenize(stripped)
+    for idx, token in enumerate(tokens):
+        if token.endswith("apt-get"):
+            start = idx
+            break
+    else:
+        continue
+
     try:
-        idx = parts.index("install")
+        install_idx = tokens.index("install", start)
     except ValueError:
         continue
-    for token in parts[idx + 1:]:
-        if token.startswith("-"):
+
+    for pkg in tokens[install_idx + 1:]:
+        if pkg.startswith("-") or "=" in pkg or pkg.endswith("\\"):
             continue
-        pkgs.add(token)
+        pkgs.add(pkg)
+
 target = f"/tmp/{type_name}_debs.txt"
 with open(target, "w", encoding="utf-8") as fh:
     for pkg in sorted(pkgs):
