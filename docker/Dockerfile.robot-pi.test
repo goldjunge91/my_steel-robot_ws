@@ -1,182 +1,87 @@
-# syntax=docker/dockerfile:1.6
+FROM ros:humble-ros-base
 
-ARG ROS_DISTRO=humble
-ARG FROM_IMAGE=ros:${ROS_DISTRO}
-ARG OVERLAY_WS=/opt/ros/overlay_ws
-ARG RUN_WS=/home/robot/workspace
+ARG REPO_URL=https://github.com/goldjunge91/my_steel-robot_ws.git
+ARG REPO_BRANCH=humble
+ARG VCS_FILE=src/ros2.repos
 
-# multi-stage for caching
-FROM $FROM_IMAGE AS cacher
-ARG ROS_DISTRO
-ARG OVERLAY_WS
 ENV DEBIAN_FRONTEND=noninteractive
 
-# overwrite defaults to persist minimal cache
-RUN rosdep update --rosdistro "$ROS_DISTRO" && \
-  cat <<'EOF' > /etc/apt/apt.conf.d/docker-clean && apt-get update
-APT::Install-Recommends "false";
-APT::Install-Suggests "false";
-EOF
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    python3-pip \
+    python3-colcon-common-extensions \
+    python3-colcon-mixin \
+    python3-rosdep \
+    python3-vcstool \
+    ros-humble-builtin-interfaces \
+    ros-humble-rosidl-runtime-c \
+    ros-humble-rosidl-generator-c; \
+    lib_candidates="$(find /opt/ros/humble/lib -maxdepth 2 -name 'libbuiltin_interfaces__rosidl_generator_c.so' -print)"; \
+    if [ -z "$lib_candidates" ]; then \
+    echo "builtin_interfaces library missing after initial install, retrying..." >&2; \
+    apt-get install -y --no-install-recommends \
+    ros-humble-rosidl-runtime-c \
+    ros-humble-rosidl-generator-c; \
+    lib_candidates="$(find /opt/ros/humble/lib -maxdepth 2 -name 'libbuiltin_interfaces__rosidl_generator_c.so' -print)"; \
+    fi; \
+    if [ -n "$lib_candidates" ]; then \
+    lib_target="$(echo "$lib_candidates" | head -n1)"; \
+    if [ "$lib_target" != "/opt/ros/humble/lib/libbuiltin_interfaces__rosidl_generator_c.so" ]; then \
+    ln -sf "$lib_target" /opt/ros/humble/lib/libbuiltin_interfaces__rosidl_generator_c.so; \
+    fi; \
+    else \
+    echo "builtin_interfaces shared library not found under /opt/ros/humble/lib" >&2; \
+    exit 1; \
+    fi; \
+    ldconfig; \
+    rm -rf /var/lib/apt/lists/*
 
-# clone overlay source
-WORKDIR $OVERLAY_WS
-COPY . .
-RUN mkdir -p src && \
-  if [ -f src/ros2.repos ]; then \
-  vcs import src < src/ros2.repos; \
-  fi
 
-# derive build/exec dependencies
-RUN --mount=type=cache,target=/etc/apt/apt.conf.d \
-  --mount=type=cache,target=/var/lib/apt/lists \
-  --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  bash -e <<'EOF'
-set -eux
-skip_keys="laser_filters xacro dynamixel_hardware_interface gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod"
-declare -A types=(["exec"]="--dependency-types=exec" ["build"]="")
-for type in "${!types[@]}"; do
-  rosdep install -y \
-    --from-paths src \
+RUN useradd -m -s /bin/bash robot && \
+    usermod -aG sudo robot && \
+    echo "robot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    mkdir -p /home/robot/workspace && \
+    chown -R robot:robot /home/robot
+
+USER robot
+WORKDIR /home/robot/workspace
+
+RUN git clone --branch "${REPO_BRANCH}" --depth 1 "${REPO_URL}" my_steel-robot_ws
+
+WORKDIR /home/robot/workspace/my_steel-robot_ws
+
+RUN vcs import src < "${VCS_FILE}"
+
+ARG COLCON_MIXINS=release
+ARG COLCON_PARALLEL_WORKERS=""
+ARG COLCON_PACKAGES_SELECT=""
+ARG COLCON_PACKAGES_UP_TO=""
+ARG COLCON_BUILD_EXTRA_ARGS=""
+ENV COLCON_MIXINS=${COLCON_MIXINS} \
+    COLCON_PARALLEL_WORKERS=${COLCON_PARALLEL_WORKERS} \
+    COLCON_PACKAGES_SELECT=${COLCON_PACKAGES_SELECT} \
+    COLCON_PACKAGES_UP_TO=${COLCON_PACKAGES_UP_TO} \
+    COLCON_BUILD_EXTRA_ARGS=${COLCON_BUILD_EXTRA_ARGS}
+
+RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
+    sudo rosdep update && \
+    sudo apt-get update && \
+    sudo rosdep install --from-paths src \
     --ignore-src \
-    --rosdistro "$ROS_DISTRO" \
-    --reinstall \
-    --simulate \
-    ${types[$type]} \
-    --skip-keys "$skip_keys" \
-  | python3 - "$type" <<'PY'
-import shlex, sys
+    --rosdistro humble \
+    --default-yes \
+    --skip-keys "laser_filters xacro dynamixel_hardware_interface gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod"
 
-def tokenize(line: str) -> list[str]:
-    lexer = shlex.shlex(line, posix=True)
-    lexer.whitespace_split = True
-    lexer.commenters = ''
-    return list(lexer)
+RUN . /opt/ros/humble/setup.sh && \
+    chmod +x build.sh && \
+    ./build.sh
 
-type_name = sys.argv[1] if len(sys.argv) > 1 else "deps"
-pkgs = set()
+ENV ROS_DISTRO=humble \
+    ROS_DOMAIN_ID=0 \
+    RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 
-for raw_line in sys.stdin:
-    stripped = raw_line.strip()
-    if "apt-get" not in stripped:
-        continue
-    tokens = tokenize(stripped)
-    for idx, token in enumerate(tokens):
-        if token.endswith("apt-get"):
-            start = idx
-            break
-    else:
-        continue
-
-    try:
-        install_idx = tokens.index("install", start)
-    except ValueError:
-        continue
-
-    for pkg in tokens[install_idx + 1:]:
-        if pkg.startswith("-") or "=" in pkg or pkg.endswith("\\"):
-            continue
-        pkgs.add(pkg)
-
-target = f"/tmp/{type_name}_debs.txt"
-with open(target, "w", encoding="utf-8") as fh:
-    for pkg in sorted(pkgs):
-        fh.write(pkg + "\n")
-PY
-done
-for file in /tmp/*_debs.txt; do
-  sed -i '/^$/d' "$file" || true
-done
-EOF
-
-# multi-stage for building
-FROM $FROM_IMAGE AS builder
-ARG ROS_DISTRO
-ARG OVERLAY_WS
-ENV DEBIAN_FRONTEND=noninteractive
-
-# install build dependencies
-COPY --from=cacher /tmp/build_debs.txt /tmp/build_debs.txt
-RUN --mount=type=cache,target=/etc/apt/apt.conf.d \
-  --mount=type=cache,target=/var/lib/apt/lists \
-  --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  bash -e <<'EOF'
-set -eux
-apt-get update
-apt-get install -y --no-install-recommends \
-  build-essential \
-  cmake \
-  git \
-  ros-${ROS_DISTRO}-control-msgs \
-  python3-colcon-common-extensions \
-  python3-colcon-mixin \
-  python3-rosdep \
-  python3-vcstool
-if [ -s /tmp/build_debs.txt ]; then
-  xargs -r -a /tmp/build_debs.txt apt-get install -y --no-install-recommends
-fi
-rm -rf /var/lib/apt/lists/*
-EOF
-
-# build overlay source
-WORKDIR $OVERLAY_WS
-COPY --from=cacher $OVERLAY_WS/ .
-RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
-  colcon build \
-  --merge-install \
-  --symlink-install \
-  --cmake-args \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-  -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
-  -DCMAKE_CXX_FLAGS=-Wall\ -Wextra\ -Wpedantic
-
-# multi-stage for running
-FROM $FROM_IMAGE-ros-base AS runner
-ARG OVERLAY_WS
-ARG RUN_WS
-ARG ROS_DISTRO
-ENV DEBIAN_FRONTEND=noninteractive
-
-# install exec dependencies
-COPY --from=cacher /tmp/exec_debs.txt /tmp/exec_debs.txt
-RUN --mount=type=cache,target=/etc/apt/apt.conf.d \
-  --mount=type=cache,target=/var/lib/apt/lists \
-  --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  bash -e <<'EOF'
-set -eux
-apt-get update
-apt-get install -y --no-install-recommends \
-  ca-certificates \
-  python3-rosdep \
-  python3-vcstool \
-  ros-${ROS_DISTRO}-control-msgs \
-  v4l-utils \
-  libv4l-0 \
-  ros-${ROS_DISTRO}-ros2-control \
-  ros-${ROS_DISTRO}-usb-cam \
-  ros-${ROS_DISTRO}-foxglove-bridge \
-  ros-${ROS_DISTRO}-robot-state-publisher \
-  ros-${ROS_DISTRO}-joint-state-publisher \
-  ros-${ROS_DISTRO}-controller-manager 
-if [ -s /tmp/exec_debs.txt ]; then
-  xargs -r -a /tmp/exec_debs.txt apt-get install -y --no-install-recommends
-fi
-rm -rf /var/lib/apt/lists/*
-EOF
-
-# setup overlay install
-ENV OVERLAY_WS=$OVERLAY_WS
-WORKDIR $OVERLAY_WS
-COPY --from=builder $OVERLAY_WS/install $OVERLAY_WS/install
-RUN sed --in-place --expression \
-  '$isource "$OVERLAY_WS/install/setup.bash"' \
-  /ros_entrypoint.sh
-
-# switch to runtime workspace
-WORKDIR $RUN_WS
-ENV ROS_DISTRO=$ROS_DISTRO \
-  ROS_DOMAIN_ID=0 \
-  RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-RUN mkdir -p "$RUN_WS"
-
-# run launch file / shell
-CMD ["bash"]
+CMD ["bash","-lc","source /opt/ros/humble/setup.bash && source /home/robot/workspace/my_steel-robot_ws/install/setup.bash && bash"]
