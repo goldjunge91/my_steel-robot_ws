@@ -1,4 +1,4 @@
-FROM ros:humble-ros-base
+FROM ros:humble-ros-base AS base
 
 ARG REPO_URL=https://github.com/goldjunge91/my_steel-robot_ws.git
 ARG REPO_BRANCH=humble
@@ -29,31 +29,47 @@ RUN set -eux; \
   libv4l-0 \
   ros-humble-foxglove-bridge \
   ros-humble-robot-state-publisher \
+  ros-humble-xacro \
   ros-humble-joint-state-publisher \
   ros-humble-controller-manager \
   ros-humble-ros2-control \
   ros-humble-rosidl-runtime-c \
   ros-humble-rosidl-generator-c; \
-  lib_candidates="$(find /opt/ros/humble/lib -maxdepth 2 -name 'libbuiltin_interfaces__rosidl_generator_c.so' -print)"; \
-  if [ -z "$lib_candidates" ]; then \
-  echo "builtin_interfaces library missing after initial install, retrying..." >&2; \
-  apt-get install -y --no-install-recommends \
-  ros-humble-rosidl-runtime-c \
-  ros-humble-rosidl-generator-c; \
-  lib_candidates="$(find /opt/ros/humble/lib -maxdepth 2 -name 'libbuiltin_interfaces__rosidl_generator_c.so' -print)"; \
-  fi; \
-  if [ -n "$lib_candidates" ]; then \
-  lib_target="$(echo "$lib_candidates" | head -n1)"; \
-  if [ "$lib_target" != "/opt/ros/humble/lib/libbuiltin_interfaces__rosidl_generator_c.so" ]; then \
-  ln -sf "$lib_target" /opt/ros/humble/lib/libbuiltin_interfaces__rosidl_generator_c.so; \
-  fi; \
-  else \
-  echo "builtin_interfaces shared library not found under /opt/ros/humble/lib" >&2; \
-  exit 1; \
-  fi; \
-  ldconfig; \
+  # lib_candidates="$(find /opt/ros/humble/lib -maxdepth 2 -name 'libbuiltin_interfaces__rosidl_generator_c.so' -print)"; \
+  # if [ -z "$lib_candidates" ]; then \
+  # echo "builtin_interfaces library missing after initial install, retrying..." >&2; \
+  # apt-get install -y --no-install-recommends \
+  # ros-humble-rosidl-runtime-c \
+  # ros-humble-rosidl-generator-c; \
+  # lib_candidates="$(find /opt/ros/humble/lib -maxdepth 2 -name 'libbuiltin_interfaces__rosidl_generator_c.so' -print)"; \
+  # fi; \
+  # if [ -n "$lib_candidates" ]; then \
+  # lib_target="$(echo "$lib_candidates" | head -n1)"; \
+  # if [ "$lib_target" != "/opt/ros/humble/lib/libbuiltin_interfaces__rosidl_generator_c.so" ]; then \
+  # ln -sf "$lib_target" /opt/ros/humble/lib/libbuiltin_interfaces__rosidl_generator_c.so; \
+  # fi; \
+  # else \
+  # echo "builtin_interfaces shared library not found under /opt/ros/humble/lib" >&2; \
+  # exit 1; \
+  # fi; \
+  # ldconfig; \
   rm -rf /var/lib/apt/lists/*
+# --- Stage: deps (after apt install) ----------
+FROM base AS deps
 
+# Copy over required config and set up user tooling
+ARG REPO_URL
+ARG REPO_BRANCH
+ARG VCS_FILE
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Repeat non-changing apt steps quickly using cache (no need to re-run job-specific stuff)
+RUN set -eux; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends \
+  python3-pip python3-colcon-common-extensions python3-colcon-mixin \
+  python3-rosdep python3-vcstool; \
+  rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -s /bin/bash robot && \
   usermod -aG sudo robot && \
@@ -70,8 +86,17 @@ WORKDIR /home/robot/workspace/my_steel-robot_ws
 
 RUN vcs import src < "${VCS_FILE}"
 
+# --- Stage: src (checkout + rosdep) -------------
+FROM deps AS src
+
+# Clone repo and import VCS (already done in deps stage, just ensure we're in the right directory)
+ARG REPO_URL
+ARG REPO_BRANCH
+ARG VCS_FILE
+WORKDIR /home/robot/workspace/my_steel-robot_ws
+
 ARG COLCON_MIXINS=release
-ARG COLCON_PARALLEL_WORKERS=""
+ARG COLCON_PARALLEL_WORKERS="2"
 ARG COLCON_PACKAGES_SELECT=""
 ARG COLCON_PACKAGES_UP_TO=""
 ARG COLCON_BUILD_EXTRA_ARGS=""
@@ -88,16 +113,150 @@ RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep
   --ignore-src \
   --rosdistro humble \
   --default-yes \
-  --skip-keys "laser_filters xacro dynamixel_hardware_interface gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod"
+  --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod"
 
-RUN . /opt/ros/humble/setup.sh && \
-  chmod +x build.sh && \
-  chmod +x setup.sh && \
-  ./setup.sh && \
-  ./build.sh
+# --- Stage: builder (do colcon builds) ----------
+FROM src AS builder
+
+USER robot
+WORKDIR /home/robot/workspace/my_steel-robot_ws
+
+ARG COLCON_PARALLEL_WORKERS=8
+ENV COLCON_PARALLEL_WORKERS=${COLCON_PARALLEL_WORKERS}
+
+RUN echo "Start step by step build"
+RUN bash -c "source /opt/ros/humble/setup.bash && \
+  echo '=== Listing all packages ===' && \
+  colcon list --base-paths src && \
+  echo '=== Building micro_ros_agent ===' && \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
+  --packages-select \
+  micro_ros_agent \
+  --merge-install"
+
+
+# RUN echo "Build micro_ros_agent"
+# RUN . /opt/ros/humble/setup.sh && \
+#   colcon build \
+#   --cmake-args -DCMAKE_BUILD_TYPE=Release \
+#   --packages-select \
+#   micro-ros-agent \
+#   --merge-install 
+
+# Step 2: Build components (base dependency)
+# RUN . /opt/ros/humble/setup.sh && \
+#   colcon build \
+#   --cmake-args -DCMAKE_BUILD_TYPE=Release \
+#   --packages-select husarion_components_description \
+#   --merge-install \
+#   --symlink-install \
+#   --continue-on-error
+
+# Step 3: Build open_manipulator_x packages (dependency for robot_description)
+RUN echo "[STEP 3] Build open_manipulator_x_description"
+RUN bash -c "source /opt/ros/humble/setup.bash && \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
+  --packages-select \
+  open_manipulator_x_description \
+  --merge-install \
+  --continue-on-error"
+
+# RUN . /opt/ros/humble/setup.sh && \
+#   colcon build \
+#   --cmake-args -DCMAKE_BUILD_TYPE=Release \
+#   --packages-select open_manipulator_x_description \
+#   --merge-install \
+#   --continue-on-error
+# #
+
+RUN echo "[STEP 4] Build robot_description robot_hardware_interfaces packages"
+RUN bash -c "source /opt/ros/humble/setup.bash && \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
+  --packages-select robot_description robot_hardware_interfaces \
+  --merge-install \
+  --symlink-install \
+  --continue-on-error"
+
+# Step 5: Build robot_utils 
+RUN echo "[STEP 5] Build robot_utils"
+RUN bash -c "source /opt/ros/humble/setup.bash && \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
+  --packages-select robot_utils \
+  --merge-install \
+  --symlink-install \
+  --continue-on-error"
+
+# Step 6: Build controller and localization packages
+RUN bash -c "source /opt/ros/humble/setup.bash && \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
+  --packages-select \
+  robot_controller \
+  --merge-install \
+  --symlink-install"
+
+# Step 7: Build bringup package (depends on everything else)
+RUN bash -c "source /opt/ros/humble/setup.bash && \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
+  --packages-select robot_bringup \
+  --merge-install \
+  --symlink-install"
+
+# Step 8: Build umbrella package to install configs/launch files
+RUN bash -c "source /opt/ros/humble/setup.bash && \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
+  --packages-select robot \
+  --merge-install \
+  --symlink-install"
+
+# # Step 3: Build open_manipulator_x packages (dependency for robot_description)
+# RUN . /opt/ros/humble/setup.sh && \
+#   colcon build \
+#   --cmake-args -DCMAKE_BUILD_TYPE=Release \
+#   --packages-select open_manipulator_x \
+#   --merge-install \
+#   --symlink-install \
+#   --continue-on-error
+# RUN . /opt/ros/humble/setup.sh && \
+#   chmod +x build.sh && \
+#   # chmod +x setup.sh && \
+#   # ./setup.sh && \
+#   ./build.sh
+
+# --- Stage: final (runtime image) ---------------
+FROM ros:humble-ros-base AS final
+
+# copy built install folder from builder stage
+COPY --from=builder /home/robot/workspace/my_steel-robot_ws/install /home/robot/workspace/my_steel-robot_ws/install
+
+# set user + workdir (if you prefer a non-root runtime)
+RUN useradd -m -s /bin/bash robot && \
+  chown -R robot:robot /home/robot
+
+USER robot
+WORKDIR /home/robot/workspace/my_steel-robot_ws
 
 ENV ROS_DISTRO=humble \
   ROS_DOMAIN_ID=0 \
   RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 
 CMD ["bash","-lc","source /opt/ros/humble/setup.bash && source /home/robot/workspace/my_steel-robot_ws/install/setup.bash && bash"]
+
+# ENV ROS_DISTRO=humble \
+#   ROS_DOMAIN_ID=0 \
+#   RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+
+# CMD ["bash","-lc","source /opt/ros/humble/setup.bash && source /home/robot/workspace/my_steel-robot_ws/install/setup.bash && bash"]
