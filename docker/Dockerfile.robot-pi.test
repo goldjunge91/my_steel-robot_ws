@@ -130,7 +130,7 @@ RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
   -DCMAKE_CXX_FLAGS=-Wall\ -Wextra\ -Wpedantic
 
 # multi-stage for running
-FROM $FROM_IMAGE-ros-core AS runner
+FROM $FROM_IMAGE-ros-base AS runner
 ARG OVERLAY_WS
 ARG RUN_WS
 ARG ROS_DISTRO
