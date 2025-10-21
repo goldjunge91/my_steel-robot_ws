@@ -28,7 +28,42 @@ RED='\033[31m'
 GREEN='\033[32m'
 BLUE='\033[34m'
 RESET='\033[0m'
-
+log() {
+	local level="$1"
+	shift
+	local color="${RESET}"
+	[ "$level" = "INFO" ] && color="${BLUE}"
+	[ "$level" = "WARN" ] && color="${RED}"
+	echo -e "${color}[$level]${RESET} $*"
+	echo "$(date): $level: $*" >>setup.log 2>/dev/null || true
+}
+# Simple logging / helper functions
+log() {
+	echo -e "${BLUE}[INFO]${RESET} $*"
+	echo "$(date): INFO: $*" >>setup.log 2>/dev/null || true
+}
+log_warn() {
+	echo -e "${RED}[WARN]${RESET} $*"
+	echo "$(date): WARN: $*" >>errors.log 2>/dev/null || true
+}
+record_failure() {
+	FAILURES+=("$*")
+	echo "$(date): FAILURE: $*" >>errors.log 2>/dev/null || true
+}
+run_command() {
+	local desc="$1"
+	shift
+	echo -e "${BLUE}[CMD]${RESET} $desc"
+	if "$@" 2>&1 | tee -a command.log; then
+		echo -e "${GREEN}✓ $desc erfolgreich${RESET}"
+		echo "$(date): $desc succeeded" >>setup.log 2>/dev/null || true
+		return 0
+	else
+		echo -e "${RED}✗ $desc fehlgeschlagen${RESET}"
+		echo "$(date): $desc failed" >>errors.log 2>/dev/null || true
+		return 1
+	fi
+}
 # Cleanup funktion zum Abbrechen bei ctrl+c
 cleanup() {
 	echo -e "\n${RED}Abbruch durch Signal. Stoppe Kindprozesse...${RESET}"
@@ -57,38 +92,6 @@ wait_for_apt() {
 }
 
 # Install funktion benötigt paketname als Argument
-# install_and_check() {
-# 	local package=$1
-# 	echo -e "${BLUE}[STEP] $package installieren${RESET}"
-
-# 	# Prüfe zuerst, ob Paket bereits installiert ist
-# 	if dpkg -l 2>/dev/null | grep -qE "^ii\s+$package\s"; then
-# 		echo -e "${GREEN}✓ $package bereits installiert${RESET}"
-# 		echo "$(date): $package bereits installiert" >>setup.log
-# 		return 0
-# 	fi
-# 	# Installiere Paket
-# 	wait_for_apt
-# 	if sudo apt install -y "$package" 2>&1 | tee -a apt_install.log; then
-# 		# Nach Installation nochmal prüfen
-# 		if dpkg -l 2>/dev/null | grep -qE "^ii\s+$package(\s|:)"; then
-# 			echo -e "${GREEN}✓ $package erfolgreich installiert${RESET}"
-# 			echo "$(date): $package erfolgreich installiert" >>setup.log
-# 			return 0
-# 		else
-# 			# Bei Meta-Paketen: prüfe ob apt-Befehl erfolgreich war
-# 			if grep -qE "(is already the newest version|newly installed)" apt_install.log; then
-# 				echo -e "${GREEN}✓ $package erfolgreich installiert${RESET}"
-# 				echo "$(date): $package erfolgreich installiert" >>setup.log
-# 				return 0
-# 			fi
-# 		fi
-# 	fi
-
-# 	echo -e "${RED}✗ $package Installation fehlgeschlagen${RESET}"
-# 	echo "$(date): $package Installation fehlgeschlagen" >>errors.log
-# 	return 1
-# }
 install_and_check() {
 	local packages=("$@")
 	echo -e "${BLUE}[STEP] ${packages[*]} installieren${RESET}"
@@ -107,8 +110,8 @@ install_and_check() {
 			continue
 		fi
 
-		# Prüfe ob Paket bereits installiert ist
-		if dpkg -l 2>/dev/null | grep -qE "^ii\s+$pkg(\s|:)"; then
+		# Robustere Prüfung, ob Paket bereits installiert ist
+		if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
 			echo -e "${GREEN}✓ $pkg bereits installiert${RESET}"
 			echo "$(date): $pkg bereits installiert" >>setup.log
 			INSTALL_CACHE="$INSTALL_CACHE $pkg"
@@ -119,15 +122,16 @@ install_and_check() {
 
 	# Nichts zu tun
 	if [ ${#missing[@]} -eq 0 ]; then
+		echo -e "${GREEN}✓ Keine neuen Pakete zu installieren${RESET}"
 		return 0
 	fi
 
 	# Batch-Installation der fehlenden Pakete
 	wait_for_apt
-	if sudo apt install -y "${missing[@]}" 2>&1 | tee -a apt_install.log; then
+	if sudo DEBIAN_FRONTEND=noninteractive apt install -y "${missing[@]}" 2>&1 | tee -a apt_install.log; then
 		local failed=()
 		for pkg in "${missing[@]}"; do
-			if dpkg -l 2>/dev/null | grep -qE "^ii\s+$pkg(\s|:)"; then
+			if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
 				echo -e "${GREEN}✓ $pkg erfolgreich installiert${RESET}"
 				echo "$(date): $pkg erfolgreich installiert" >>setup.log
 				INSTALL_CACHE="$INSTALL_CACHE $pkg"
@@ -152,8 +156,8 @@ install_and_check() {
 		echo -e "${RED}✗ Batch-Installation fehlgeschlagen, versuche Einzelinstallation${RESET}"
 		for pkg in "${missing[@]}"; do
 			wait_for_apt
-			if sudo apt install -y "$pkg" 2>&1 | tee -a apt_install.log; then
-				if dpkg -l 2>/dev/null | grep -qE "^ii\s+$pkg(\s|:)"; then
+			if sudo DEBIAN_FRONTEND=noninteractive apt install -y "$pkg" 2>&1 | tee -a apt_install.log; then
+				if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
 					echo -e "${GREEN}✓ $pkg erfolgreich installiert${RESET}"
 					echo "$(date): $pkg erfolgreich installiert" >>setup.log
 					INSTALL_CACHE="$INSTALL_CACHE $pkg"
@@ -386,20 +390,20 @@ fi
 
 # --- Pico SDK Installation nur, wenn nicht vorhanden ---
 if [ -d "$SDK_DEST" ]; then
-	log_info "✓ Pico SDK bereits vorhanden: $SDK_DEST"
+	log "✓ Pico SDK bereits vorhanden: $SDK_DEST"
 	SDK="$SDK_DEST"
 	SDK_INSTALLED=1
 else
 	mkdir -p "$(dirname "$SDK_DEST")"
-	log_info "Versuche Pico SDK Version $PICO_SDK_VERSION zu klonen..."
+	log "Versuche Pico SDK Version $PICO_SDK_VERSION zu klonen..."
 	if git clone --branch "$PICO_SDK_VERSION" --depth 1 --recursive https://github.com/raspberrypi/pico-sdk.git "$SDK_DEST" 2>/dev/null; then
-		log_info "✓ Pico SDK $PICO_SDK_VERSION erfolgreich geklont"
+		log "✓ Pico SDK $PICO_SDK_VERSION erfolgreich geklont"
 		SDK="$SDK_DEST"
 		SDK_INSTALLED=1
 	else
 		log_warn "✗ Version $PICO_SDK_VERSION nicht gefunden, versuche neueste Version..."
 		if git clone --recursive --depth 1 https://github.com/raspberrypi/pico-sdk.git "$SDK_DEST"; then
-			log_info "✓ Neueste Pico SDK erfolgreich geklont"
+			log "✓ Neueste Pico SDK erfolgreich geklont"
 			SDK="$SDK_DEST"
 			SDK_INSTALLED=1
 		else
@@ -411,17 +415,17 @@ else
 fi
 
 # Pico SDK installiert (Versionsprüfung ausgelassen)
-log_info "Pico SDK bereit: $SDK_DEST"
+log "Pico SDK bereit: $SDK_DEST"
 
 # Nur bei erfolgreicher SDK-Installation Environment-Variablen setzen
 if [ "$SDK_INSTALLED" -eq 1 ] && [ -n "$SDK" ] && [ -d "$SDK" ]; then
 	# Direkt $PICO_SDK_PATH (vom Skriptanfang) verwenden
-	log_info "Using Pico SDK at: $PICO_SDK_PATH"
+	log "Using Pico SDK at: $PICO_SDK_PATH"
 
 	# Systemweite Konfiguration in /etc/profile.d/
 	if sudo sh -c "printf 'export PICO_SDK_PATH=\"%s\"\n' \"$PICO_SDK_PATH\" > /etc/profile.d/pico_sdk.sh"; then
 		sudo chmod 644 /etc/profile.d/pico_sdk.sh
-		log_info "Added PICO_SDK_PATH to /etc/profile.d/pico_sdk.sh"
+		log "Added PICO_SDK_PATH to /etc/profile.d/pico_sdk.sh"
 	else
 		log_warn "Failed to write /etc/profile.d/pico_sdk.sh"
 		record_failure "Writing /etc/profile.d/pico_sdk.sh"
@@ -433,25 +437,25 @@ if [ "$SDK_INSTALLED" -eq 1 ] && [ -n "$SDK" ] && [ -d "$SDK" ]; then
 	# PICO_SDK_PATH hinzufügen (idempotent)
 	if ! grep -q "PICO_SDK_PATH=" "$BASHRC" 2>/dev/null; then
 		if echo "export PICO_SDK_PATH=\"$PICO_SDK_PATH\"" >>"$BASHRC"; then
-			log_info "Added PICO_SDK_PATH to ~/.bashrc"
+			log "Added PICO_SDK_PATH to ~/.bashrc"
 		else
 			log_warn "Failed to write to ~/.bashrc"
 			record_failure "Writing to ~/.bashrc"
 		fi
 	else
-		log_info "PICO_SDK_PATH already present in ~/.bashrc"
+		log "PICO_SDK_PATH already present in ~/.bashrc"
 	fi
 
 	# ~/.local/bin zu PATH hinzufügen (für Picotool)
 	if ! grep -q '.local/bin' "$BASHRC" 2>/dev/null; then
 		if echo 'export PATH="$HOME/.local/bin:$PATH"' >>"$BASHRC"; then
-			log_info "Added ~/.local/bin to PATH in ~/.bashrc"
+			log "Added ~/.local/bin to PATH in ~/.bashrc"
 		else
 			log_warn "Failed to add PATH to ~/.bashrc"
 			record_failure "Adding PATH to ~/.bashrc"
 		fi
 	else
-		log_info "~/.local/bin already in PATH"
+		log "~/.local/bin already in PATH"
 	fi
 else
 	log_warn "Pico SDK directory not available; skipping SDK environment setup."
@@ -462,83 +466,38 @@ fi
 
 # --- Picotool Installation nur, wenn nicht vorhanden ---
 if command -v picotool >/dev/null 2>&1; then
-	log_info "✓ Picotool bereits installiert: $(command -v picotool)"
+	echo -e "${GREEN}✓ Picotool bereits installiert: $(command -v picotool)${RESET}"
 	PICOTOOL_INSTALLED=1
-	SKIP_PICOTOOL=1
 else
-	MISSING_CMDS=()
-	for cmd in git cmake ninja; do
-		command -v "$cmd" >/dev/null 2>&1 || MISSING_CMDS+=("$cmd")
-	done
-	if [ "${#MISSING_CMDS[@]}" -gt 0 ]; then
-		log_warn "Missing required command(s) for picotool build: ${MISSING_CMDS[*]}"
-		record_failure "Missing commands for picotool: ${MISSING_CMDS[*]}"
-		SKIP_PICOTOOL=1
-	fi
-fi
-
-if [ "$SKIP_PICOTOOL" -eq 0 ]; then
-	TMP_DIR=$(mktemp -d) || {
-		log_warn "Unable to create temporary directory for picotool build."
-		record_failure "Creating temporary directory for picotool"
-		SKIP_PICOTOOL=1
-	}
-fi
-
-if [ "$SKIP_PICOTOOL" -eq 0 ]; then
-	# Klonen: gewünschte Version, sonst Fallback neueste
-	log_info "Cloning picotool (target $PICOTOOL_VERSION)..."
-	if ! git clone --branch "$PICOTOOL_VERSION" --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_DIR/picotool" 2>/dev/null; then
-		log_warn "Version $PICOTOOL_VERSION not found; cloning latest picotool..."
-		if ! git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_DIR/picotool"; then
-			log_warn "Failed to clone picotool"
-			record_failure "Picotool clone failed"
-			SKIP_PICOTOOL=1
-		fi
-	fi
-
-	if [ "$SKIP_PICOTOOL" -eq 0 ]; then
-		# Configure & Build
-		if ! run_command "Configure picotool" cmake -S "$TMP_DIR/picotool" -B "$TMP_DIR/build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DPICO_SDK_PATH="$PICO_SDK_PATH"; then
-			SKIP_PICOTOOL=1
+	TMP_DIR=$(mktemp -d)
+	echo -e "${BLUE}[STEP] Picotool wird gebaut und installiert${RESET}"
+	# Klonen
+	if git clone --branch "$PICOTOOL_VERSION" --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_DIR/picotool"; then
+		# Build
+		cmake -S "$TMP_DIR/picotool" -B "$TMP_DIR/build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DPICO_SDK_PATH="$PICO_SDK_PATH"
+		cmake --build "$TMP_DIR/build" --target picotool
+		PICOTOOL_BIN="$TMP_DIR/build/picotool"
+		[ -f "$PICOTOOL_BIN" ] || PICOTOOL_BIN="$TMP_DIR/build/tools/picotool/picotool"
+		if [ -f "$PICOTOOL_BIN" ]; then
+			mkdir -p "$HOME/.local/bin"
+			install -m755 "$PICOTOOL_BIN" "$HOME/.local/bin/picotool"
+			echo -e "${GREEN}✓ Picotool installiert: $HOME/.local/bin/picotool${RESET}"
+			PICOTOOL_INSTALLED=1
 		else
-			JOBS=1
-			command -v nproc >/dev/null 2>&1 && JOBS=$(nproc)
-			if ! run_command "Build picotool" cmake --build "$TMP_DIR/build" --target picotool -j"$JOBS"; then
-				SKIP_PICOTOOL=1
-			else
-				PICOTOOL_BIN="$TMP_DIR/build/picotool"
-				[ -f "$PICOTOOL_BIN" ] || PICOTOOL_BIN="$TMP_DIR/build/tools/picotool/picotool"
-				if [ ! -f "$PICOTOOL_BIN" ]; then
-					log_warn "Picotool binary not found after build"
-					record_failure "Picotool binary missing"
-					SKIP_PICOTOOL=1
-				else
-					LOCAL_BIN="$HOME/.local/bin"
-					run_command "Create $LOCAL_BIN" mkdir -p "$LOCAL_BIN" >/dev/null 2>&1 || true
-					if run_command "Install picotool" install -m755 "$PICOTOOL_BIN" "$LOCAL_BIN/picotool"; then
-						PICOTOOL_INSTALLED=1
-						log_info "✓ Picotool installed to $LOCAL_BIN/picotool"
-						if [ -x "$LOCAL_BIN/picotool" ]; then
-							PICOTOOL_VERSION_DETECTED=$("$LOCAL_BIN/picotool" version 2>/dev/null | grep -oP '\\d+\\.\\d+\\.\\d+' | head -1 || echo "unknown")
-							log_info "✓ Installed Picotool version: $PICOTOOL_VERSION_DETECTED"
-						fi
-					else
-						record_failure "Picotool install failed"
-						SKIP_PICOTOOL=1
-					fi
-				fi
-			fi
+			echo -e "${RED}✗ Picotool Build fehlgeschlagen${RESET}"
 		fi
+	else
+		echo -e "${RED}✗ Picotool konnte nicht geklont werden${RESET}"
 	fi
+	rm -rf "$TMP_DIR"
 fi
 
 if [ "$PICOTOOL_INSTALLED" -eq 1 ]; then
-	log_info "Picotool installed successfully."
+	log "Picotool installed successfully."
 	# PATH für aktuelle Session setzen, falls ~/.local/bin nicht enthalten
 	if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
 		export PATH="$HOME/.local/bin:$PATH"
-		log_info "PATH für aktuelle Session ergänzt: $HOME/.local/bin"
+		log "PATH für aktuelle Session ergänzt: $HOME/.local/bin"
 	fi
 elif [ "$SKIP_PICOTOOL" -eq 1 ]; then
 	log_warn "Picotool installation skipped or incomplete due to earlier issues."
@@ -572,7 +531,7 @@ if [ "${#FAILURES[@]}" -gt 0 ]; then
 		log_warn " - ${failure}"
 	done
 else
-	log_info "Completed all steps without errors."
+	log "Completed all steps without errors."
 fi
 
 echo -e "${GREEN}--- install_picotool_and_sdk.sh: done ---${RESET}"
