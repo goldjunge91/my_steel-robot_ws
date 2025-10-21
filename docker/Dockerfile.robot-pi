@@ -188,6 +188,7 @@ RUN useradd -m -s /bin/bash robot && \
 
 # Copy built workspace from builder stage (consistent paths)
 COPY --from=builder /home/robot/workspace/my_steel-robot_ws/install /home/robot/workspace/my_steel-robot_ws/install
+COPY --from=builder /home/robot/workspace/my_steel-robot_ws/build /home/robot/workspace/my_steel-robot_ws/build
 COPY --from=builder /home/robot/workspace/my_steel-robot_ws/src /home/robot/workspace/my_steel-robot_ws/src
 
 # Create Tailscale startup script (runs only when credentials are provided)

@@ -23,14 +23,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get install -y --no-install-recommends \
   build-essential \
-  cmake \
-  git \
-  ca-certificates \
-  python3-pip \
-  python3-colcon-common-extensions \
-  python3-colcon-mixin \
-  python3-rosdep \
-  python3-vcstool \
   libssl-dev \
   pkg-config \
   cmake \
@@ -47,7 +39,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   ros-humble-ros2-controllers \
   ros-humble-moveit-msgs \
   ros-humble-robot-localization \
-  ca-certificates \
   ros-humble-usb-cam \
   v4l-utils \
   libv4l-0 \
@@ -60,7 +51,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   ros-humble-xacro \
   ros-humble-joint-state-publisher \
   ros-humble-controller-manager \
-  ros-humble-ros2-control \
   ros-humble-rosidl-runtime-c \
   ros-humble-rosidl-generator-c; \
   rm -rf /var/lib/apt/lists/*
@@ -123,10 +113,8 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon list --base-paths src && \
   echo '=== Building micro_ros_agent ===' && \
   colcon build \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
-  --packages-up-to \
-  micro_ros_agent \
+  --parallel-workers 1 \
+  --packages-up-to micro_ros_agent \
   --event-handlers console_direct+ \
   --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON \
   --merge-install"
@@ -216,6 +204,26 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
 
 # --- Stage: final (runtime image) ---------------
 FROM ros:humble-ros-base AS final
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install runtime dependencies (all ros-humble packages needed at runtime)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  ros-humble-ros2-control \
+  ros-humble-ros2-controllers \
+  ros-humble-controller-manager \
+  ros-humble-robot-state-publisher \
+  ros-humble-joint-state-publisher \
+  ros-humble-foxglove-bridge \
+  ros-humble-xacro \
+  ros-humble-usb-cam \
+  v4l-utils \
+  libv4l-0 \
+  libasio-dev \
+  libtinyxml2-dev \
+  libyaml-cpp-dev \
+  libspdlog-dev \
+  && rm -rf /var/lib/apt/lists/*
 
 # Copy complete workspace (src, build, install) for full ROS2 development
 COPY --from=builder /home/robot/workspace/my_steel-robot_ws /home/robot/workspace/my_steel-robot_ws
