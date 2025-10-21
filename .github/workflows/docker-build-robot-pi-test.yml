@@ -70,10 +70,25 @@ jobs:
         with:
           platforms: arm64
 
+      # - name: Set up Docker Buildx
+      #   if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
+      #   id: buildx
+      #   uses: docker/setup-buildx-action@v3
+
       - name: Set up Docker Buildx
         if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
         id: buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+          install: true
+          buildkitd-flags: --debug
+      - name: Bootstrap Buildx (start workers)
+        if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
+        run: |
+          docker buildx use ${{ steps.buildx.outputs.name }}
+          docker buildx inspect --bootstrap
+          docker buildx ls
 
       - name: Log in to Docker Hub
         if: ${{ steps.check-secrets.outputs.skip != 'true' && !env.ACT }}
@@ -87,15 +102,27 @@ jobs:
         id: build-ci
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: docker/Dockerfile.robot-pi.test
-          platforms: linux/arm64
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/robot:pi-test-ci
-          labels: |
-            org.opencontainers.image.title=my_steel Robot Test Image
-            org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
-            org.opencontainers.image.revision=${{ github.sha }}
+        builder: ${{ steps.buildx.outputs.name }}
+        context: .
+        file: docker/Dockerfile.robot-pi.test
+        platforms: linux/arm64
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/robot:pi-test-ci
+        labels: |
+          org.opencontainers.image.title=my_steel Robot Test Image
+          org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
+          org.opencontainers.image.revision=${{ github.sha }}
+
+        # with:
+        #   context: .
+        #   file: docker/Dockerfile.robot-pi.test
+        #   platforms: linux/arm64
+        #   push: true
+        #   tags: ${{ secrets.DOCKERHUB_USERNAME }}/robot:pi-test-ci
+        #   labels: |
+        #     org.opencontainers.image.title=my_steel Robot Test Image
+        #     org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
+        #     org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Build robot-pi test image (arm64) [LOCAL]
         if: ${{ env.ACT }}
