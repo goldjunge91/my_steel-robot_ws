@@ -128,8 +128,8 @@ RUN . /opt/ros/humble/setup.sh && \
 # ============================================================================
 # Stage 2: Runtime - Production image
 # ============================================================================
-FROM ros:humble-ros-core
-
+# FROM ros:humble-ros-core
+FROM ros:humble-ros-base 
 # Install runtime dependencies and system tools
 RUN apt-get update && \
   apt-get upgrade -y && \
