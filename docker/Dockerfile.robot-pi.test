@@ -68,6 +68,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   ros-humble-moveit-msgs \
   ros-humble-robot-localization \
   ros-humble-usb-cam \
+  ros-humble-control-msgs \
+  ros-humble-controller-interface \
+  ros-humble-micro-ros-msgs \
+  ros-humble-nav2-common \
+  ros-humble-moveit-msgs \
   v4l-utils \
   libv4l-0 \
   libasio-dev \
@@ -300,16 +305,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   usbutils \
   && rm -rf /var/lib/apt/lists/*
 
+# Create non-root user for security best practices
+# Fresh user creation (no sudo needed in runtime)
+RUN useradd -m -s /bin/bash robot
+
 # Copy complete workspace from builder stage
 # Includes: src/ (source code), build/ (build cache), install/ (compiled packages)
 # This provides full ROS2 development capabilities in the runtime image
-COPY --from=builder /home/robot/workspace/my_steel-robot_ws /home/robot/workspace/my_steel-robot_ws
-
-# Create non-root user for security best practices
-# Fresh user creation (no sudo needed in runtime)
-# chown: Give robot user ownership of copied workspace
-RUN useradd -m -s /bin/bash robot && \
-  chown -R robot:robot /home/robot
+COPY --from=builder --chown=robot:robot /home/robot/workspace/my_steel-robot_ws /home/robot/workspace/my_steel-robot_ws
 
 USER robot
 WORKDIR /home/robot/workspace/my_steel-robot_ws

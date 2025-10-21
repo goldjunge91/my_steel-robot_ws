@@ -10,6 +10,24 @@ ros2 run foxglove_bridge foxglove_bridge --port 8765
  ros2 node list
 
 
+# Schneller Test - alle wichtigen Checks
+docker run -it --rm robot-test:latest bash -c "
+source /opt/ros/humble/setup.bash && 
+source /home/robot/workspace/my_steel-robot_ws/install/setup.bash && 
+echo '=== ROS2 Environment ===' && 
+echo 'ROS_DISTRO:' \$ROS_DISTRO && 
+echo 'Workspace:' \$PWD && 
+echo '' &&
+echo '=== Available Robot Packages ===' && 
+ros2 pkg list | grep -E '(micro_ros|robot)' && 
+echo '' &&
+echo '=== Workspace Structure ===' && 
+ls -la /home/robot/workspace/my_steel-robot_ws/ && 
+echo '' &&
+echo '=== micro_ros_agent Test ===' && 
+ros2 run micro_ros_agent micro_ros_agent --help | head -5
+"
+
 https://turtlebot.github.io/turtlebot4-user-manual/
 
 docker run --rm -v "$(pwd)":/workspace -w /workspace ros:humble bash -c "bash setup.sh && bash build.sh"  
