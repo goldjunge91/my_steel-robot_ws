@@ -15,3 +15,15 @@ docker run --rm -v "$(pwd)":/workspace -w /workspace ros:humble bash -c "bash se
 docker run --rm -v "$(pwd)":/workspace -w /workspace ros:humble bash -c "bash setup.sh && bash build.sh && bash test.sh"  
 
 pipx run pytest src/robot_utils/test/ -v   
+
+lokal docker container bauen und in repo pushen
+
+```
+cd /Users/marco/Github.tmp/my_steel-robot_ws
+docker buildx build \
+  --platform linux/arm64 \
+  -f docker/Dockerfile.robot-pi.test \
+  -t goldjunge491/my-steel-robot:working-latest \
+  --push \
+  .
+```
