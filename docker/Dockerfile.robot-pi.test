@@ -298,6 +298,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   python3-rosdep \
   python3-vcstool \
   v4l-utils \
+  openssl \
   libv4l-0 \
   libasio-dev \
   libtinyxml2-dev \

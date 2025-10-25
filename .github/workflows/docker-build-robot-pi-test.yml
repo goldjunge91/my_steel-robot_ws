@@ -27,6 +27,7 @@ on:
 jobs:
   build-test-image:
     runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
     permissions:
       contents: read
       packages: write
@@ -61,19 +62,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up QEMU
-        if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
+      # QEMU not needed on native ARM64 runner
+      # - name: Set up QEMU
+      #   if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
+      #   uses: docker/setup-qemu-action@v3
+      #   with:
+      #     platforms: arm64
 
       - name: Set up Docker Buildx
         if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
         id: buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker
-          install: true
+          
       - name: Bootstrap Buildx (start workers)
         if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
         run: |
@@ -99,8 +99,6 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-test-ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           labels: |
             org.opencontainers.image.title=my_steel Robot Test Image
             org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
