@@ -121,6 +121,10 @@ RUN echo "[INFO] end of line 109"
 RUN git clone --branch "${REPO_BRANCH}" --depth 1 "${REPO_URL}" . && \
   vcs import src < "${VCS_FILE}"
 
+# Initialize rosdep and derive build and runtime dependencies
+RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init; fi && \
+  rosdep update
+
 # Derive build and runtime dependencies using rosdep
 RUN bash -e <<'EOF'
 declare -A types=(
@@ -156,10 +160,16 @@ RUN echo -e "\033[1;93m=========================================================
 # Install additional runtime dependencies discovered by rosdep
 # This analyzes all package.xml files and installs missing dependencies
 # Skip keys are packages that fail on ARM64 or are not needed for robot
-# Cache mounts: Persist apt cache, rosdep cache, and package lists between builds
+# Cache mounts: Persist apt cache and rosdep cache with proper permissions
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  --mount=type=cache,target=/home/robot/.ros,sharing=locked \
+  --mount=type=cache,target=/tmp/rosdep_cache,sharing=locked \
+  sudo mkdir -p /home/robot/.ros && \
+  sudo chown robot:robot /home/robot/.ros && \
+  if [ -d /tmp/rosdep_cache ] && [ "$(ls -A /tmp/rosdep_cache 2>/dev/null)" ]; then \
+  sudo cp -r /tmp/rosdep_cache/* /home/robot/.ros/ 2>/dev/null || true; \
+  sudo chown -R robot:robot /home/robot/.ros; \
+  fi && \
   if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
   sudo rosdep update && \
   sudo apt-get update && \
@@ -167,7 +177,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --ignore-src \
   --rosdistro humble \
   --default-yes \
-  --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod"
+  --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod" && \
+  sudo cp -r /home/robot/.ros/* /tmp/rosdep_cache/ 2>/dev/null || true
 
 ARG COLCON_PARALLEL_WORKERS=2
 ENV COLCON_PARALLEL_WORKERS=${COLCON_PARALLEL_WORKERS}

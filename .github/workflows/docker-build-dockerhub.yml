@@ -38,13 +38,13 @@ jobs:
             echo "To enable Docker Hub builds:"
             echo "1. Go to Settings → Secrets and variables → Actions"
             echo "2. Add DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets"
-            echo "3. Create Docker Hub repository: {username}/robot"
+            echo "3. Create Docker Hub repository: {username}/my-steel-robot"
             echo ""
             echo "GHCR builds will continue: ghcr.io/${{ github.repository }}"
           else
             echo "skip=false" >> $GITHUB_OUTPUT
             echo "✅ Docker Hub credentials found"
-            echo "Building for repository: ${{ secrets.DOCKERHUB_USERNAME }}/robot"
+            echo "Building for repository: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot"
           fi
 
       - name: Checkout repository
@@ -104,7 +104,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/robot
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot
           tags: |
             type=raw,value=humble-arm64
             type=raw,value=humble-arm64-${{ steps.version.outputs.version }}
@@ -127,8 +127,8 @@ jobs:
             org.opencontainers.image.created=${{ steps.version.outputs.build_date }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.repositoryUrl }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/robot:buildcache-arm64-v2
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/robot:buildcache-arm64-v2,mode=max
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:buildcache-arm64-v2
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:buildcache-arm64-v2,mode=max
           build-args: |
             BUILD_DATE=${{ steps.version.outputs.build_date }}
             VCS_REF=${{ steps.version.outputs.short_sha }}
@@ -138,7 +138,7 @@ jobs:
         run: |
           echo "## Docker Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** ${{ secrets.DOCKERHUB_USERNAME }}/robot" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot" >> $GITHUB_STEP_SUMMARY
           echo "**Platform:** linux/arm64" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ steps.version.outputs.short_sha }}" >> $GITHUB_STEP_SUMMARY
@@ -151,7 +151,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Pull Command" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "docker pull ${{ secrets.DOCKERHUB_USERNAME }}/robot:humble-arm64" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:humble-arm64" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Verify image push success
@@ -159,10 +159,10 @@ jobs:
         run: |
           echo "✅ Image build and push completed successfully"
           echo "📦 Available images:"
-          echo "  - ${{ secrets.DOCKERHUB_USERNAME }}/robot:humble-arm64"
-          echo "  - ${{ secrets.DOCKERHUB_USERNAME }}/robot:humble-arm64-${{ steps.version.outputs.version }}"
+          echo "  - ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:humble-arm64"
+          echo "  - ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:humble-arm64-${{ steps.version.outputs.version }}"
           echo ""
           echo "🔍 To verify on ARM64 device:"
-          echo "  docker pull ${{ secrets.DOCKERHUB_USERNAME }}/robot:humble-arm64"
+          echo "  docker pull ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:humble-arm64"
           echo ""
           echo "Note: Image validation skipped - ARM64 image cannot run on AMD64 GitHub runner"

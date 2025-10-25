@@ -80,9 +80,8 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v3
         with:
-          driver: docker-container
+          driver: docker
           install: true
-          buildkitd-flags: --debug
       - name: Bootstrap Buildx (start workers)
         if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
         run: |
@@ -107,7 +106,7 @@ jobs:
           file: docker/Dockerfile.robot-pi.test
           platforms: linux/arm64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/robot:pi-test-ci
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-test-ci
           labels: |
             org.opencontainers.image.title=my_steel Robot Test Image
             org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
@@ -134,7 +133,7 @@ jobs:
           platforms: linux/arm64
           push: false
           load: true
-          tags: robot:pi-test-local
+          tags: goldjunge491/my-steel-robot:pi-test-local
           labels: |
             org.opencontainers.image.title=my_steel Robot Test Image (LOCAL)
             org.opencontainers.image.description=Local build with act (linux/arm64)
@@ -153,11 +152,11 @@ jobs:
             fi
             echo ""
             if [ "${{ env.ACT }}" = "true" ]; then
-              echo "- Mode: LOCAL (image loaded as \`robot:pi-test-local\`)"
+              echo "- Mode: LOCAL (image loaded as \`goldjunge491/my-steel-robot:pi-test-local\`)"
               echo "- Dockerfile: \`docker/Dockerfile.robot-pi.test\`"
               echo "- Platform: \`linux/arm64\`"
             else
-              echo "- Mode: CI (pushed tag: \`${{ secrets.DOCKERHUB_USERNAME }}/robot:pi-test-ci\`)"
+              echo "- Mode: CI (pushed tag: \`${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-test-ci\`)"
               echo "- Dockerfile: \`docker/Dockerfile.robot-pi.test\`"
               echo "- Platform: \`linux/arm64\`"
             fi
