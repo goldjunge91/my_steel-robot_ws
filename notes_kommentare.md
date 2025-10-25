@@ -377,3 +377,33 @@ Lokaler Test: Lädt das frisch gepushte Image aus der Registry und führt einen 
 ```bash
 docker run --rm -it goldjunge491/my-steel-robot:humble-arm64 bash -c "source /opt/ros/humble/setup.bash && source /home/robot/workspace/my_steel-robot_ws/install/setup.bash && ros2 pkg list | grep robot"
 ```
+
+Alle unbenutzte Images löschen
+```bash
+docker image prune -a
+```
+
+Alle gestoppten Container löschen
+```bash
+docker container prune
+```
+
+Alle Container stoppen und löschen
+```bash
+docker stop $(docker ps -aq) && docker rm $(docker ps -aq)
+```
+
+Unbenutzte Volumes löschen
+```bash
+docker volume prune
+```
+
+Unbenutzte Networks löschen
+```bash
+docker network prune
+```
+
+Kompletten Build Cache löschen
+```bash
+docker builder prune -a
+```
