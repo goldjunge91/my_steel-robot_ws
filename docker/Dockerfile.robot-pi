@@ -55,11 +55,15 @@ RUN rosdep update || true
 RUN apt-get update && apt-get install -y \
   libssl-dev \
   pkg-config \
+  python3-ament-package \
   ros-humble-builtin-interfaces \
   ros-humble-hardware-interface \
   ros-humble-ros2-control \
   ros-humble-ros2-controllers \
   ros-humble-moveit-msgs \
+  ros-humble-moveit-ros-planning \
+  ros-humble-moveit \
+  ros-humble-micro-ros-msgs \
   ros-humble-robot-localization \
   ros-humble-usb-cam \
   v4l-utils \
@@ -101,7 +105,7 @@ RUN . /opt/ros/humble/setup.sh && \
 RUN . /opt/ros/humble/setup.sh && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --packages-select husarion_components_description \
+  --packages-select components_description \
   --merge-install \
   --continue-on-error
 
@@ -163,6 +167,7 @@ RUN apt-get update && \
   apt-get upgrade -y && \
   apt-get install -y --no-install-recommends \
   ca-certificates \
+  python3-ament-package \
   ros-humble-usb-cam \
   v4l-utils \
   libv4l-0 \
@@ -171,6 +176,10 @@ RUN apt-get update && \
   ros-humble-joint-state-publisher \
   ros-humble-controller-manager \
   ros-humble-ros2-control \
+  ros-humble-micro-ros-msgs \
+  ros-humble-moveit-msgs \
+  ros-humble-moveit-ros-planning \
+  ros-humble-moveit \
   udev \
   usbutils \
   curl \
