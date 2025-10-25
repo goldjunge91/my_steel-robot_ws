@@ -40,12 +40,6 @@ Baut den ROS 2 Workspace mit Colcon:
 colcon build --symlink-install --merge-install --event-handlers console_direct+
 ```
 
-Wechselt in das Hauptverzeichnis des Robot-Workspaces:
-
-```bash
-cd /home/pi/workspace/ros2_dev_ws/my_steel-robot_ws
-```
-
 Führt das Haupt-Skript des Roboters aus (vermutlich ein Launch-File):
 
 ```bash
@@ -81,6 +75,7 @@ act workflow_dispatch -W .github/workflows/docker-build-robot-pi-test.yml --cont
 Startet den Micro-ROS Agent als Brücke zum Mikrocontroller (`--dev /dev/ttyACM0` gibt den seriellen Port/USB des Mikrocontrollers an):
 
 ```bash
+source install/setup.bash
 ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0
 ```
 
@@ -91,8 +86,32 @@ ros2 run foxglove_bridge foxglove_bridge --port 8765
 ```
 
 -----
+## 4\. Docker lokale Builds
 
-## 4\. ROS 2 Diagnose-Befehle
+Test-Image lokal
+```bash
+docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi.test -t goldjunge491/my-steel-robot:test-local --load .
+```
+
+Production-Image lokal  
+```bash
+docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi -t goldjunge491/my-steel-robot:prod-local --load .
+```
+## Container starten:
+
+Als robot user
+```bash
+docker run -it --rm goldjunge491/my-steel-robot:test-local /bin/bash
+```
+
+root user
+```bash
+docker run -it --rm --entrypoint /bin/bash --user root goldjunge491/my-steel-robot:test-local
+```
+
+-----
+
+## 5\. ROS 2 Diagnose-Befehle
 
 Zeigt die verfügbaren Hardware-Interfaces von `ros2_control` an (z.B. Gelenke):
 
@@ -114,7 +133,7 @@ ros2 node list
 
 -----
 
-## 8\. Docker Build & Push (Verschiedene Varianten)
+## 6\. Docker Build & Push (Verschiedene Varianten)
 
 Wechselt in das Verzeichnis, das den Build-Kontext (Dockerfile etc.) enthält:
 
@@ -185,7 +204,7 @@ docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi.test -t
 
 -----
 
-## 9\. Docker Compose (Für lokale Testumgebungen)
+## 7\. Docker Compose (Für lokale Testumgebungen)
 
 Stoppt alle Dienste und löscht die Volumes (`-v`) für einen sauberen Neustart:
 
@@ -215,7 +234,7 @@ docker compose exec -it microros-agent /bin/sh
 
 -----
 
-## 10\. Docker Exec (Umfassende Referenz)
+## 8\. Docker Exec (Umfassende Referenz)
 
 Öffnet eine interaktive Shell im Container namens "microros-agent":
 
@@ -297,7 +316,7 @@ docker container exec -it microros-agent /bin/bash
 
 -----
 
-## 11\. Finale Production-Builds (mit Logging)
+## 9\. Finale Production-Builds (mit Logging)
 
 Baut das *finale* Production-Image (`docker/Dockerfile.robot-pi`) für ARM64, pusht es zu Docker Hub und leitet die gesamte Ausgabe (`stdout` & `stderr`) in eine Log-Datei *und* auf die Konsole (dank `tee`):
 
@@ -339,7 +358,7 @@ docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi \
 
 -----
 
-## 12\. Hilfsbefehle für den Build & Push
+## 10\. Hilfsbefehle für den Build & Push
 
 Beobachtet die Log-Datei des Builds in Echtzeit (in einem separaten Terminal):
 
