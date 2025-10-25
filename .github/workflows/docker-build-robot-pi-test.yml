@@ -21,9 +21,6 @@ on:
     paths:
       - "docker/Dockerfile.robot-pi.test"
       - "docker/compose.robot-pi.test.yaml"
-      - "docker/README.md"
-      - "build.sh"
-      - "src/**"
       - ".github/workflows/docker-build-robot-pi-test.yml"
   workflow_dispatch:
 
@@ -69,11 +66,6 @@ jobs:
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
-
-      # - name: Set up Docker Buildx
-      #   if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
-      #   id: buildx
-      #   uses: docker/setup-buildx-action@v3
 
       - name: Set up Docker Buildx
         if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
