@@ -26,8 +26,7 @@ on:
 
 jobs:
   build-test-image:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 120
+    runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
       packages: write
@@ -102,8 +101,6 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-test-ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            COLCON_PARALLEL_WORKERS=1
           labels: |
             org.opencontainers.image.title=my_steel Robot Test Image
             org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)

@@ -180,9 +180,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod" && \
   sudo cp -r /home/robot/.ros/* /tmp/rosdep_cache/ 2>/dev/null || true
 
-ARG COLCON_PARALLEL_WORKERS=2
-ENV COLCON_PARALLEL_WORKERS=${COLCON_PARALLEL_WORKERS}
-
 # Build robot packages in dependency order
 # Step-by-step approach ensures proper dependency resolution
 # Use pre-built micro-ROS agent to avoid ARM64 emulation timeout issues
@@ -212,7 +209,6 @@ RUN echo -e "\033[1;33m[STEP 1] Build open_manipulator_x_description\033[0m"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
   --packages-select \
   open_manipulator_x_description \
   --merge-install \
@@ -226,7 +222,6 @@ RUN echo -e "\033[1;36m[STEP 2] Build robot_description robot_hardware_interface
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
   --packages-select robot_description robot_hardware_interfaces \
   --merge-install \
   --symlink-install \
@@ -237,7 +232,6 @@ RUN echo -e "\033[1;35m[STEP 3] Build robot_utils\033[0m"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
   --packages-select robot_utils \
   --merge-install \
   --symlink-install \
@@ -249,7 +243,6 @@ RUN echo -e "\033[1;31m[STEP 4] Build robot_controller\033[0m"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
   --packages-select \
   robot_controller \
   --merge-install \
@@ -261,7 +254,6 @@ RUN echo -e "\033[1;32m[STEP 5] Build robot_bringup\033[0m"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
   --packages-select robot_bringup \
   --merge-install \
   --symlink-install"
@@ -272,7 +264,6 @@ RUN echo -e "\033[1;92m[STEP 6] Build robot umbrella package\033[0m"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --parallel-workers ${COLCON_PARALLEL_WORKERS} \
   --packages-select robot \
   --merge-install \
   --symlink-install \
@@ -302,6 +293,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
   python3-colcon-common-extensions \
   python3-pip \
+  python3-colcon-common-extensions \
+  python3-colcon-mixin \
+  python3-rosdep \
+  python3-vcstool \
   v4l-utils \
   libv4l-0 \
   libasio-dev \
@@ -310,18 +305,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libspdlog-dev \
   cmake \
   git \
-  python3-pip \
-  python3-colcon-common-extensions \
-  python3-colcon-mixin \
-  python3-rosdep \
-  python3-vcstool \
   ca-certificates \
   v4l-utils \
-  libv4l-0 \
-  libasio-dev \
-  libtinyxml2-dev \
   libyaml-cpp-dev \
-  libspdlog-dev \
   ros-humble-builtin-interfaces \
   ros-humble-hardware-interface \
   ros-humble-ros2-control \
