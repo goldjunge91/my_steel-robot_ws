@@ -51,14 +51,18 @@ repositories:
     type: git
     url: https://github.com/goldjunge91/robot-micro-ROS-Agent.git
     version: humble
-  # micro_ros_msgs:
-  #   type: git
-  #   url: https://github.com/micro-ROS/micro_ros_msgs.git
-  #   version: humble
+  micro_ros_msgs:
+    type: git
+    url: https://github.com/micro-ROS/micro_ros_msgs.git
+    version: humble
   robot_gz_worlds:
     type: git
     url: https://github.com/goldjunge91/robot_gz_worlds.git
     version: main
+  components_description:
+    type: git
+    url: https://github.com/goldjunge91/components_description.git
+    version: ros2
   # robot_control_gui:
   #   type: git
   #   url: https://github.com/goldjunge91/robot_control_gui.git
