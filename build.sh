@@ -2,6 +2,25 @@
 set -u -o pipefail -E
 # set -e
 
+# Ensure ROS environment is sourced so CMake can find ament_cmake and friends
+ROS_DISTRO=${ROS_DISTRO:-humble}
+ROS_SETUP="/opt/ros/${ROS_DISTRO}/setup.bash"
+
+# Prevent unbound variable issues inside setup scripts under `set -u`
+if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
+    export AMENT_TRACE_SETUP_FILES=""
+fi
+
+if [ -f "$ROS_SETUP" ]; then
+    # shellcheck disable=SC1090
+    source "$ROS_SETUP"
+fi
+
+if [ -f "install/setup.bash" ]; then
+    # shellcheck disable=SC1091
+    source "install/setup.bash"
+fi
+
 # Set the default build type
 BUILD_TYPE=RelWithDebInfo
 colcon build \
