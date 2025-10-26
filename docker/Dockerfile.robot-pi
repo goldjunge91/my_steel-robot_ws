@@ -1,11 +1,32 @@
-# Multi-stage Dockerfile for my_steel robot deployment on Raspberry Pi 4B
-# Optimized for ARM64 architecture with ROS2 Humble
-# Build version: 2025-10-16 (includes micro_ros_agent from source)
+# Multi-stage build optimized for ROS2 Humble Robot Pi deployment
+# This Dockerfile creates a production-ready ROS2 robot image with:
+# - Stage 1 (cacher): Install dependencies and fetch source code
+# - Stage 2 (builder): Compile the robot workspace 
+# - Stage 3 (final): Minimal runtime image with compiled robot
+
+ARG FROM_IMAGE=ros:humble-ros-base
+ARG OVERLAY_WS=/home/robot/workspace/my_steel-robot_ws
 
 # ============================================================================
-# Stage 1: Builder - Compile ROS2 workspace
+# Stage 1: Dependency caching and source code preparation
+# Purpose: Install all build dependencies and fetch source code
+# This stage is heavily cached to speed up rebuilds
 # ============================================================================
-FROM ros:humble-ros-base AS builder
+FROM $FROM_IMAGE AS cacher
+
+RUN echo -e "\033[1;96m============================================================================\033[0m"
+RUN echo -e "\033[1;96m🔧 STAGE 1: Dependency caching and source code preparation\033[0m"
+RUN echo -e "\033[1;96m============================================================================\033[0m"
+ARG OVERLAY_WS
+ARG REPO_URL=https://github.com/goldjunge91/my_steel-robot_ws.git
+ARG REPO_BRANCH=humble
+ARG VCS_FILE=src/ros2.repos
+
+ENV DEBIAN_FRONTEND=noninteractive \
+  TERM=xterm-256color \
+  FORCE_COLOR=1 \
+  CLICOLOR_FORCE=1 \
+  COLCON_LOG_LEVEL=20
 
 # Install build dependencies
 RUN apt-get update && \
@@ -193,10 +214,15 @@ RUN curl -fsSL https://tailscale.com/install.sh | sh
 RUN useradd -m -s /bin/bash robot && \
   usermod -aG dialout,video robot
 
-# Copy built workspace from builder stage (consistent paths)
-COPY --from=builder /home/robot/workspace/my_steel-robot_ws/install /home/robot/workspace/my_steel-robot_ws/install
-COPY --from=builder /home/robot/workspace/my_steel-robot_ws/build /home/robot/workspace/my_steel-robot_ws/build
-COPY --from=builder /home/robot/workspace/my_steel-robot_ws/src /home/robot/workspace/my_steel-robot_ws/src
+# Setup overlay install
+ARG OVERLAY_WS=/home/robot/workspace/my_steel-robot_ws
+ENV OVERLAY_WS=$OVERLAY_WS
+COPY --from=cacher $OVERLAY_WS/install $OVERLAY_WS/install
+COPY --from=cacher /home/robot/workspace/my_steel-robot_ws/build /home/robot/workspace/my_steel-robot_ws/build
+COPY --from=cacher /home/robot/workspace/my_steel-robot_ws/src /home/robot/workspace/my_steel-robot_ws/src
+RUN sed --in-place --expression \
+  '$isource "$OVERLAY_WS/install/setup.bash"' \
+  /ros_entrypoint.sh
 
 # Create Tailscale startup script (runs only when credentials are provided)
 RUN mkdir -p /usr/local/bin && \
@@ -293,5 +319,5 @@ ENV ROBOT_MODEL_NAME=robot_xl
 # Set entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-# Default command (can be overridden)
-CMD ["bash"]
+# Run launch file
+CMD ["ros2", "launch", "robot_bringup", "bringup.launch.py"]

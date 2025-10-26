@@ -35,10 +35,10 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
-            runner: ubuntu-24.04
+            runner: ubuntu-latest
             arch: amd64
           - platform: linux/arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-latest
             arch: arm64
 
     steps:
@@ -64,12 +64,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      # # QEMU not needed on native ARM64 runner
-      # - name: Set up QEMU
-      #   if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
-      #   uses: docker/setup-qemu-action@v3
-      #   with:
-      #     platforms: ${{ matrix.platform }}
+      - name: Set up QEMU
+        if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ matrix.platform }}
 
       - name: Set up Docker Buildx
         if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
@@ -91,21 +90,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # - name: Build robot-pi test image (arm64) [CI]
-      #   if: ${{ steps.check-secrets.outputs.skip != 'true' && !env.ACT }}
-      #   id: build-ci
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     builder: ${{ steps.buildx.outputs.name }}
-      #     context: .
-      #     file: docker/Dockerfile.robot-pi.test
-      #     platforms: linux/arm64
-      #     push: true
-      #     tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-test-ci
-      #     labels: |
-      #       org.opencontainers.image.title=my_steel Robot Test Image
-      #       org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
-      #       org.opencontainers.image.revision=${{ github.sha }}
+
 
       - name: Build robot-pi test image (${{ matrix.arch }}) [CI]
         if: ${{ steps.check-secrets.outputs.skip != 'true' && !env.ACT }}
@@ -123,16 +108,7 @@ jobs:
             org.opencontainers.image.description=CI build (${{ matrix.platform }})
             org.opencontainers.image.revision=${{ github.sha }}
 
-        # with:
-        #   context: .
-        #   file: docker/Dockerfile.robot-pi.test
-        #   platforms: linux/arm64
-        #   push: true
-        #   tags: ${{ secrets.DOCKERHUB_USERNAME }}/robot:pi-test-ci
-        #   labels: |
-        #     org.opencontainers.image.title=my_steel Robot Test Image
-        #     org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
-        #     org.opencontainers.image.revision=${{ github.sha }}
+
 
       - name: Build robot-pi test image (${{ matrix.arch }}) [LOCAL]
         if: ${{ env.ACT }}

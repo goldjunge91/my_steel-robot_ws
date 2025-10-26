@@ -59,13 +59,19 @@ Führt einen kompletten GitHub Actions-Workflow lokal aus:
 <!-- end list -->
 
 ```bash
-act workflow_dispatch -W .github/workflows/docker-build-robot-pi-test.yml --container-architecture linux/arm64 --verbose
+act workflow_dispatch -W .github/workflows/docker-build-robot-pi-test.yml --container-architecture linux/arm64 --verbose --no-skip-checkout
 ```
 
 Führt nur einen *bestimmten Job* ("build-test-image") aus dem Workflow aus:
 
 ```bash
-act workflow_dispatch -W .github/workflows/docker-build-robot-pi-test.yml --container-architecture linux/arm64 --job build-test-image
+act workflow_dispatch -W .github/workflows/docker-build-robot-pi-test.yml --container-architecture linux/arm64 --job build-test-image --no-skip-checkout
+```
+
+**Empfohlener kurzer Befehl (verhält sich wie echte GitHub Actions):**
+
+```bash
+act push -j build-test-image --no-skip-checkout
 ```
 
 -----
@@ -101,12 +107,12 @@ docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi -t gold
 
 Als robot user
 ```bash
-docker run -it --rm goldjunge491/my-steel-robot:test-local /bin/bash
+docker run -it --rm goldjunge491/my-steel-robot:pi-test-local /bin/bash
 ```
 
 root user
 ```bash
-docker run -it --rm --entrypoint /bin/bash --user root goldjunge491/my-steel-robot:test-local
+docker run -it --rm --entrypoint /bin/bash --user root goldjunge491/my-steel-robot:pi-test-local
 ```
 
 -----
@@ -206,16 +212,16 @@ docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi.test -t
 
 ## 7\. Docker Compose (Für lokale Testumgebungen)
 
-Stoppt alle Dienste und löscht die Volumes (`-v`) für einen sauberen Neustart:
-
-```bash
-docker compose -f docker/compose.robot-pi.test.yaml down -v
-```
-
 Startet alle Dienste (z.B. 'microros-agent') im Hintergrund (`-d`):
 
 ```bash
 docker compose -f docker/compose.robot-pi.test.yaml up -d
+```
+
+Stoppt alle Dienste und löscht die Volumes (`-v`) für einen sauberen Neustart:
+
+```bash
+docker compose -f docker/compose.robot-pi.test.yaml down -v
 ```
 
 ### Interaktion mit Compose-Containern
@@ -224,12 +230,6 @@ docker compose -f docker/compose.robot-pi.test.yaml up -d
 
 ```bash
 docker compose exec -it microros-agent /bin/bash
-```
-
-Fallback-Befehl, falls der Container kein `/bin/bash` hat (`/bin/sh` ist fast immer da):
-
-```bash
-docker compose exec -it microros-agent /bin/sh
 ```
 
 -----
