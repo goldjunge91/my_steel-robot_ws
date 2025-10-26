@@ -33,6 +33,10 @@ run_step() {
 log_step "Initialisiere GitHub Actions Umgebung"
 git config --global --add safe.directory '*' 2>/dev/null || log_warning "Konnte git safe.directory nicht setzen"
 
+# Set required ROS environment variables before sourcing
+export AMENT_PYTHON_EXECUTABLE="${AMENT_PYTHON_EXECUTABLE:-/usr/bin/python3}"
+export AMENT_TRACE_SETUP_FILES="${AMENT_TRACE_SETUP_FILES:-}"
+
 # Source ROS environment so CMake can find ament_cmake and other packages
 ROS_DISTRO=${ROS_DISTRO:-humble}
 ROS_SETUP="/opt/ros/${ROS_DISTRO}/setup.bash"
