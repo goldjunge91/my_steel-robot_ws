@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -eo pipefail
 # set -e
 
 vcs import src <src/ros2.repos

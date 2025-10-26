@@ -1,5 +1,5 @@
 #!/bin/bash
-set -u -o pipefail -E
+set -o pipefail -E
 # set -e
 
 # Ensure ROS environment is sourced so CMake can find ament_cmake and friends
