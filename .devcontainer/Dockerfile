@@ -100,5 +100,7 @@ ENV AMENT_TRACE_SETUP_FILES=""
 RUN mkdir -p ${WORKSPACE} && \
     chown -R $USER_UID:$USER_GID ${WORKSPACE}
 
-USER ros
+# No USER instruction - container runs as root by default
+# VS Code will override to 'ros' user via devcontainer.json remoteUser
+# GitHub Actions stays as root to avoid permission issues
 WORKDIR ${WORKSPACE}

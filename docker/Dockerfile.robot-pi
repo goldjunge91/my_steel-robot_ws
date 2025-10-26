@@ -340,29 +340,113 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   usbutils \
   && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user for security best practices
-# Fresh user creation (no sudo needed in runtime)
-RUN useradd -m -s /bin/bash robot
+# Install Tailscale
+RUN curl -fsSL https://tailscale.com/install.sh | sh
+
+# Create non-root robot user with necessary group memberships
+RUN useradd -m -s /bin/bash robot && \
+  usermod -aG dialout,video robot
 
 # Copy complete workspace from builder stage
-# Includes: src/ (source code), build/ (build cache), install/ (compiled packages)
-# This provides full ROS2 development capabilities in the runtime image
 COPY --from=builder --chown=robot:robot /home/robot/workspace/my_steel-robot_ws /home/robot/workspace/my_steel-robot_ws
-
-# Setup overlay install
-ARG OVERLAY_WS=/home/robot/workspace/my_steel-robot_ws
-ENV OVERLAY_WS=$OVERLAY_WS
-RUN sed --in-place --expression \
-  '$isource "$OVERLAY_WS/install/setup.bash"' \
-  /ros_entrypoint.sh
 
 USER robot
 WORKDIR /home/robot/workspace/my_steel-robot_ws
 
-# Set ROS2 environment variables for runtime
-ENV ROS_DISTRO=humble \
-  ROS_DOMAIN_ID=0 \
-  RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+# Create Tailscale startup script (runs only when credentials are provided)
+RUN mkdir -p /usr/local/bin && \
+  cat <<'EOF' >/usr/local/bin/tailscale-start.sh
+#!/bin/bash
+set -euo pipefail
+
+# Skip when no auth key or when running as non-root (tailscale needs CAP_SYS_ADMIN)
+if [ -z "${TAILSCALE_AUTHKEY:-}" ]; then
+  echo "[tailscale] No auth key provided, skipping Tailscale setup"
+  exit 0
+fi
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "[tailscale] Not running as root, skipping Tailscale setup"
+  exit 0
+fi
+
+echo "[tailscale] Starting tailscaled daemon..."
+mkdir -p /var/lib/tailscale
+tailscaled --state=/var/lib/tailscale/tailscaled.state >/var/log/robot/tailscaled.log 2>&1 &
+
+# Give the daemon a moment to come up
+for _ in $(seq 1 10); do
+  if tailscale status >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
+echo "[tailscale] Bringing interface up..."
+tailscale up \
+  --authkey="${TAILSCALE_AUTHKEY}" \
+  --hostname="${TAILSCALE_HOSTNAME:-robot-xl}" \
+  ${TAILSCALE_SUBNET_ROUTES:+--advertise-routes="${TAILSCALE_SUBNET_ROUTES}"} \
+  --accept-routes \
+  --reset
+
+echo "[tailscale] Connected"
+EOF
+
+RUN chmod +x /usr/local/bin/tailscale-start.sh
+
+# Create entrypoint script with ROS environment setup and graceful shutdown
+RUN cat <<'EOF' >/usr/local/bin/entrypoint.sh
+#!/bin/bash
+set -euo pipefail
+
+shutdown_handler() {
+  echo "[entrypoint] Received termination signal, stopping child process..."
+  if [ -n "${CHILD_PID:-}" ] && kill -0 "${CHILD_PID}" 2>/dev/null; then
+    kill -TERM "${CHILD_PID}" 2>/dev/null || true
+    wait "${CHILD_PID}" 2>/dev/null || true
+  fi
+  echo "[entrypoint] Shutdown complete"
+  exit 0
+}
+
+trap shutdown_handler SIGINT SIGTERM
+
+echo "[entrypoint] Sourcing ROS environments"
+source /opt/ros/humble/setup.bash
+if [ -f /home/robot/workspace/my_steel-robot_ws/install/setup.bash ]; then
+  source /home/robot/workspace/my_steel-robot_ws/install/setup.bash
+fi
+
+# Start Tailscale when possible (runs as background task)
+/usr/local/bin/tailscale-start.sh || true
+
+echo "[entrypoint] Executing command: $*"
+exec "$@"
+EOF
+
+# Make entrypoint executable
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Set working directory (consistent with compose.yaml)
+WORKDIR /home/robot/workspace/my_steel-robot_ws
+
+# Create log directory
+RUN mkdir -p /var/log/robot && \
+  chown -R robot:robot /var/log/robot
+
+# Switch to non-root user for runtime
+USER robot
+
+# Set environment variables
+ENV ROS_DISTRO=humble
+ENV ROS_DOMAIN_ID=0
+ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+ENV ROS_LOG_DIR=/var/log/robot
+ENV ROBOT_MODEL_NAME=robot_xl
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Run launch file
 CMD ["ros2", "launch", "robot_bringup", "bringup.launch.py"]
