@@ -8,17 +8,17 @@ ROS_SETUP="/opt/ros/${ROS_DISTRO}/setup.bash"
 
 # Prevent unbound variable issues inside setup scripts under `set -u`
 if [ -z "${AMENT_TRACE_SETUP_FILES+x}" ]; then
-    export AMENT_TRACE_SETUP_FILES=""
+	export AMENT_TRACE_SETUP_FILES=""
 fi
 
 if [ -f "$ROS_SETUP" ]; then
-    # shellcheck disable=SC1090
-    source "$ROS_SETUP"
+	# shellcheck disable=SC1090
+	source "$ROS_SETUP"
 fi
 
 if [ -f "install/setup.bash" ]; then
-    # shellcheck disable=SC1091
-    source "install/setup.bash"
+	# shellcheck disable=SC1091
+	source "install/setup.bash"
 fi
 
 # Set the default build type
