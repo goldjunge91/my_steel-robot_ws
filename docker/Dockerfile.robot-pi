@@ -46,141 +46,174 @@ RUN apt-get update && \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/*
 
-# Create workspace (consistent with compose.yaml)
-WORKDIR /home/robot/workspace/my_steel-robot_ws
+# Configure apt for optimal Docker builds and update rosdep
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  rosdep update --rosdistro $ROS_DISTRO && \
+  cat <<EOF > /etc/apt/apt.conf.d/docker-clean && apt-get update
+APT::Install-Recommends "false";
+APT::Install-Suggests "false";
+EOF
 
-# Clone source code (consistent with .test approach)
-ARG REPO_URL=https://github.com/goldjunge91/my_steel-robot_ws.git
-ARG REPO_BRANCH=humble
-ARG VCS_FILE=src/ros2.repos
-
-RUN git clone --branch "${REPO_BRANCH}" --depth 1 "${REPO_URL}" . && \
-  python3 -m pip install vcstool && \
-  vcs import src < "${VCS_FILE}"
-
-ARG COLCON_MIXINS=release
-ARG COLCON_PACKAGES_SELECT=""
-ARG COLCON_PACKAGES_UP_TO=""
-ARG COLCON_BUILD_EXTRA_ARGS=""
-ENV COLCON_MIXINS=${COLCON_MIXINS} \
-  COLCON_PACKAGES_SELECT=${COLCON_PACKAGES_SELECT} \
-  COLCON_PACKAGES_UP_TO=${COLCON_PACKAGES_UP_TO} \
-  COLCON_BUILD_EXTRA_ARGS=${COLCON_BUILD_EXTRA_ARGS}
-
-# Initialize rosdep if not already done
-RUN rosdep update || true
-
-# Install your proven manual dependencies (from .test file)
-RUN apt-get update && apt-get install -y \
+# Install additional build dependencies and proven ROS2 packages
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  apt-get install -y --no-install-recommends \
+  build-essential \
   libssl-dev \
   pkg-config \
-  python3-ament-package \
-  ros-humble-builtin-interfaces \
-  ros-humble-hardware-interface \
-  ros-humble-ros2-control \
-  ros-humble-ros2-controllers \
-  ros-humble-moveit-msgs \
-  ros-humble-moveit-ros-planning \
-  ros-humble-moveit \
-  ros-humble-micro-ros-msgs \
-  ros-humble-robot-localization \
-  ros-humble-usb-cam \
+  cmake \
+  git \
+  python3-pip \
+  python3-colcon-common-extensions \
+  python3-colcon-mixin \
+  python3-rosdep \
+  python3-vcstool \
+  ca-certificates \
   v4l-utils \
   libv4l-0 \
   libasio-dev \
   libtinyxml2-dev \
   libyaml-cpp-dev \
   libspdlog-dev \
+  ros-humble-builtin-interfaces \
+  ros-humble-hardware-interface \
+  ros-humble-ros2-control \
+  ros-humble-ros2-controllers \
+  ros-humble-moveit-msgs \
+  ros-humble-robot-localization \
+  ros-humble-usb-cam \
+  ros-humble-control-msgs \
+  ros-humble-controller-interface \
+  ros-humble-micro-ros-msgs \
+  ros-humble-nav2-common \
+  ros-humble-moveit-ros-planning \
   ros-humble-foxglove-bridge \
+  ros-humble-moveit \
+  ros-humble-moveit-core \
+  ros-humble-moveit-ros-planning \
+  ros-humble-moveit-ros-planning-interface \
+  ros-humble-moveit-planners-ompl \
+  ros-humble-moveit-servo \
+  ros-humble-moveit-simple-controller-manager \
   ros-humble-robot-state-publisher \
   ros-humble-xacro \
   ros-humble-joint-state-publisher \
   ros-humble-controller-manager \
   ros-humble-rosidl-runtime-c \
-  ros-humble-rosidl-generator-c \
-  && rm -rf /var/lib/apt/lists/* /tmp/*
+  ros-humble-rosidl-generator-c; \
+  rm -rf /var/lib/apt/lists/*
 
-# Skip rosdeps that fail to resolve for arm64 cross builds
-RUN apt-get update && \
-  rosdep install --from-paths src \
+# Create robot user for security best practices
+RUN useradd -m -s /bin/bash robot && \
+  usermod -aG sudo robot && \
+  echo "robot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+  echo "robot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/robot && \
+  mkdir -p $OVERLAY_WS && \
+  chown -R robot:robot /home/robot
+
+USER robot
+WORKDIR $OVERLAY_WS
+
+# Clone repository and import VCS dependencies
+RUN git clone --branch "${REPO_BRANCH}" --depth 1 "${REPO_URL}" . && \
+  vcs import src < "${VCS_FILE}"
+
+# Initialize rosdep and derive build and runtime dependencies
+RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init; fi && \
+  rosdep update
+
+# Install additional runtime dependencies
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  sudo apt-get update && \
+  sudo rosdep install --from-paths src \
   --ignore-src \
   --rosdistro humble \
-  --skip-keys "dynamixel_hardware_interface laser_filters gz_ros2_control ros_gz_sim ros_gz_bridge" \
-  -y && \
-  rm -rf /var/lib/apt/lists/* /tmp/*
+  --default-yes \
+  --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod"
 
-# Build packages in multiple steps to handle dependencies correctly
-# Note: micro_ros_agent will be built from source in src/micro-ROS-Agent
+# ============================================================================
+# Stage 2: Build environment - Compile the robot workspace
+# ============================================================================
+FROM cacher AS builder
 
-RUN . /opt/ros/humble/setup.sh && \
-  echo "=== Listing all packages ===" && \
-  colcon list --base-paths src && \
-  echo "=== Building micro_ros_agent ===" && \
+RUN echo -e "\033[1;93m============================================================================\033[0m"
+RUN echo -e "\033[1;93m🏗️  STAGE 2: Build environment - Compile the robot workspace\033[0m"
+RUN echo -e "\033[1;93m============================================================================\033[0m"
+
+# Build robot packages step by step
+RUN echo -e "\033[1;32m=== Building micro-ROS agent ===\033[0m"
+RUN if [ -d "src/micro-ROS-Agent" ]; then \
+  bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --merge-install
+  --parallel-workers 1 \
+  --packages-select micro_ros_agent \
+  --merge-install"; \
+  fi
 
-# Step 2: Build components (base dependency)
-RUN . /opt/ros/humble/setup.sh && \
+RUN echo -e "\033[1;33m[STEP 1] Build open_manipulator_x_description\033[0m"
+RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --packages-select components_description \
+  --packages-select open_manipulator_x_description \
   --merge-install \
-  --continue-on-error
+  --continue-on-error"
 
-# Step 3: Build open_manipulator_x packages (dependency for robot_description)
-RUN . /opt/ros/humble/setup.sh && \
+RUN echo -e "\033[1;36m[STEP 2] Build robot core packages\033[0m"
+RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --packages-select \
-  open_manipulator_x_description \
+  --packages-select robot_description robot_hardware_interfaces \
   --merge-install \
-  --continue-on-error
+  --symlink-install \
+  --continue-on-error"
 
-# Step 4: Build robot core packages
-RUN . /opt/ros/humble/setup.sh && \
-  colcon build \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --packages-select \
-  robot_description \
-  robot_hardware_interfaces \
-  --merge-install
-
-# Step 5: Build robot_utils (dependency for robot_controller)
-RUN . /opt/ros/humble/setup.sh && \
+RUN echo -e "\033[1;35m[STEP 3] Build robot_utils\033[0m"
+RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
   --packages-select robot_utils \
   --merge-install \
-  --continue-on-error
+  --symlink-install \
+  --continue-on-error"
 
-# Step 6: Build controller and localization packages
-RUN . /opt/ros/humble/setup.sh && \
+RUN echo -e "\033[1;31m[STEP 4] Build robot_controller\033[0m"
+RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --packages-select \
-  robot_controller \
-  --merge-install
+  --packages-select robot_controller \
+  --merge-install \
+  --symlink-install"
 
-# Step 7: Build bringup package (depends on everything else)
-RUN . /opt/ros/humble/setup.sh && \
+RUN echo -e "\033[1;32m[STEP 5] Build robot_bringup\033[0m"
+RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
   --packages-select robot_bringup \
-  --merge-install
+  --merge-install \
+  --symlink-install"
 
-# Step 8: Build umbrella package to install configs/launch files
-RUN . /opt/ros/humble/setup.sh && \
+RUN echo -e "\033[1;92m[STEP 6] Build robot umbrella package\033[0m"
+RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
   --packages-select robot \
-  --merge-install
+  --merge-install \
+  --symlink-install \
+  --continue-on-error"
 
 # ============================================================================
-# Stage 2: Runtime - Production image
+# Stage 3: Final runtime image - Production-ready robot container
 # ============================================================================
-# FROM ros:humble-ros-core
-FROM ros:humble-ros-base 
+FROM $FROM_IMAGE AS final
+
+RUN echo -e "\033[1;92m============================================================================\033[0m"
+RUN echo -e "\033[1;92m🚀 STAGE 3: Final runtime image - Production-ready robot container\033[0m"
+RUN echo -e "\033[1;92m============================================================================\033[0m"
+
+ENV DEBIAN_FRONTEND=noninteractive 
 # Install runtime dependencies and system tools
 RUN apt-get update && \
   apt-get upgrade -y && \
@@ -214,15 +247,14 @@ RUN curl -fsSL https://tailscale.com/install.sh | sh
 RUN useradd -m -s /bin/bash robot && \
   usermod -aG dialout,video robot
 
-# Setup overlay install
-ARG OVERLAY_WS=/home/robot/workspace/my_steel-robot_ws
-ENV OVERLAY_WS=$OVERLAY_WS
-COPY --from=cacher $OVERLAY_WS/install $OVERLAY_WS/install
-COPY --from=cacher /home/robot/workspace/my_steel-robot_ws/build /home/robot/workspace/my_steel-robot_ws/build
-COPY --from=cacher /home/robot/workspace/my_steel-robot_ws/src /home/robot/workspace/my_steel-robot_ws/src
-RUN sed --in-place --expression \
-  '$isource "$OVERLAY_WS/install/setup.bash"' \
-  /ros_entrypoint.sh
+# Create non-root user for security best practices
+RUN useradd -m -s /bin/bash robot
+
+# Copy complete workspace from builder stage
+COPY --from=builder --chown=robot:robot /home/robot/workspace/my_steel-robot_ws /home/robot/workspace/my_steel-robot_ws
+
+USER robot
+WORKDIR /home/robot/workspace/my_steel-robot_ws
 
 # Create Tailscale startup script (runs only when credentials are provided)
 RUN mkdir -p /usr/local/bin && \
