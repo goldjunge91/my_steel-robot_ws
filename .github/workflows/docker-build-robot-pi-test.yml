@@ -9,9 +9,6 @@ on:
     paths:
       - "docker/Dockerfile.robot-pi.test"
       - "docker/compose.robot-pi.test.yaml"
-      - "docker/README.md"
-      - "build.sh"
-      - "src/**"
       - ".github/workflows/docker-build-robot-pi-test.yml"
   push:
     branches:
@@ -25,36 +22,46 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-test-image:
-    runs-on: ubuntu-24.04-arm
+ build-test-image:
+    name: Build robot-pi (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     permissions:
       contents: read
       packages: write
       actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-20.04
+            arch: amd64
+          - platform: linux/arm64
+            runner: ubuntu-20.04-arm
+            arch: arm64
 
     steps:
+
       - name: Check Docker Hub credentials
         id: check-secrets
         run: |
           if [ "${{ env.ACT }}" = "true" ]; then
             echo "skip=false" >> "$GITHUB_OUTPUT"
-            echo "🧪 Running in LOCAL mode with act - skipping credentials check"
+            echo "::notice::Running in LOCAL mode with act - skipping credentials check"
           elif [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "⚠️  Missing DOCKERHUB_USERNAME and/or DOCKERHUB_TOKEN secrets. Skipping build."
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "## Robot Pi Test Image (CI build)" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "⚠️  Skipped because Docker Hub credentials are not configured." >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "To enable this workflow:" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Add DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets in the repository settings." >> "$GITHUB_STEP_SUMMARY"
-            echo "- Ensure the Docker Hub repository exists (e.g. ${GITHUB_REPOSITORY_OWNER}/robot)." >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning title=Missing Credentials::Missing DOCKERHUB_USERNAME and/or DOCKERHUB_TOKEN secrets. Skipping build."
+            echo "⚠️  Missing DOCKERHUB_USERNAME or DOCKERHUB_TOKEN secrets. Skipping build." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
             echo "✅ Docker Hub credentials found for ${{ secrets.DOCKERHUB_USERNAME }}"
           fi
+          
+      # - name: Build robot-pi (Test) Image
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     platforms: ${{matrix.platform}}
 
       - name: Checkout repository
         if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
@@ -62,12 +69,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # QEMU not needed on native ARM64 runner
+      # # QEMU not needed on native ARM64 runner
       # - name: Set up QEMU
       #   if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
       #   uses: docker/setup-qemu-action@v3
       #   with:
-      #     platforms: arm64
+      #     platforms: ${{ matrix.platform }}
+      #     # platforms: arm64
 
       - name: Set up Docker Buildx
         if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
@@ -77,9 +85,10 @@ jobs:
       - name: Bootstrap Buildx (start workers)
         if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
         run: |
+          echo "::group::Bootstrap Docker Buildx"
           docker buildx use ${{ steps.buildx.outputs.name }}
           docker buildx inspect --bootstrap
-          docker buildx ls
+          echo "::endgroup::"
 
       - name: Log in to Docker Hub
         if: ${{ steps.check-secrets.outputs.skip != 'true' && !env.ACT }}
@@ -88,7 +97,23 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build robot-pi test image (arm64) [CI]
+      # - name: Build robot-pi test image (arm64) [CI]
+      #   if: ${{ steps.check-secrets.outputs.skip != 'true' && !env.ACT }}
+      #   id: build-ci
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     builder: ${{ steps.buildx.outputs.name }}
+      #     context: .
+      #     file: docker/Dockerfile.robot-pi.test
+      #     platforms: linux/arm64
+      #     push: true
+      #     tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-test-ci
+      #     labels: |
+      #       org.opencontainers.image.title=my_steel Robot Test Image
+      #       org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
+      #       org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Build robot-pi test image (${{ matrix.arch }}) [CI]
         if: ${{ steps.check-secrets.outputs.skip != 'true' && !env.ACT }}
         id: build-ci
         uses: docker/build-push-action@v5
@@ -96,12 +121,12 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: docker/Dockerfile.robot-pi.test
-          platforms: linux/arm64
+          platforms: ${{ matrix.platform }}
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-test-ci
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-test-ci-${{ matrix.arch }}
           labels: |
             org.opencontainers.image.title=my_steel Robot Test Image
-            org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
+            org.opencontainers.image.description=CI build of the Raspberry Pi test image (${{ matrix.platform }})
             org.opencontainers.image.revision=${{ github.sha }}
 
         # with:
@@ -115,41 +140,50 @@ jobs:
         #     org.opencontainers.image.description=CI build of the Raspberry Pi test image (linux/arm64)
         #     org.opencontainers.image.revision=${{ github.sha }}
 
-      - name: Build robot-pi test image (arm64) [LOCAL]
+      - name: Build robot-pi test image (${{ matrix.arch }}) [LOCAL]
         if: ${{ env.ACT }}
         id: build-local
         uses: docker/build-push-action@v5
         with:
+          builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: docker/Dockerfile.robot-pi.test
-          platforms: linux/arm64
+          platforms: ${{ matrix.platform }}
           push: false
           load: true
-          tags: goldjunge491/my-steel-robot:pi-test-local
+          tags: goldjunge491/my-steel-robot:pi-test-local-${{ matrix.arch }}
           labels: |
             org.opencontainers.image.title=my_steel Robot Test Image (LOCAL)
-            org.opencontainers.image.description=Local build with act (linux/arm64)
+            org.opencontainers.image.description=Local build with act (${{ matrix.platform }})
             org.opencontainers.image.revision=${{ github.sha }}
 
-      - name: Summarize build result
+      - name: Summarize build result (${{ matrix.arch }})
         if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
         run: |
-          {
-            echo "## Robot Pi Test Image (build)"
-            echo ""
-            if [ "${{ job.status }}" = "success" ]; then
-              echo "✅ Build completed successfully."
-            else
-              echo "❌ Build failed. Check the logs above for details."
-            fi
-            echo ""
-            if [ "${{ env.ACT }}" = "true" ]; then
-              echo "- Mode: LOCAL (image loaded as \`goldjunge491/my-steel-robot:pi-test-local\`)"
-              echo "- Dockerfile: \`docker/Dockerfile.robot-pi.test\`"
-              echo "- Platform: \`linux/arm64\`"
-            else
-              echo "- Mode: CI (pushed tag: \`${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-test-ci\`)"
-              echo "- Dockerfile: \`docker/Dockerfile.robot-pi.test\`"
-              echo "- Platform: \`linux/arm64\`"
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          echo "## 🤖 Robot Pi Test Image (Build - ${{ matrix.arch }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY" # Leerzeile
+
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ **Build completed successfully.**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "❌ **Build failed.** Check the logs above for details." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "---" >> "$GITHUB_STEP_SUMMARY" # Trennlinie
+          echo "### Details" >> "$GITHUB_STEP_SUMMARY"
+          
+          if [ "${{ env.ACT }}" = "true" ]; then
+            IMAGE_TAG="goldjunge491/my-steel-robot:pi-test-local-${{ matrix.arch }}"
+            echo "- **Mode:** LOCAL (mit \`act\` ausgeführt)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Image:** \`$IMAGE_TAG\` (nur lokal geladen)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            IMAGE_TAG="${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-test-ci-${{ matrix.arch }}"
+            echo "- **Mode:** CI (Push nach Docker Hub)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Image:** \`$IMAGE_TAG\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Link:** [View on Docker Hub](https://hub.docker.com/r/${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot/tags)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          
+          echo "- **Dockerfile:** \`docker/Dockerfile.robot-pi.test\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Platform:** \`${{ matrix.platform }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Commit:** \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
