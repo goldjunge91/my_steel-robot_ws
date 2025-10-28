@@ -214,66 +214,74 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
   --merge-install \
   --continue-on-error"
 
-# Step 2: Build core robot packages (URDF + hardware interface)
-# robot_description: Robot URDF model and meshes
-# robot_hardware_interfaces: ros2_control hardware plugin for Pico
-# --symlink-install: Create symlinks for faster development iteration
-RUN echo -e "\033[1;36m[STEP 2] Build robot_description robot_hardware_interfaces packages\033[0m"
+# # Step 2: Build core robot packages (URDF + hardware interface)
+# # robot_description: Robot URDF model and meshes
+# # robot_hardware_interfaces: ros2_control hardware plugin for Pico
+# # --symlink-install: Create symlinks for faster development iteration
+# RUN echo -e "\033[1;36m[STEP 2] Build robot_description robot_hardware_interfaces packages\033[0m"
+# RUN bash -c "source /opt/ros/humble/setup.bash && \
+#   colcon build \
+#   --cmake-args -DCMAKE_BUILD_TYPE=Release \
+#   --packages-select robot_description robot_hardware_interfaces \
+#   --merge-install \
+#   --symlink-install \
+#   --continue-on-error"
+
+# # Step 3: Build robot_utils (helper functions and tools)
+# RUN echo -e "\033[1;35m[STEP 3] Build robot_utils\033[0m"
+# RUN bash -c "source /opt/ros/humble/setup.bash && \
+#   colcon build \
+#   --cmake-args -DCMAKE_BUILD_TYPE=Release \
+#   --packages-select robot_utils \
+#   --merge-install \
+#   --symlink-install \
+#   --continue-on-error"
+
+# # Step 4: Build robot_controller (ros2_control configuration)
+# # Contains controller configs for mecanum drive and manipulator
+# RUN echo -e "\033[1;31m[STEP 4] Build robot_controller\033[0m"
+# RUN bash -c "source /opt/ros/humble/setup.bash && \
+#   colcon build \
+#   --cmake-args -DCMAKE_BUILD_TYPE=Release \
+#   --packages-select \
+#   robot_controller \
+#   --merge-install \
+#   --symlink-install"
+
+# # Step 5: Build robot_bringup (main launch package)
+# # Contains launch files that start the complete robot system
+# RUN echo -e "\033[1;32m[STEP 5] Build robot_bringup\033[0m"
+# RUN bash -c "source /opt/ros/humble/setup.bash && \
+#   colcon build \
+#   --cmake-args -DCMAKE_BUILD_TYPE=Release \
+#   --packages-select robot_bringup \
+#   --merge-install \
+#   --symlink-install"
+
+# # Step 6: Build umbrella package (meta-package for complete robot)
+# # Installs all configurations and makes robot command available
+# RUN echo -e "\033[1;92m[STEP 6] Build robot package\033[0m"
+# RUN bash -c "source /opt/ros/humble/setup.bash && \
+#   colcon build \
+#   --cmake-args -DCMAKE_BUILD_TYPE=Release \
+#   --packages-select robot \
+#   --merge-install \
+#   --symlink-install \
+#   --continue-on-error"
+
+# RUN echo -e "\033[1;92m[STEP 6] \033[0m"
+# RUN bash -c "source /opt/ros/humble/setup.bash && \
+#   colcon build \
+#   --packages-select components_description \
+#   --merge-install \
+#   --continue-on-error"
+
+RUN echo -e "\033[1;92m[STEP 6] Build robot umbrella package\033[0m"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --packages-select robot_description robot_hardware_interfaces \
   --merge-install \
   --symlink-install \
-  --continue-on-error"
-
-# Step 3: Build robot_utils (helper functions and tools)
-RUN echo -e "\033[1;35m[STEP 3] Build robot_utils\033[0m"
-RUN bash -c "source /opt/ros/humble/setup.bash && \
-  colcon build \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --packages-select robot_utils \
-  --merge-install \
-  --symlink-install \
-  --continue-on-error"
-
-# Step 4: Build robot_controller (ros2_control configuration)
-# Contains controller configs for mecanum drive and manipulator
-RUN echo -e "\033[1;31m[STEP 4] Build robot_controller\033[0m"
-RUN bash -c "source /opt/ros/humble/setup.bash && \
-  colcon build \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --packages-select \
-  robot_controller \
-  --merge-install \
-  --symlink-install"
-
-# Step 5: Build robot_bringup (main launch package)
-# Contains launch files that start the complete robot system
-RUN echo -e "\033[1;32m[STEP 5] Build robot_bringup\033[0m"
-RUN bash -c "source /opt/ros/humble/setup.bash && \
-  colcon build \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --packages-select robot_bringup \
-  --merge-install \
-  --symlink-install"
-
-# Step 6: Build umbrella package (meta-package for complete robot)
-# Installs all configurations and makes robot command available
-RUN echo -e "\033[1;92m[STEP 6] Build robot package\033[0m"
-RUN bash -c "source /opt/ros/humble/setup.bash && \
-  colcon build \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --packages-select robot \
-  --merge-install \
-  --symlink-install \
-  --continue-on-error"
-
-RUN echo -e "\033[1;92m[STEP 6] \033[0m"
-RUN bash -c "source /opt/ros/humble/setup.bash && \
-  colcon build \
-  --packages-select components_description \
-  --merge-install \
   --continue-on-error"
 
 # Build completed in steps above - no need for additional build.sh execution
