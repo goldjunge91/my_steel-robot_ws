@@ -249,12 +249,6 @@ RUN --mount=type=cache,target=/etc/apt/apt.conf.d,from=cacher,source=/etc/apt/ap
 # Create non-root user
 RUN useradd -m -s /bin/bash robot
 
-# Copy ONLY install/ directory from builder
-# This contains compiled binaries and shared libraries
-# Does NOT include:
-#   - src/ (source code)
-#   - build/ (build artifacts)
-# Result: Minimal image size, production-ready
 COPY --from=builder --chown=robot:robot $OVERLAY_WS/install $OVERLAY_WS/install
 
 # Setup overlay install in entrypoint

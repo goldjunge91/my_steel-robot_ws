@@ -1,7 +1,7 @@
 #!/bin/bash
 
-start_date="2025-09-19"
-end_date="2025-10-20"
+start_date="2025-10-01"
+end_date="2025-10-26"
 current_date="$start_date"
 
 while [[ "$current_date" < "$end_date" ]] || [[ "$current_date" == "$end_date" ]]; do
