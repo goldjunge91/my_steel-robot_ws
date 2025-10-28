@@ -253,6 +253,8 @@ RUN --mount=type=cache,target=/etc/apt/apt.conf.d,from=cacher,source=/etc/apt/ap
 RUN useradd -m -s /bin/bash robot
 
 COPY --from=builder --chown=robot:robot $OVERLAY_WS/install $OVERLAY_WS/install
+COPY --from=builder --chown=robot:robot $OVERLAY_WS/src $OVERLAY_WS/src
+COPY --from=builder --chown=robot:robot $OVERLAY_WS/ $OVERLAY_WS/
 
 # Setup overlay install in entrypoint
 ENV OVERLAY_WS=$OVERLAY_WS
