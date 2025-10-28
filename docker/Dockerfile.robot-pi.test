@@ -42,68 +42,15 @@ APT::Install-Suggests "false";
 EOF
 
 
-# Install build dependencies and proven ROS2 packages
-# Build tools: build-essential, cmake, git for compilation
-# ROS2 tools: colcon for building, rosdep for dependencies, vcstool for VCS
-# System libs: SSL, YAML, spdlog for various robot components
-# ROS2 packages: Manually tested packages that rosdep often misses
+# Install ONLY tools for dependency analysis (minimal cacher stage)
+# rosdep will automatically derive ALL build and runtime dependencies
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get install -y --no-install-recommends \
-  build-essential \
-  libssl-dev \
-  pkg-config \
-  cmake \
-  git \
-  python3-pip \
-  python3-colcon-common-extensions \
-  python3-colcon-mixin \
   python3-rosdep \
   python3-vcstool \
-  ca-certificates \
-  v4l-utils \
-  libv4l-0 \
-  libasio-dev \
-  libtinyxml2-dev \
-  libyaml-cpp-dev \
-  libspdlog-dev \
-  ros-humble-builtin-interfaces \
-  ros-humble-rosidl-default-generators \
-  ros-humble-rosidl-default-runtime \
-  ros-humble-rosidl-generator-c \
-  ros-humble-rosidl-generator-cpp \
-  ros-humble-rosidl-typesupport-c \
-  ros-humble-rosidl-typesupport-cpp \
-  ros-humble-rosidl-typesupport-fastrtps-c \
-  ros-humble-rosidl-typesupport-fastrtps-cpp \
-  ros-humble-action-msgs \
-  ros-humble-hardware-interface \
-  ros-humble-ros2-control \
-  ros-humble-ros2-controllers \
-  ros-humble-moveit-msgs \
-  ros-humble-robot-localization \
-  ros-humble-usb-cam \
-  ros-humble-control-msgs \
-  ros-humble-controller-interface \
-  ros-humble-micro-ros-msgs \
-  ros-humble-nav2-common \
-  ros-humble-moveit-ros-planning \
-  ros-humble-foxglove-bridge \
-  ros-humble-micro-ros-msgs \
-  ros-humble-moveit \
-  ros-humble-moveit-core \
-  ros-humble-moveit-ros-planning \
-  ros-humble-moveit-ros-planning-interface \
-  ros-humble-moveit-planners-ompl \
-  ros-humble-moveit-servo \
-  ros-humble-moveit-simple-controller-manager \
-  ros-humble-robot-state-publisher \
-  ros-humble-xacro \
-  ros-humble-joint-state-publisher \
-  ros-humble-controller-manager \
-  ros-humble-rosidl-runtime-c \
-  ros-humble-rosidl-generator-c \
-  ros-humble-ros-core-dev; \
+  git \
+  ca-certificates; \
   rm -rf /var/lib/apt/lists/*
 
 # Create robot user for security best practices
@@ -167,34 +114,19 @@ RUN echo -e "\033[1;93m=========================================================
 RUN echo -e "\033[1;93m🏗️  STAGE 2: Build environment - Compile the robot workspace\033[0m"
 RUN echo -e "\033[1;93m============================================================================\033[0m"
 
-# Install additional runtime dependencies discovered by rosdep
-# This analyzes all package.xml files and installs missing dependencies
-# Skip keys are packages that fail on ARM64 or are not needed for robot
-# Cache mounts: Persist apt cache and rosdep cache with proper permissions
+# Install BUILD dependencies from rosdep analysis
+# This includes: build-essential, cmake, rosidl-generators, -dev packages
+COPY --from=cacher /tmp/build_debs.txt /tmp/build_debs.txt
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   sudo apt-get update && \
+  cat /tmp/build_debs.txt | xargs sudo apt-get install -y --no-install-recommends && \
   sudo apt-get install -y --no-install-recommends \
-  libssl-dev \
-  pkg-config \
-  ros-humble-rosidl-default-generators \
-  ros-humble-rosidl-default-runtime \
-  ros-humble-action-msgs \
-  ros-humble-control-msgs \
-  ros-humble-sensor-msgs \
-  ros-humble-geometry-msgs \
-  ros-humble-std-msgs \
-  ros-humble-trajectory-msgs \
-  ros-humble-builtin-interfaces && \
-  if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
-  sudo rosdep update && \
-  sudo rosdep install --from-paths src \
-  --ignore-src \
-  --rosdistro humble \
-  --default-yes \
-  --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod" || true  && \
-  sudo cp -r /home/robot/.ros/* /tmp/rosdep_cache/ 2>/dev/null || true
-# --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod" && \
+  build-essential \
+  cmake \
+  git \
+  python3-colcon-common-extensions \
+  python3-colcon-mixin
 
 # Build robot packages in dependency order
 # Step-by-step approach ensures proper dependency resolution
@@ -315,69 +247,21 @@ RUN echo -e "\033[1;92m=========================================================
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install runtime system libraries (no ROS packages - they come from workspace)
-# python3-colcon: For potential runtime rebuilds
-# v4l-utils: Video4Linux camera support
-# libasio/libyaml/libspdlog: System libraries for robot components
-# udev/usbutils: USB device management for Pico and camera
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install RUNTIME dependencies from rosdep analysis
+# This includes: shared libraries (.so), runtime executables, NO -dev packages
+COPY --from=cacher /tmp/exec_debs.txt /tmp/exec_debs.txt
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  apt-get update && \
+  cat /tmp/exec_debs.txt | xargs apt-get install -y --no-install-recommends && \
+  apt-get install -y --no-install-recommends \
   python3-colcon-common-extensions \
   python3-pip \
-  python3-colcon-common-extensions \
-  python3-colcon-mixin \
-  python3-rosdep \
-  python3-vcstool \
   v4l-utils \
-  openssl \
-  libv4l-0 \
-  libasio-dev \
-  libtinyxml2-dev \
-  libyaml-cpp-dev \
-  libspdlog-dev \
-  cmake \
-  git \
-  ca-certificates \
-  v4l-utils \
-  libyaml-cpp-dev \
-  ros-humble-builtin-interfaces \
-  ros-humble-rosidl-default-generators \
-  ros-humble-rosidl-default-runtime \
-  ros-humble-rosidl-generator-c \
-  ros-humble-rosidl-generator-cpp \
-  ros-humble-rosidl-typesupport-c \
-  ros-humble-rosidl-typesupport-cpp \
-  ros-humble-rosidl-typesupport-fastrtps-c \
-  ros-humble-rosidl-typesupport-fastrtps-cpp \
-  ros-humble-action-msgs \
-  ros-humble-hardware-interface \
-  ros-humble-ros2-control \
-  ros-humble-ros2-controllers \
-  ros-humble-moveit-msgs \
-  ros-humble-robot-localization \
-  ros-humble-usb-cam \
-  ros-humble-control-msgs \
-  ros-humble-controller-interface \
-  ros-humble-micro-ros-msgs \
-  ros-humble-nav2-common \
-  ros-humble-moveit-ros-planning \
-  ros-humble-foxglove-bridge \
-  ros-humble-micro-ros-msgs \
-  ros-humble-moveit \
-  ros-humble-moveit-core \
-  ros-humble-moveit-ros-planning \
-  ros-humble-moveit-ros-planning-interface \
-  ros-humble-moveit-planners-ompl \
-  ros-humble-moveit-servo \
-  ros-humble-moveit-simple-controller-manager \
-  ros-humble-robot-state-publisher \
-  ros-humble-xacro \
-  ros-humble-joint-state-publisher \
-  ros-humble-controller-manager \
-  ros-humble-rosidl-runtime-c \
-  ros-humble-rosidl-generator-c \
   udev \
   usbutils \
-  && rm -rf /var/lib/apt/lists/*
+  ca-certificates && \
+  rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security best practices
 # Fresh user creation (no sudo needed in runtime)
