@@ -14,12 +14,8 @@ on:
       - "docker/compose.robot-pi.test.yaml"
       - ".github/workflows/docker-build-robot-pi-test.yml"
   push:
-    branches:
-      - main
+    branches-ignore:
       - humble
-      - feat_CI_CD
-    # branches-ignore:
-    #   - humble
     paths:
       - "docker/Dockerfile.robot-pi.test"
       - "docker/Dockerfile.robot-pi.v2"
@@ -44,7 +40,7 @@ jobs:
             runner: ubuntu-latest
             arch: amd64
           - platform: linux/arm64
-            runner: ubuntu-latest-arm64
+            runner: ubuntu-22.04-arm
             arch: arm64
 
     steps:
