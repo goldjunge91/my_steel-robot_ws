@@ -68,6 +68,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   libyaml-cpp-dev \
   libspdlog-dev \
   ros-humble-builtin-interfaces \
+  ros-humble-rosidl-default-generators \
+  ros-humble-rosidl-default-runtime \
+  ros-humble-rosidl-generator-c \
+  ros-humble-rosidl-generator-cpp \
+  ros-humble-rosidl-typesupport-c \
+  ros-humble-rosidl-typesupport-cpp \
+  ros-humble-rosidl-typesupport-fastrtps-c \
+  ros-humble-rosidl-typesupport-fastrtps-cpp \
+  ros-humble-action-msgs \
   ros-humble-hardware-interface \
   ros-humble-ros2-control \
   ros-humble-ros2-controllers \
@@ -93,7 +102,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   ros-humble-joint-state-publisher \
   ros-humble-controller-manager \
   ros-humble-rosidl-runtime-c \
-  ros-humble-rosidl-generator-c; \
+  ros-humble-rosidl-generator-c \
+  ros-humble-ros-core-dev; \
   rm -rf /var/lib/apt/lists/*
 
 # Create robot user for security best practices
@@ -163,25 +173,28 @@ RUN echo -e "\033[1;93m=========================================================
 # Cache mounts: Persist apt cache and rosdep cache with proper permissions
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  --mount=type=cache,target=/tmp/rosdep_cache,sharing=locked \
-  sudo mkdir -p /home/robot/.ros && \
-  sudo chown robot:robot /home/robot/.ros && \
-  if [ -d /tmp/rosdep_cache ] && [ "$(ls -A /tmp/rosdep_cache 2>/dev/null)" ]; then \
-  sudo cp -r /tmp/rosdep_cache/* /home/robot/.ros/ 2>/dev/null || true; \
-  sudo chown -R robot:robot /home/robot/.ros; \
-  fi && \
-  if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
-  sudo rosdep update && \
   sudo apt-get update && \
   sudo apt-get install -y --no-install-recommends \
   libssl-dev \
-  pkg-config && \
+  pkg-config \
+  ros-humble-rosidl-default-generators \
+  ros-humble-rosidl-default-runtime \
+  ros-humble-action-msgs \
+  ros-humble-control-msgs \
+  ros-humble-sensor-msgs \
+  ros-humble-geometry-msgs \
+  ros-humble-std-msgs \
+  ros-humble-trajectory-msgs \
+  ros-humble-builtin-interfaces && \
+  if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
+  sudo rosdep update && \
   sudo rosdep install --from-paths src \
   --ignore-src \
   --rosdistro humble \
   --default-yes \
-  --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod" && \
+  --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod" || true  && \
   sudo cp -r /home/robot/.ros/* /tmp/rosdep_cache/ 2>/dev/null || true
+# --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod" && \
 
 # Build robot packages in dependency order
 # Step-by-step approach ensures proper dependency resolution
@@ -327,6 +340,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   v4l-utils \
   libyaml-cpp-dev \
   ros-humble-builtin-interfaces \
+  ros-humble-rosidl-default-generators \
+  ros-humble-rosidl-default-runtime \
+  ros-humble-rosidl-generator-c \
+  ros-humble-rosidl-generator-cpp \
+  ros-humble-rosidl-typesupport-c \
+  ros-humble-rosidl-typesupport-cpp \
+  ros-humble-rosidl-typesupport-fastrtps-c \
+  ros-humble-rosidl-typesupport-fastrtps-cpp \
+  ros-humble-action-msgs \
   ros-humble-hardware-interface \
   ros-humble-ros2-control \
   ros-humble-ros2-controllers \
