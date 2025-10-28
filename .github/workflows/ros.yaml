@@ -9,7 +9,6 @@ on:
       - jazzy*
       - rolling*
       - main
-      - feat_CI_CD
   workflow_dispatch:
 
 jobs:
