@@ -40,7 +40,7 @@ jobs:
             runner: ubuntu-latest
             arch: amd64
           - platform: linux/arm64
-            runner: ubuntu-latest
+            runner: ubuntu-latest-arm64
             arch: arm64
 
     steps:
@@ -66,11 +66,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up QEMU
-        if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: ${{ matrix.platform }}
+      # - name: Set up QEMU
+      #   if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
+      #   uses: docker/setup-qemu-action@v3
+      #   with:
+      #     platforms: ${{ matrix.platform }}
 
       - name: Set up Docker Buildx
         if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
@@ -109,8 +109,6 @@ jobs:
             org.opencontainers.image.title=my_steel Robot Test Image
             org.opencontainers.image.description=CI build (${{ matrix.platform }})
             org.opencontainers.image.revision=${{ github.sha }}
-
-
 
       - name: Build robot-pi test image (${{ matrix.arch }}) [LOCAL]
         if: ${{ env.ACT }}

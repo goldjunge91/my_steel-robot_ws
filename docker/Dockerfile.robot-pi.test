@@ -167,6 +167,7 @@ RUN bash -c '\
   if [ -d "src/micro_ros_msgs" ]; then \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --parallel-workers 1 \
   --packages-select micro_ros_msgs \
   --merge-install \
   --event-handlers console_direct+ || exit 1; \
@@ -193,6 +194,7 @@ RUN bash -c '\
   echo -e "\033[1;35m=== Step 3/4: Building open_manipulator_x_description ==="; \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+  --parallel-workers 1 \
   --packages-select open_manipulator_x_description \
   --merge-install \
   --event-handlers console_direct+ || exit 1; \
@@ -202,6 +204,7 @@ RUN bash -c '\
   echo -e "\033[1;92m=== Step 4/4: Building all remaining packages ==="; \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+  --parallel-workers 1 \
   --merge-install \
   --event-handlers console_direct+; \
   BUILD_RESULT=$?; \
