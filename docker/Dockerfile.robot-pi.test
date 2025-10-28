@@ -192,7 +192,6 @@ RUN if [ -d "src/micro-ROS-Agent" ]; then \
   bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS='-O2' \
-  --parallel-workers 1 \
   --packages-select micro_ros_agent \
   --merge-install \
   --event-handlers console_direct+"; \
@@ -222,7 +221,7 @@ RUN echo -e "\033[1;36m[STEP 2] Build robot_description robot_hardware_interface
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --packages-select robot_description robot_hardware_interfaces components_description \
+  --packages-select robot_description robot_hardware_interfaces \
   --merge-install \
   --symlink-install \
   --continue-on-error"
@@ -260,13 +259,20 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
 
 # Step 6: Build umbrella package (meta-package for complete robot)
 # Installs all configurations and makes robot command available
-RUN echo -e "\033[1;92m[STEP 6] Build robot umbrella package\033[0m"
+RUN echo -e "\033[1;92m[STEP 6] Build robot package\033[0m"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
   --packages-select robot \
   --merge-install \
   --symlink-install \
+  --continue-on-error"
+
+RUN echo -e "\033[1;92m[STEP 6] \033[0m"
+RUN bash -c "source /opt/ros/humble/setup.bash && \
+  colcon build \
+  --packages-select components_description \
+  --merge-install \
   --continue-on-error"
 
 # Build completed in steps above - no need for additional build.sh execution
