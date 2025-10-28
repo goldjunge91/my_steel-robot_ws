@@ -1,33 +1,57 @@
-# Multi-stage build optimized for ROS2 Humble Robot Pi deployment
-# Uses rosdep for ALL dependency management (no manual apt-get install lists)
-# This Dockerfile creates a production-ready ROS2 robot image with:
-# - Stage 1 (cacher): Fetch source code
-# - Stage 2 (builder): Install dependencies and compile workspace
-# - Stage 3 (final): Minimal runtime image
-
 ARG FROM_IMAGE=ros:humble-ros-base
 ARG OVERLAY_WS=/home/robot/workspace/my_steel-robot_ws
 
 # ============================================================================
-# Stage 1: Source Code Fetching (cacher)
+# Stage 1: Dependency Analysis
 # ============================================================================
 FROM $FROM_IMAGE AS cacher
+
+RUN echo -e "============================================================================"
+RUN echo -e "📦 STAGE 1: Dependency Analysis with rosdep"
+RUN echo -e "============================================================================"
 
 ARG OVERLAY_WS
 ARG REPO_URL=https://github.com/goldjunge91/my_steel-robot_ws.git
 ARG REPO_BRANCH=feat_CI_CD
 ARG VCS_FILE=src/ros2.repos
 
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+  TERM=xterm-256color \
+  FORCE_COLOR=1 \
+  CLICOLOR_FORCE=1 \
+  COLCON_LOG_LEVEL=20
 
-# Install minimal tools for source code fetching
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Configure apt for optimal Docker builds
+# Persist minimal apt cache for rosdep analysis
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  rosdep update --rosdistro $ROS_DISTRO && \
+  cat <<EOF > /etc/apt/apt.conf.d/docker-clean && apt-get update
+APT::Install-Recommends "false";
+APT::Install-Suggests "false";
+EOF
+
+# Install ONLY tools needed for dependency analysis
+# Minimal footprint - rosdep will derive everything else
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  apt-get install -y --no-install-recommends \
+  python3-rosdep \
+  build-essential \
+  libssl-dev \
+  pkg-config \
+  cmake \
+  python3-pip \
+  python3-colcon-common-extensions \
+  python3-colcon-mixin \
+  python3-rosdep \
   python3-vcstool \
+  python3-distutils \
   git \
-  ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+  ca-certificates; \
+  rm -rf /var/lib/apt/lists/*
 
-# Create robot user
+# Create robot user for security
 RUN useradd -m -s /bin/bash robot && \
   usermod -aG sudo robot && \
   echo "robot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
@@ -39,95 +63,213 @@ WORKDIR $OVERLAY_WS
 
 # Clone repository and import VCS dependencies
 RUN git clone --branch "${REPO_BRANCH}" --depth 1 "${REPO_URL}" . && \
-  vcs import src < "${VCS_FILE}"
+  echo "📂 Cloned main repository, now importing VCS dependencies..." && \
+  vcs import src < "${VCS_FILE}" && \
+  echo "✓ VCS import complete." && \
+  ls -la src/
+
+# Initialize rosdep
+RUN if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then \
+  rosdep init; \
+  fi && \
+  rosdep update
+
+# CRITICAL: We do NOT use --ignore-src here because many dependencies are only
+RUN bash -e <<'EOF'
+declare -A types=(
+  [exec]="--dependency-types=exec"
+  [build]="")
+
+for type in "${!types[@]}"; do
+  rosdep install -y \
+    --from-paths src \
+    --reinstall \
+    --rosdistro $ROS_DISTRO \
+    ${types[$type]} \
+    --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod" \
+    | grep 'apt-get install' \
+    | awk '{gsub(/'\''/,"",$4); print $4}' \
+    | grep -v '^install$' \
+    | sort -u > /tmp/${type}_debs.txt
+done
+
+echo "📋 Build dependencies:"
+wc -l /tmp/build_debs.txt
+echo "📋 Runtime dependencies:"
+wc -l /tmp/exec_debs.txt
+EOF
 
 # ============================================================================
-# Stage 2: Build Stage (builder)
+# Stage 2: Build Environment
+# Output: Compiled install/ directory
 # ============================================================================
 FROM $FROM_IMAGE AS builder
 
+RUN echo -e "==========================================================================="
+RUN echo -e "🏗️🏗️  STAGE 2: Build environment - Compile workspace"
+RUN echo -e "==========================================================================="
+
 ARG OVERLAY_WS
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Create robot user (same as cacher)
-RUN useradd -m -s /bin/bash robot && \
-  usermod -aG sudo robot && \
-  echo "robot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
-  mkdir -p $OVERLAY_WS && \
-  chown -R robot:robot /home/robot
-
-# Copy source code from cacher
-COPY --from=cacher --chown=robot:robot $OVERLAY_WS $OVERLAY_WS
-
-USER robot
 WORKDIR $OVERLAY_WS
 
-# Install ALL dependencies using rosdep (build + runtime)
-# This is the CORRECT way - rosdep reads package.xml files
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  sudo apt-get update && \
-  sudo rosdep init || true && \
-  rosdep update --rosdistro $ROS_DISTRO && \
-  rosdep install --from-paths src --ignore-src -y \
-  --skip-keys "micro_ros_agent micro_ros_msgs"
+# Copy workspace source and dependency lists
+COPY --from=cacher $OVERLAY_WS/src $OVERLAY_WS/src
+COPY --from=cacher /tmp/build_debs.txt /tmp/build_debs.txt
 
-# Build workspace with correct dependency order
-# 1. Build micro_ros_msgs first (dependency of micro_ros_agent)
-# 2. Build micro_ros_agent second
-# 3. Build everything else
-RUN source /opt/ros/$ROS_DISTRO/setup.bash && \
-  echo "=== Building micro_ros_msgs ===" && \
-  colcon build --packages-select micro_ros_msgs \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release && \
-  echo "=== Building micro_ros_agent ===" && \
-  colcon build --packages-select micro_ros_agent \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release && \
-  echo "=== Building remaining packages ===" && \
-  colcon build --packages-skip micro_ros_msgs micro_ros_agent \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release
+# Install build dependencies from derived list
+# This includes: cmake, build-essential, *-dev packages, rosidl-generators
+RUN --mount=type=cache,target=/etc/apt/apt.conf.d,from=cacher,source=/etc/apt/apt.conf.d \
+  --mount=type=cache,target=/var/lib/apt/lists,from=cacher,source=/var/lib/apt/lists \
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  apt-get update && \
+  < /tmp/build_debs.txt xargs apt-get install -y --no-install-recommends && \
+  # Zusätzliche ROS2-Control-Abhängigkeiten, die rosdep nicht erkennt
+  apt-get install -y --no-install-recommends \
+  python3-distutils \
+  ros-humble-moveit \
+  ros-humble-control-msgs \
+  ros-humble-controller-interface \
+  ros-humble-controller-manager \
+  ros-humble-ros2-control \
+  ros-humble-hardware-interface \
+  ros-humble-builtin-interfaces \
+  ros-humble-hardware-interface \
+  ros-humble-ros2-controllers \
+  ros-humble-robot-localization \
+  ros-humble-ros2-control \
+  ros-humble-moveit-msgs \
+  ros-humble-robot-localization \
+  ros-humble-usb-cam \
+  v4l-utils \
+  libv4l-0 \
+  libasio-dev \
+  libtinyxml2-dev \
+  libyaml-cpp-dev \
+  libspdlog-dev \
+  ros-humble-foxglove-bridge \
+  ros-humble-robot-state-publisher \
+  ros-humble-moveit-ros-planning \
+  ros-humble-moveit-ros-planning-interface \
+  ros-humble-xacro \
+  ros-humble-joint-state-publisher \
+  ros-humble-moveit-servo \
+  ros-humble-moveit-msgs && \
+  rm -rf /var/lib/apt/lists/*
+
+RUN echo "==== dpkg -l | grep control ====" && dpkg -l | grep -E 'moveit-msgs|control-msgs|controller-interface|controller-manager|ros2-control|hardware-interface' && \
+  echo "==== ls moveit_msgsConfig.cmake ====" && ls /opt/ros/humble/share/moveit_msgs/cmake/moveit_msgsConfig.cmake && \
+  echo "==== ls control_msgsConfig.cmake ====" && ls /opt/ros/humble/share/control_msgs/cmake/control_msgsConfig.cmake && \
+  echo "==== ls controller_interfaceConfig.cmake ====" && ls /opt/ros/humble/share/controller_interface/cmake/controller_interfaceConfig.cmake
+RUN bash -c '\
+  source /opt/ros/humble/setup.bash; \
+  \
+  echo -e "\033[1;32m=== Step 1/4: Building micro_ros_msgs ==="; \
+  if [ -d "src/micro_ros_msgs" ]; then \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --packages-select micro_ros_msgs \
+  --merge-install \
+  --event-handlers console_direct+ || exit 1; \
+  echo "✓ Built micro_ros_msgs, sourcing overlay..."; \
+  source install/local_setup.bash; \
+  else \
+  echo "⚠️  micro_ros_msgs not found, skipping"; \
+  fi; \
+  \
+  echo -e "\033[1;33m=== Step 2/4: Building micro_ros_agent ==="; \
+  if [ -d "src/micro-ROS-Agent" ]; then \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O2" \
+  --parallel-workers 1 \
+  --packages-select micro_ros_agent \
+  --merge-install \
+  --event-handlers console_direct+ || exit 1; \
+  echo "✓ Built micro_ros_agent, sourcing overlay..."; \
+  source install/local_setup.bash; \
+  else \
+  echo "⚠️  micro-ROS-Agent not found, skipping"; \
+  fi; \
+  \
+  echo -e "\033[1;35m=== Step 3/4: Building open_manipulator_x_description ==="; \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+  --packages-select open_manipulator_x_description \
+  --merge-install \
+  --event-handlers console_direct+ || exit 1; \
+  echo "✓ Built open_manipulator_x_description, sourcing overlay..."; \
+  source install/local_setup.bash; \
+  \
+  echo -e "\033[1;92m=== Step 4/4: Building all remaining packages ==="; \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+  --merge-install \
+  --event-handlers console_direct+; \
+  BUILD_RESULT=$?; \
+  \
+  echo ""; \
+  echo -e "📊 Build Summary:"; \
+  if [ $BUILD_RESULT -eq 0 ]; then \
+  echo -e "\033[1;32m✅ All packages built successfully!"; \
+  else \
+  echo -e "\033[1;31m❌ Some packages failed to build"; \
+  echo "Check the logs above for details"; \
+  exit 1; \
+  fi'
 
 # ============================================================================
-# Stage 3: Runtime Image (final)
+# Stage 3: Production Runtime Image
+# Size optimization: No build tools, no source code, no build artifacts
 # ============================================================================
 FROM $FROM_IMAGE AS final
 
-ARG OVERLAY_WS
+RUN echo -e "\033[1;92m============================================================================"
+RUN echo -e "\033[1;92m🚀 STAGE 3: Production runtime image (minimal)"
+RUN echo -e "\033[1;92m============================================================================"
 
+ARG OVERLAY_WS
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Create robot user (same as builder)
-RUN useradd -m -s /bin/bash robot && \
-  usermod -aG sudo robot && \
-  echo "robot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
-  mkdir -p $OVERLAY_WS && \
-  chown -R robot:robot /home/robot
+COPY --from=cacher /tmp/exec_debs.txt /tmp/exec_debs.txt
 
-# Copy built workspace from builder
-COPY --from=builder --chown=robot:robot $OVERLAY_WS $OVERLAY_WS
+RUN --mount=type=cache,target=/etc/apt/apt.conf.d,from=cacher,source=/etc/apt/apt.conf.d \
+  --mount=type=cache,target=/var/lib/apt/lists,from=cacher,source=/var/lib/apt/lists \
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  apt-get update && \
+  < /tmp/exec_debs.txt xargs apt-get install -y --no-install-recommends && \
+  # Additional runtime tools not in rosdep
+  apt-get install -y --no-install-recommends \
+  python3-rosdep \
+  python3-colcon-common-extensions \
+  python3-pip \
+  udev \
+  usbutils \
+  v4l-utils && \
+  rm -rf /var/lib/apt/lists/* /tmp/exec_debs.txt
+
+# Create non-root user
+RUN useradd -m -s /bin/bash robot
+
+# Copy ONLY install/ directory from builder
+# This contains compiled binaries and shared libraries
+# Does NOT include:
+#   - src/ (source code)
+#   - build/ (build artifacts)
+# Result: Minimal image size, production-ready
+COPY --from=builder --chown=robot:robot $OVERLAY_WS/install $OVERLAY_WS/install
+
+# Setup overlay install in entrypoint
+ENV OVERLAY_WS=$OVERLAY_WS
+RUN sed --in-place --expression \
+  '$isource "$OVERLAY_WS/install/setup.bash"' \
+  /ros_entrypoint.sh
 
 USER robot
 WORKDIR $OVERLAY_WS
 
-# Install ONLY runtime dependencies using rosdep
-# --dependency-types=exec: Only install runtime dependencies (no build tools)
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  sudo apt-get update && \
-  sudo rosdep init || true && \
-  rosdep update --rosdistro $ROS_DISTRO && \
-  rosdep install --from-paths src --ignore-src -y \
-  --dependency-types=exec \
-  --skip-keys "micro_ros_agent micro_ros_msgs"
+# Set ROS2 environment variables
+ENV ROS_DISTRO=humble \
+  ROS_DOMAIN_ID=0 \
+  RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 
-# Setup entrypoint
-RUN echo '#!/bin/bash\n\
-  set -e\n\
-  source /opt/ros/$ROS_DISTRO/setup.bash\n\
-  source $OVERLAY_WS/install/setup.bash\n\
-  exec "$@"' > /entrypoint.sh && \
-  sudo chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["bash"]
+# Run robot bringup
+CMD ["ros2", "launch", "robot_bringup", "bringup.launch.py"]
