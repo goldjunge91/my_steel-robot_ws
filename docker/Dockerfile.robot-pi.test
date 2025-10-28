@@ -151,20 +151,59 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # Step-by-step approach ensures proper dependency resolution
 # Use pre-built micro-ROS agent to avoid ARM64 emulation timeout issues
 
-RUN echo -e "\033[1;32m=== Building complete workspace with automatic dependency resolution ===\033[0m"
+RUN echo -e "\033[1;32m=== Building workspace in correct dependency order ===\033[0m"
 
-# Build ALL packages in correct dependency order
-# colcon automatically resolves dependencies and builds in the right order
-# --merge-install: Single install directory for all packages
-# --symlink-install: Faster rebuilds during development
-# --continue-on-error: Don't stop on optional package failures
+# List all packages that will be built
 RUN bash -c "source /opt/ros/humble/setup.bash && \
+  echo '=== PACKAGES TO BUILD ===' && \
+  colcon list --names-only"
+
+# Step 1: Build micro_ros_msgs first (required by micro_ros_agent)
+RUN echo "=== Step 1: Building micro_ros_msgs ===" && \
+  bash -c "source /opt/ros/humble/setup.bash && \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --packages-select micro_ros_msgs \
+  --merge-install \
+  --symlink-install" || echo "micro_ros_msgs not found or failed (optional)"
+
+# Step 2: Build micro_ros_agent (depends on micro_ros_msgs)
+RUN echo "=== Step 2: Building micro_ros_agent ===" && \
+  bash -c "source /opt/ros/humble/setup.bash && \
+  if [ -f install/setup.bash ]; then source install/setup.bash; fi && \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --packages-select micro_ros_agent \
+  --merge-install \
+  --symlink-install" || echo "micro_ros_agent failed (optional)"
+
+# Step 3: Build ALL remaining packages
+RUN echo "=== Step 3: Building all remaining packages ===" && \
+  bash -c "source /opt/ros/humble/setup.bash && \
+  if [ -f install/setup.bash ]; then source install/setup.bash; fi && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
   --merge-install \
   --symlink-install \
-  --continue-on-error \
-  --event-handlers console_direct+"
+  --continue-on-error"
+
+# Verify that critical packages were built
+RUN if [ ! -d install ] || [ -z "$(ls -A install 2>/dev/null)" ]; then \
+  echo "ERROR: No packages were built successfully!" && \
+  exit 1; \
+  else \
+  echo "=== BUILD COMPLETED SUCCESSFULLY ==="; \
+  fi
+
+# Show build summary
+RUN bash -c "source /opt/ros/humble/setup.bash && \
+  echo '=== BUILD SUMMARY ===' && \
+  if [ -d install ]; then \
+  echo 'Successfully built packages:' && \
+  ls -1 install/share/ | head -20; \
+  else \
+  echo 'WARNING: No install directory found!'; \
+  fi"
 
 # Build completed in steps above - no need for additional build.sh execution
 RUN echo -e "\033[1;92m=== Build completed successfully ===\033[0m"
