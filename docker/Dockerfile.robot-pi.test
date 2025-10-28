@@ -132,12 +132,21 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # Step-by-step approach ensures proper dependency resolution
 # Use pre-built micro-ROS agent to avoid ARM64 emulation timeout issues
 
-RUN echo -e "\033[1;32m=== Building micro-ROS agent with optimizations ===\033[0m"
+RUN echo -e "\033[1;32m=== Building micro-ROS packages with correct dependency order ===\033[0m"
 
-# Build micro-ROS agent first with single worker to avoid memory issues
+# Step 1: Build micro_ros_msgs first (dependency of micro_ros_agent)
+RUN bash -c "source /opt/ros/humble/setup.bash && \
+  colcon build \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --packages-select micro_ros_msgs \
+  --merge-install \
+  --continue-on-error"
+
+# Step 2: Build micro-ROS agent (depends on micro_ros_msgs)
 RUN if [ -d "src/micro-ROS-Agent" ]; then \
   echo "Building micro-ROS-Agent from source with ARM64 optimizations" && \
   bash -c "source /opt/ros/humble/setup.bash && \
+  source install/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS='-O2' \
   --parallel-workers 1 \
