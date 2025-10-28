@@ -8,6 +8,7 @@ on:
   pull_request:
     paths:
       - "docker/Dockerfile.robot-pi.test"
+      - "docker/Dockerfile.robot-pi.v2"
       - "docker/compose.robot-pi.test.yaml"
       - ".github/workflows/docker-build-robot-pi-test.yml"
   push:
@@ -17,6 +18,7 @@ on:
       - feat_CI_CD
     paths:
       - "docker/Dockerfile.robot-pi.test"
+      - "docker/Dockerfile.robot-pi.v2"
       - "docker/compose.robot-pi.test.yaml"
       - ".github/workflows/docker-build-robot-pi-test.yml"
   workflow_dispatch:
