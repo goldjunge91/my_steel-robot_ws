@@ -42,8 +42,8 @@ APT::Install-Suggests "false";
 EOF
 
 
-# Install ONLY tools for dependency analysis (minimal cacher stage)
-# rosdep will automatically derive ALL build and runtime dependencies
+# Install minimal tools for source code fetching
+# We'll use rosdep in builder stage to install actual dependencies
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get install -y --no-install-recommends \
@@ -117,16 +117,30 @@ RUN echo -e "\033[1;93m=========================================================
 # Install BUILD dependencies from rosdep analysis
 # This includes: build-essential, cmake, rosidl-generators, -dev packages
 COPY --from=cacher /tmp/build_debs.txt /tmp/build_debs.txt
+# Install BUILD dependencies using rosdep
+# rosdep analyzes all package.xml files and installs required dependencies
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   sudo apt-get update && \
-  cat /tmp/build_debs.txt | xargs sudo apt-get install -y --no-install-recommends && \
   sudo apt-get install -y --no-install-recommends \
   build-essential \
   cmake \
   git \
   python3-colcon-common-extensions \
-  python3-colcon-mixin
+  python3-colcon-mixin \
+  ros-humble-control-msgs \
+  ros-humble-controller-interface \
+  ros-humble-controller-manager \
+  ros-humble-ros2-control \
+  ros-humble-hardware-interface \
+  ros-humble-moveit-msgs \
+  python3-pip && \
+  if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
+  sudo rosdep update && \
+  sudo rosdep install --from-paths src \
+  --rosdistro humble \
+  --default-yes \
+  --skip-keys "laser_filters gazebo_ros gazebo_ros2_control ros_gz_sim ros_gz_bridge python3-libgpiod" || true
 
 # Build robot packages in dependency order
 # Step-by-step approach ensures proper dependency resolution
