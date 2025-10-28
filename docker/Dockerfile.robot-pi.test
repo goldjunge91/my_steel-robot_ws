@@ -192,6 +192,7 @@ RUN if [ -d "src/micro-ROS-Agent" ]; then \
   bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
   --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS='-O2' \
+  --parallel-workers 1 \
   --packages-select micro_ros_agent \
   --merge-install \
   --event-handlers console_direct+"; \
