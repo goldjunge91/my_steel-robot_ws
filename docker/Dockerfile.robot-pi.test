@@ -173,6 +173,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi && \
   sudo rosdep update && \
   sudo apt-get update && \
+  sudo apt-get install -y --no-install-recommends \
+  libssl-dev \
+  pkg-config && \
   sudo rosdep install --from-paths src \
   --ignore-src \
   --rosdistro humble \
@@ -279,7 +282,6 @@ RUN bash -c "source /opt/ros/humble/setup.bash && \
 RUN echo -e "\033[1;92m[STEP 6] Build robot umbrella package\033[0m"
 RUN bash -c "source /opt/ros/humble/setup.bash && \
   colcon build \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release \
   --merge-install \
   --symlink-install \
   --continue-on-error"
