@@ -14,8 +14,12 @@ on:
       - "docker/compose.robot-pi.test.yaml"
       - ".github/workflows/docker-build-robot-pi-test.yml"
   push:
-    branches-ignore:
+   branches:
+      - main
       - humble
+      - feat_CI_CD
+    # branches-ignore:
+    #   - humble
     paths:
       - "docker/Dockerfile.robot-pi.test"
       - "docker/Dockerfile.robot-pi.v2"

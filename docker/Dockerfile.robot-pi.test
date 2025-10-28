@@ -115,6 +115,10 @@ WORKDIR $OVERLAY_WS
 # Copy workspace source and dependency lists
 COPY --from=cacher $OVERLAY_WS/src $OVERLAY_WS/src
 COPY --from=cacher /tmp/build_debs.txt /tmp/build_debs.txt
+# Copy repository helper scripts so they can be used for debugging/retries inside builder
+COPY --from=cacher $OVERLAY_WS/setup.sh $OVERLAY_WS/setup.sh
+COPY --from=cacher $OVERLAY_WS/build.sh $OVERLAY_WS/build.sh
+RUN chmod +x $OVERLAY_WS/setup.sh $OVERLAY_WS/build.sh || true
 
 # Install build dependencies from derived list
 # This includes: cmake, build-essential, *-dev packages, rosidl-generators
@@ -248,6 +252,20 @@ RUN --mount=type=cache,target=/etc/apt/apt.conf.d,from=cacher,source=/etc/apt/ap
   usbutils \
   v4l-utils && \
   rm -rf /var/lib/apt/lists/* /tmp/exec_debs.txt
+
+
+# If any build failures are present in colcon logs, run setup.sh and build.sh for troubleshooting
+RUN if [ -d log/latest_build ]; then \
+  if grep -R -I -n "CMake Error\|error:\|fatal error" log/latest_build >/dev/null 2>&1; then \
+  echo "Detected build failures in log/latest_build — running setup.sh and build.sh for troubleshooting"; \
+  if [ -f ./setup.sh ]; then echo "Running ./setup.sh" && bash ./setup.sh || echo "./setup.sh returned non-zero"; else echo "./setup.sh not found"; fi; \
+  if [ -f ./build.sh ]; then echo "Running ./build.sh" && bash ./build.sh || echo "./build.sh returned non-zero"; else echo "./build.sh not found"; fi; \
+  else \
+  echo "No errors found in build logs"; \
+  fi; \
+  else \
+  echo "No build logs found (log/latest_build missing)"; \
+  fi
 
 # Create non-root user
 RUN useradd -m -s /bin/bash robot
