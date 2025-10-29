@@ -1,0 +1,1823 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://goldjunge91.github.io/my_steel-robot_ws/Projekt/">
+      
+      
+        <link rel="prev" href="../PINMAP/">
+      
+      
+        <link rel="next" href="../architecture_and_packages/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.28">
+    
+    
+      
+        <title>Projektbeschreibung: ROS2-Roboter - goldjunge91/my_steel-robot_ws</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.6543a935.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#projektbeschreibung-ros2-roboter" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="goldjunge91/my_steel-robot_ws" class="md-header__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            goldjunge91/my_steel-robot_ws
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Projektbeschreibung: ROS2-Roboter
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="goldjunge91/my_steel-robot_ws" class="md-nav__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    goldjunge91/my_steel-robot_ws
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    my_steel Robot Workspace
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Pico Firmware Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE_INDEX/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Documentation Index
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LICENSE/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LICENSE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PINMAP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PINMAP (Template) — my_steel Robot (Digital Board: Raspberry Pi Pico)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Projektbeschreibung: ROS2-Roboter
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Projektbeschreibung: ROS2-Roboter
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-motivation-projektidee" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Motivation &amp; Projektidee
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Motivation & Projektidee">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#die-vision" class="md-nav__link">
+    <span class="md-ellipsis">
+      Die Vision
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-von-der-idee-zum-konzept" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Von der Idee zum Konzept
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Von der Idee zum Konzept">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-die-initiale-wunschliste" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1. Die initiale Wunschliste
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-konkretisierung-der-funktionen" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.2. Konkretisierung der Funktionen
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-recherche-konzeptentscheidungen" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Recherche &amp; Konzeptentscheidungen
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Recherche & Konzeptentscheidungen">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-antriebskonzept" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1. Antriebskonzept
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-sensorik-fur-slam" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2. Sensorik für SLAM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-steuerungsarchitektur" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.3. Steuerungsarchitektur
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-systemarchitektur" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Systemarchitektur
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Systemarchitektur">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-high-level-steuerung-das-gehirn" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.1. High-Level-Steuerung (Das Gehirn)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-low-level-echtzeit-steuerung-das-ruckgrat" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.2. Low-Level Echtzeit-Steuerung (Das Rückgrat)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-aktor-steuerung-der-schutze" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.3. Aktor-Steuerung (Der Schütze)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-remote-steuerung-die-kommandozentrale" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.4. Remote-Steuerung (Die Kommandozentrale)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-hardware-komponenten" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Hardware-Komponenten
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Hardware-Komponenten">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-komponenten-ubersicht" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.1. Komponenten-Übersicht
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-systemubersicht-diagramme" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.2. Systemübersicht-Diagramme
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2. Systemübersicht-Diagramme">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#komponenten-architektur" class="md-nav__link">
+    <span class="md-ellipsis">
+      Komponenten-Architektur
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#datenfluss-kommunikation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Datenfluss &amp; Kommunikation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deployment-architektur" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment-Architektur
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-software-stack-ros2-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Software-Stack &amp; ROS2-Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Software-Stack & ROS2-Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-ros2-architektur" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.1. ROS2-Architektur
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-entwicklungs-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.2. Entwicklungs-Workflow
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-kernfunktionen-im-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Kernfunktionen im Detail
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Kernfunktionen im Detail">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-slam-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1. SLAM &amp; Navigation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-omnidirektionale-bewegung" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2. Omnidirektionale Bewegung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-computer-vision-launcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.3. Computer Vision &amp; Launcher
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-remote-steuerung" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.4. Remote-Steuerung
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-lessons-learned-ausblick" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Lessons Learned &amp; Ausblick
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Lessons Learned & Ausblick">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-herausforderungen" class="md-nav__link">
+    <span class="md-ellipsis">
+      8.1. Herausforderungen
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-mogliche-erweiterungen" class="md-nav__link">
+    <span class="md-ellipsis">
+      8.2. Mögliche Erweiterungen
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture_and_packages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture and packages
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../command%20list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    command list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware_setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Hardware Preparation and Bringup Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imu_calibration_guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IMU Calibration Guide - ICM-20948
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Notes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notes_kommentare/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ROS 2 Workspace &amp; Roboter-Steuerung: Befehlsreferenz
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raspberry_pi_setup_plan/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    my_steel Robot - Einfacher Start Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tmux/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tmux
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Github
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            Github
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../github/Workflow%20commands%20for%20GitHub%20Actions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Workflow commands for GitHub Actions (Workflowbefehle für GitHub Actions)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Ros
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            Ros
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/Ros2_docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Ros2 docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/orsf_README/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    OSRF Docker Images
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-motivation-projektidee" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Motivation &amp; Projektidee
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Motivation & Projektidee">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#die-vision" class="md-nav__link">
+    <span class="md-ellipsis">
+      Die Vision
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-von-der-idee-zum-konzept" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Von der Idee zum Konzept
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Von der Idee zum Konzept">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-die-initiale-wunschliste" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1. Die initiale Wunschliste
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-konkretisierung-der-funktionen" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.2. Konkretisierung der Funktionen
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-recherche-konzeptentscheidungen" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Recherche &amp; Konzeptentscheidungen
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Recherche & Konzeptentscheidungen">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-antriebskonzept" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1. Antriebskonzept
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-sensorik-fur-slam" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2. Sensorik für SLAM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-steuerungsarchitektur" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.3. Steuerungsarchitektur
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-systemarchitektur" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Systemarchitektur
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Systemarchitektur">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-high-level-steuerung-das-gehirn" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.1. High-Level-Steuerung (Das Gehirn)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-low-level-echtzeit-steuerung-das-ruckgrat" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.2. Low-Level Echtzeit-Steuerung (Das Rückgrat)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-aktor-steuerung-der-schutze" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.3. Aktor-Steuerung (Der Schütze)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-remote-steuerung-die-kommandozentrale" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.4. Remote-Steuerung (Die Kommandozentrale)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-hardware-komponenten" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Hardware-Komponenten
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Hardware-Komponenten">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-komponenten-ubersicht" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.1. Komponenten-Übersicht
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-systemubersicht-diagramme" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.2. Systemübersicht-Diagramme
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5.2. Systemübersicht-Diagramme">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#komponenten-architektur" class="md-nav__link">
+    <span class="md-ellipsis">
+      Komponenten-Architektur
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#datenfluss-kommunikation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Datenfluss &amp; Kommunikation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deployment-architektur" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment-Architektur
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-software-stack-ros2-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Software-Stack &amp; ROS2-Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Software-Stack & ROS2-Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-ros2-architektur" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.1. ROS2-Architektur
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-entwicklungs-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.2. Entwicklungs-Workflow
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-kernfunktionen-im-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Kernfunktionen im Detail
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Kernfunktionen im Detail">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-slam-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1. SLAM &amp; Navigation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-omnidirektionale-bewegung" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2. Omnidirektionale Bewegung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-computer-vision-launcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.3. Computer Vision &amp; Launcher
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-remote-steuerung" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.4. Remote-Steuerung
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-lessons-learned-ausblick" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Lessons Learned &amp; Ausblick
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Lessons Learned & Ausblick">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-herausforderungen" class="md-nav__link">
+    <span class="md-ellipsis">
+      8.1. Herausforderungen
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-mogliche-erweiterungen" class="md-nav__link">
+    <span class="md-ellipsis">
+      8.2. Mögliche Erweiterungen
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="projektbeschreibung-ros2-roboter"><strong>Projektbeschreibung: ROS2-Roboter</strong></h1>
+<h2 id="1-motivation-projektidee">1. Motivation &amp; Projektidee</h2>
+<p>Dieses Projekt vereint zwei Leidenschaften: die Begeisterung für Robotik aus dem Mechatronik-Studium und die Freude am Programmieren, die ich bei der Entwicklung von Fullstack-Webanwendungen für meinen Arbeitgeber entdeckt habe. Nach zwei erfolgreichen Web-Projekten wollte ich endlich etwas schaffen, das beide Welten verbindet – komplexe Software und anspruchsvolle Hardware.</p>
+<p>Da fertige Roboter-Kits nicht nur teuer sind, sondern ich auch langjährige Erfahrung im 3D-Druck mitbringe, fiel die Entscheidung schnell: ein komplett "self-sourced" entwickeltes Projekt.</p>
+<h3 id="die-vision">Die Vision</h3>
+<p>Die Idee war klar: Ein Roboter, der mehr kann als nur vor und zurück zu fahren. Er sollte:</p>
+<ul>
+<li>Autonom navigieren und Hindernissen ausweichen</li>
+<li>Objekte und Personen erkennen</li>
+<li>Sich präzise fernsteuern lassen</li>
+</ul>
+<p>Die Idee der Fernsteuerung wurde stark durch meine Erfahrungen aus einem <strong>5G-Forschungsprojekt</strong> geprägt, in dem ich die Testleitung für automatisiertes und teleoperiertes Fahren begleiten durfte. Der Austausch mit Entwicklern straßenzugelassener autonomer Fahrzeuge und die Inspiration durch Flottensteuerungs- und Luftfahrt-Kontrollzentralen zeigten mir, was in diesem Bereich möglich ist.</p>
+<p>Und um dem Ganzen eine persönliche und humorvolle Note zu geben, kam die Idee mit dem <strong>Nerf-Dart-Launcher</strong> – inspiriert von <a href="https://www.youtube.com/watch?v=8RKy_i2h_j8&amp;t=789s">diesem super lustigen Video</a>. Es ging mir darum, tief in die Programmierung einzutauchen und zu lernen, wie man Hardware und Software zu einem intelligenten System kombiniert.</p>
+<hr />
+<h2 id="2-von-der-idee-zum-konzept">2. Von der Idee zum Konzept</h2>
+<h3 id="21-die-initiale-wunschliste">2.1. Die initiale Wunschliste</h3>
+<p>Am Anfang stand keine detaillierte Planung, sondern nur eine Sammlung von Ideen und den üblichen Buzzwords aus Medien und Social Media: <strong>SLAM, Face Recognition, Object Recognition, Path Planning, Autonomous Driving, Computer Vision</strong>. Ich wollte all den coolen Shit haben!</p>
+<p>Die unsortierte Wunschliste:</p>
+<ul>
+<li><strong>Vier angetriebene Räder</strong> – nicht die Standard-Zwei-Rad-Lösung, sondern mehr Traktion, Stabilität und eine solidere Basis</li>
+<li><strong>Autonome Intelligenz</strong> – keine stumpfe Befehlsausführung, sondern Umgebungswahrnehmung und Selbstorientierung</li>
+<li><strong>Interaktion</strong> – ein greifbares, sichtbares Feature statt nur Herumfahren</li>
+<li><strong>Persönlichkeit</strong> – keine tiefgründigen KI-Gespräche, sondern lustige Sprüche und einfache Sprachbefehle</li>
+<li><strong>Volle Kontrolle</strong> – kompletter Zugriff auf Sensordaten und Systemzustand wie in einer Kontrollzentrale</li>
+<li><strong>Industriestandard</strong> – keine 10.000-Zeilen-Arduino-Datei, sondern eine professionelle Robotik-Architektur</li>
+</ul>
+<h3 id="22-konkretisierung-der-funktionen">2.2. Konkretisierung der Funktionen</h3>
+<p>Aus diesen vagen Vorstellungen wurden klare, technische Anforderungen:</p>
+<p><strong>Antrieb:</strong><br />
+Vier Räder waren gesetzt – und zwar aus Trotz gegenüber den zahlreichen TurtleBot-Kopien mit Differentialantrieb. Ich wollte etwas Eigenes entwickeln.</p>
+<p><strong>SLAM:</strong><br />
+Die "Intelligenz" konkretisierte sich zur Anforderung, dass der Roboter in meiner Wohnung autonom eine Karte erstellen, sich darin lokalisieren und navigieren können muss.</p>
+<p><strong>Computer Vision:</strong><br />
+Der Wunsch nach "Interaktion" mündete in der Kombination aus <strong>Gesichtserkennung</strong> und dem <strong>Nerf-Dart-Launcher</strong> – ernste Technik mit einem spielerischen, greifbaren Feature.</p>
+<p><strong>Fernsteuerung:</strong><br />
+Die Steuerung sollte <strong>immer remote</strong> erfolgen – manuell per Xbox-Controller oder durch autonome Befehle. Die Launcher-Steuerung musste dabei <strong>vollständig getrennt</strong> von der Fahrsteuerung sein, um eine saubere, modulare Architektur zu gewährleisten. Ein <strong>Web-Dashboard</strong> zur Visualisierung der Telemetriedaten war ebenfalls Pflicht.</p>
+<p><strong>Technologiebasis:</strong><br />
+Von Anfang an stand fest: Das Projekt baut auf <strong>ROS2</strong> auf.</p>
+<hr />
+<h2 id="3-recherche-konzeptentscheidungen">3. Recherche &amp; Konzeptentscheidungen</h2>
+<p>Nachdem klar war, <em>was</em> der Roboter können soll, begann die eigentliche Arbeit: <em>Wie</em> setze ich das alles um?</p>
+<h3 id="31-antriebskonzept">3.1. Antriebskonzept</h3>
+<p>Die Entscheidung für vier Räder eröffnete verschiedene Antriebskonzepte. Aus meiner KFZ-Ausbildung kannte ich klassische Lenkungen, doch welche Optionen bietet die Robotik?</p>
+<pre><code class="language-mermaid">graph TD
+    subgraph &quot;Anforderung: Antrieb mit 4 Rädern&quot;
+        A{Welche Bewegungsart wird angestrebt?}
+        A -- &quot;Maximale Manövrierfähigkeit (holonom)&quot; --&gt; B[Omnidirektionale Antriebe]
+        A -- &quot;Fahrzeugähnliche Bewegung (nicht-holonom)&quot; --&gt; C[Gelenkte / Starre Antriebe]
+    end
+
+    subgraph &quot;Technologie-Optionen&quot;
+        B -- &quot;Für glatte Böden&quot; --&gt; B1[&quot;Mecanum-Räder&quot;]
+        B -- &quot;Für unebene Böden&quot; --&gt; B2[&quot;Omni-Räder&quot;]
+        C -- &quot;Panzerlenkung&quot; --&gt; C1[&quot;Skid-Steer&quot;]
+        C -- &quot;Autolenkung&quot; --&gt; C2[&quot;Ackermann-Lenkung&quot;]
+    end
+
+    subgraph &quot;Meine Entscheidung&quot;
+        B1 --&gt; End1[Ergebnis: Mecanum-Antrieb für Indoor-Agilität]
+    end
+
+    style End1 fill:#cde4ff,stroke:#333,stroke-width:2px
+</code></pre>
+<p><strong>Entscheidung:</strong> Mecanum-Räder bieten holonome Bewegung (seitliches Fahren, Rotation auf der Stelle) und sind ideal für Indoor-Umgebungen mit glatten Böden.</p>
+<h3 id="32-sensorik-fur-slam">3.2. Sensorik für SLAM</h3>
+<p>Für die autonome Navigation muss der Roboter seine Umgebung erfassen. Die Optionen:</p>
+<pre><code class="language-mermaid">mindmap
+  root(&quot;(Sensor für SLAM?)&quot;)
+    LiDAR
+      ::icon(fa fa-satellite-dish)
+      + Hohe Präzision 2D
+      + 360° Abdeckung
+      + Unempfindlich gegen Licht
+      - Kostenfaktor
+    Tiefenkamera (Stereo/ToF)
+      ::icon(fa fa-camera-retro)
+      + Günstiger
+      + Echte 3D-Daten
+      - Begrenztes Sichtfeld
+      - Anfällig für Lichtverhältnisse
+    Ultraschall
+      ::icon(fa fa-assistive-listening-systems)
+      + Sehr günstig
+      - Zu ungenau für SLAM
+      - Nur simple Hinderniserkennung
+    Entscheidung
+      ::icon(fa fa-check-circle)
+      **LiDAR** für robustes 2D-Mapping als Basis
+</code></pre>
+<p><strong>Entscheidung:</strong> LiDAR bietet die beste Balance aus Präzision, Zuverlässigkeit und 360°-Abdeckung für robustes Indoor-SLAM.</p>
+<h3 id="33-steuerungsarchitektur">3.3. Steuerungsarchitektur</h3>
+<p>Die Kombination aus rechenintensivem ROS2 und präziser Motoransteuerung stellte eine zentrale Herausforderung dar.</p>
+<pre><code class="language-mermaid">flowchart LR
+    subgraph &quot;Option A: Monolithisch&quot;
+        A1[Raspberry Pi 4]
+        A1 --&gt; A2{&quot;ROS2 (High-Level)&quot;}
+        A1 --&gt; A3{&quot;Motor-PWM (Low-Level)&quot;}
+        style A3 fill:#f8d7da,stroke:#721c24
+    end
+
+    subgraph &quot;Option B: Verteilte Architektur&quot;
+        B1[Raspberry Pi 4] --&gt; B2{&quot;ROS2 (High-Level)&quot;}
+        B1 -- &quot;Befehle (z.B. 0.5 m/s)&quot; --&gt; B3[Raspberry Pi Pico]
+        B3 --&gt; B4{&quot;Motor-PWM (Echtzeit)&quot;}
+        style B4 fill:#d4edda,stroke:#155724
+    end
+
+    subgraph &quot;Entscheidung&quot;
+        C1{&quot;Problem bei A:\nLinux ist kein Echtzeit-OS.\nPWM-Jitter führt zu unsauberer Bewegung.&quot;}
+        C2{&quot;Vorteil von B:\nPico übernimmt Echtzeit-kritische Tasks.\nSaubere, zuverlässige Motoransteuerung.&quot;}
+        C3[**Option B gewählt**]
+    end
+
+    A1 --&gt; C1
+    B1 --&gt; C2
+    C1 --&gt; C3
+    C2 --&gt; C3
+</code></pre>
+<p><strong>Entscheidung:</strong> Getrennte Architektur mit Raspberry Pi 4 für High-Level-Logik und Raspberry Pi Pico für echtzeitkritische Motorsteuerung.</p>
+<hr />
+<h2 id="4-systemarchitektur">4. Systemarchitektur</h2>
+<p>Die finale Architektur ist modular aufgebaut und nutzt die Stärken verschiedener Controller für spezifische Aufgaben. Die Kommunikation erfolgt durchgängig über das ROS2-Netzwerk, wobei <strong>micro-ROS</strong> als Brücke zu den Mikrocontrollern dient.</p>
+<h3 id="41-high-level-steuerung-das-gehirn">4.1. High-Level-Steuerung (Das Gehirn)</h3>
+<p><strong>Hardware:</strong> Raspberry Pi 4B (8GB)<br />
+<strong>Software:</strong> Ubuntu Server 22.04 LTS, ROS2 Humble  </p>
+<p><strong>Verantwortlichkeiten:</strong></p>
+<ul>
+<li>Verarbeitung von LiDAR- und Kameradaten</li>
+<li>Ausführung der SLAM-Algorithmen (Kartierung &amp; Lokalisierung)</li>
+<li>Pfadplanung für autonome Navigation</li>
+<li>Hosting des Web-Dashboards und der ROS2-Web-Bridge</li>
+<li>Computer-Vision-Verarbeitung für Gesichtserkennung</li>
+<li>Betrieb des <strong><code>micro-ros-agent</code></strong> für die Kommunikation mit Mikrocontrollern</li>
+</ul>
+<h3 id="42-low-level-echtzeit-steuerung-das-ruckgrat">4.2. Low-Level Echtzeit-Steuerung (Das Rückgrat)</h3>
+<p><strong>Hardware:</strong> Raspberry Pi Pico<br />
+<strong>Software:</strong> FreeRTOS, micro-ROS Client  </p>
+<p><strong>Verantwortlichkeiten:</strong></p>
+<ul>
+<li>Ansteuerung der 4 DC-Motoren mit PWM</li>
+<li>Auslesen der Hall-Encoder für Odometrie</li>
+<li>Erfassung der IMU-Daten (Beschleunigung, Rotation, Orientierung)</li>
+<li>Auslesen der Time-of-Flight-Sensoren</li>
+<li>Veröffentlichung von Sensordaten und Odometrie auf ROS2-Topics</li>
+<li>Verarbeitung von <code>geometry_msgs/Twist</code>-Bewegungsbefehlen</li>
+</ul>
+<h3 id="43-aktor-steuerung-der-schutze">4.3. Aktor-Steuerung (Der Schütze)</h3>
+<p><strong>Hardware:</strong> Arduino Nano oder Pro Micro<br />
+<strong>Software:</strong> micro-ROS Client  </p>
+<p><strong>Verantwortlichkeiten:</strong></p>
+<ul>
+<li>Steuerung der Pan/Tilt-Servos für Zielausrichtung</li>
+<li>Ansteuerung der Brushless-Motoren (Flywheel) zum Dart-Beschleunigen</li>
+<li>Auslösen des Abzugsmechanismus</li>
+<li>Verarbeitung von Ziel- und Feuerbefehlen über dedizierte ROS2-Topics</li>
+</ul>
+<p><strong>Design-Prinzip:</strong> Vollständige Entkopplung von der kritischen Bewegungssteuerung für Modularität und Ausfallsicherheit.</p>
+<h3 id="44-remote-steuerung-die-kommandozentrale">4.4. Remote-Steuerung (Die Kommandozentrale)</h3>
+<p><strong>Hardware:</strong> Externer PC (Remote Workstation)  </p>
+<p><strong>Funktionen:</strong></p>
+<ul>
+<li><strong>Manuelle Steuerung:</strong> Xbox-Controller am PC verbunden, ROS2-Node wandelt Eingaben in <code>Twist</code>-Nachrichten um</li>
+<li><strong>Telemetrie &amp; Monitoring:</strong> Web-Dashboard im Browser mit Echtzeit-Visualisierung über ROS2-Web-Bridge</li>
+<li><strong>Kommandosteuerung:</strong> Senden von autonomen Navigationsbefehlen und Launcher-Kommandos</li>
+</ul>
+<hr />
+<h2 id="5-hardware-komponenten">5. Hardware-Komponenten</h2>
+<h3 id="51-komponenten-ubersicht">5.1. Komponenten-Übersicht</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"><strong>Kategorie</strong></th>
+<th style="text-align: left;"><strong>Komponente</strong></th>
+<th style="text-align: left;"><strong>Funktion</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Chassis &amp; Antrieb</strong></td>
+<td style="text-align: left;">4× DC-Getriebemotoren GM3865-520 mit Hall-Encodern</td>
+<td style="text-align: left;">Kraftvoller Antrieb mit Drehzahl-Feedback</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">4× Mecanum-Räder (80mm)</td>
+<td style="text-align: left;">Omnidirektionale Bewegung</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">4× TB6612FNG Motortreiber</td>
+<td style="text-align: left;">H-Brücken-Ansteuerung der DC-Motoren</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Steuerung &amp; Sensorik</strong></td>
+<td style="text-align: left;">Raspberry Pi 4B (8GB RAM)</td>
+<td style="text-align: left;">High-Level-Steuerung, ROS2-Master, Computer Vision</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Raspberry Pi Pico</td>
+<td style="text-align: left;">Echtzeit-Steuerung (Motoren, Encoder, IMU, ToF)</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Arduino Nano / Pro Micro</td>
+<td style="text-align: left;">Dedizierte Launcher-Steuerung</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">YDLIDAR LDS01RR</td>
+<td style="text-align: left;">360° Laser-Scanner für SLAM (8m Reichweite)</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">ICM-20948 (9-DoF IMU)</td>
+<td style="text-align: left;">Lage- und Bewegungssensorik (Sensorfusion mit Odometrie)</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">VL53L0X Time-of-Flight-Sensor</td>
+<td style="text-align: left;">Präzise Distanzmessung (bis 2m) für Kollisionsvermeidung</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">USB-Kamera (1080p)</td>
+<td style="text-align: left;">Video-Streaming und Computer-Vision-Input</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Nerf-Launcher</strong></td>
+<td style="text-align: left;">2× RS2205 Brushless-Motoren &amp; 2× 40A ESCs</td>
+<td style="text-align: left;">Dart-Beschleunigung (Flywheel-System)</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">1× Digital-Servo (22kg) &amp; 1× 9g Servo</td>
+<td style="text-align: left;">Pan/Tilt-Mechanismus für Zielausrichtung</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Energieversorgung</strong></td>
+<td style="text-align: left;">3S Li-Ion Akku-Pack (18650-Zellen)</td>
+<td style="text-align: left;">Mobile Stromversorgung (11,1V nominal)</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">3S BMS (Battery Management System)</td>
+<td style="text-align: left;">Lade-/Entladeschutz, Zellenbalancierung</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">INA3221 Sensor</td>
+<td style="text-align: left;">Echtzeit-Monitoring von Spannung, Strom und Leistung</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Bedienung &amp; Interface</strong></td>
+<td style="text-align: left;">Xbox Controller (Remote-PC)</td>
+<td style="text-align: left;">Präzise, intuitive manuelle Fernsteuerung</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Web-Dashboard (Remote-PC)</td>
+<td style="text-align: left;">Telemetrie-Visualisierung und Systemsteuerung</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-systemubersicht-diagramme">5.2. Systemübersicht-Diagramme</h3>
+<h4 id="komponenten-architektur">Komponenten-Architektur</h4>
+<p><a href="https://editor.plantuml.com/uml/RP9DRi9038NtSmgBLQ8gBAgkmg842RMgG20YbKqsWPZ4Ol2W6GVQ7g07w1bwazwa9-aa_5RjSlIU_VpPqtUIMwatMWc9HaW5QxGrbowtoue4rr9R26QJz1PshWlJ-HY6oqhUa2HKggrMj8AWarpy-xpIzvqGf4BsocGhP1YIEED4QtIGroj0Ojp0mEIsw8GA89xbRhj0QrzXId2NSHiPF59PHIFSeGuple6n4MEZPeXWPFP7eUVBsGY2zMRn3u2fDGkDcnX6nFKBa1DO-yJpwD4axHwCyt7qH29euVlz0sfsUUsdG1ZW7ak_XyQ6NBG12hN32z300psWM6JsuLVy1w06estwXwINyPIMfXMlYCvx_GVesLX1ql6PO6r9QDskikbrf6aYaKNdJb2wa1vX4dQdk_xcuO9MIiL35hUia0fly50dFYXn__LPQUdvGvkjwdk__oe_"><img alt="Komponenten-Diagramm" src="https://img.plantuml.biz/plantuml/dsvg/RP9DRi9038NtSmgBLQ8gBAgkmg842RMgG20YbKqsWPZ4Ol2W6GVQ7g07w1bwazwa9-aa_5RjSlIU_VpPqtUIMwatMWc9HaW5QxGrbowtoue4rr9R26QJz1PshWlJ-HY6oqhUa2HKggrMj8AWarpy-xpIzvqGf4BsocGhP1YIEED4QtIGroj0Ojp0mEIsw8GA89xbRhj0QrzXId2NSHiPF59PHIFSeGuple6n4MEZPeXWPFP7eUVBsGY2zMRn3u2fDGkDcnX6nFKBa1DO-yJpwD4axHwCyt7qH29euVlz0sfsUUsdG1ZW7ak_XyQ6NBG12hN32z300psWM6JsuLVy1w06estwXwINyPIMfXMlYCvx_GVesLX1ql6PO6r9QDskikbrf6aYaKNdJb2wa1vX4dQdk_xcuO9MIiL35hUia0fly50dFYXn__LPQUdvGvkjwdk__oe_" /></a></p>
+<h4 id="datenfluss-kommunikation">Datenfluss &amp; Kommunikation</h4>
+<p><a href="https://editor.plantuml.com/uml/RPBFQW8n4CRlUOh1NboAj2Zqe8UghAtGjPIkNaelqPtD3iQ99DcBp-C3z04yrHThzWyenLlc-y9ylqncxBoqljnfuSbhX1JP6KjRoCyd2saoMGXHNn6KGxVJs1VpkHE1Bv23bL0y-Un40c1O7qTmbv0g_5IN64Gs7i5MGYW0xc5k2eGFUpuUo9497Vfnr5g3fyVV7vYiCzniIrQjkcBSxNFYJDEc08Kgn2RXs3JimPjn7ZaKo5aT9r0xhB6NX3doLkxGoWRnMe5kwj6YULYQbsXqY_NrV6BdIQ5jXLc8HHZ4lLWscHN059L5FdXqa5PSEUgijMfEoVdvg3Mf_uo1SAMzbMvJIAqRm2lX9bAAXGNLShKfNoM4SI7Bykhx6kkzj30FiqFBvD1kaRcPx0M4Cyg56CxOXrYaBFZ3Rwx_4gHsC9MENDFOcdNfgdVsuzv2xlV4QXJMnEp5EBIfjkaF"><img alt="Datenfluss-Diagramm" src="https://img.plantuml.biz/plantuml/dsvg/RPBFQW8n4CRlUOh1NboAj2Zqe8UghAtGjPIkNaelqPtD3iQ99DcBp-C3z04yrHThzWyenLlc-y9ylqncxBoqljnfuSbhX1JP6KjRoCyd2saoMGXHNn6KGxVJs1VpkHE1Bv23bL0y-Un40c1O7qTmbv0g_5IN64Gs7i5MGYW0xc5k2eGFUpuUo9497Vfnr5g3fyVV7vYiCzniIrQjkcBSxNFYJDEc08Kgn2RXs3JimPjn7ZaKo5aT9r0xhB6NX3doLkxGoWRnMe5kwj6YULYQbsXqY_NrV6BdIQ5jXLc8HHZ4lLWscHN059L5FdXqa5PSEUgijMfEoVdvg3Mf_uo1SAMzbMvJIAqRm2lX9bAAXGNLShKfNoM4SI7Bykhx6kkzj30FiqFBvD1kaRcPx0M4Cyg56CxOXrYaBFZ3Rwx_4gHsC9MENDFOcdNfgdVsuzv2xlV4QXJMnEp5EBIfjkaF" /></a></p>
+<h4 id="deployment-architektur">Deployment-Architektur</h4>
+<p><a href="https://editor.plantuml.com/uml/LP6nJiCm48PtFuNLgHb25wPse4L228aAYOgjYualpidEkN8kWFeyVGOcjhmObpfLORt_z_z_lbjtR1BtRL2C741lY1F2U-SZ7U70UdwhNuUJXLGeTROghFLyTW-Vu7fodKpkPeNc1aZ6JGoHOhkdUMk-RlJMqF3z8Ncf7auDEW_8nQnGMYzVMaAB2JnZ97CjXfMevuetOaWkzMJ_5BXWc1TFP6DCvo29sa9bg6_Bp3c-Xz21c7kIFBhOniQ_7h9Ogyb9M3LSNkbhqwGZz4weAOWsGJz20F8CUg77NQJ_r7LCFbVjFDfonv2RnhaspY1bTLDvIAqXAfybJPOuuUI0pAMM3yHTrG1QCIptTFdaLAZhuIVfl8Toup0W3oTUoOdYGQqbOxpeBm00"><img alt="Deployment-Diagramm" src="https://img.plantuml.biz/plantuml/dsvg/LP6nJiCm48PtFuNLgHb25wPse4L228aAYOgjYualpidEkN8kWFeyVGOcjhmObpfLORt_z_z_lbjtR1BtRL2C741lY1F2U-SZ7U70UdwhNuUJXLGeTROghFLyTW-Vu7fodKpkPeNc1aZ6JGoHOhkdUMk-RlJMqF3z8Ncf7auDEW_8nQnGMYzVMaAB2JnZ97CjXfMevuetOaWkzMJ_5BXWc1TFP6DCvo29sa9bg6_Bp3c-Xz21c7kIFBhOniQ_7h9Ogyb9M3LSNkbhqwGZz4weAOWsGJz20F8CUg77NQJ_r7LCFbVjFDfonv2RnhaspY1bTLDvIAqXAfybJPOuuUI0pAMM3yHTrG1QCIptTFdaLAZhuIVfl8Toup0W3oTUoOdYGQqbOxpeBm00" /></a></p>
+<hr />
+<h2 id="6-software-stack-ros2-integration">6. Software-Stack &amp; ROS2-Integration</h2>
+<h3 id="61-ros2-architektur">6.1. ROS2-Architektur</h3>
+<p>Das System basiert vollständig auf <strong>ROS2 Humble</strong> und nutzt dessen modulare, verteilte Architektur.</p>
+<p><strong>Zentrale ROS2-Nodes:</strong></p>
+<ul>
+<li><strong><code>base_controller</code></strong> (Pico): Motorsteuerung, Odometrie-Publikation</li>
+<li><strong><code>slam_toolbox</code></strong> (Pi 4): SLAM-Algorithmus für Kartierung</li>
+<li><strong><code>nav2</code></strong> (Pi 4): Navigations-Stack für Pfadplanung</li>
+<li><strong><code>face_recognition_node</code></strong> (Pi 4): Computer-Vision-Verarbeitung</li>
+<li><strong><code>launcher_controller</code></strong> (Arduino): Nerf-Launcher-Steuerung</li>
+<li><strong><code>teleop_node</code></strong> (Remote-PC): Controller-Input-Verarbeitung</li>
+<li><strong><code>web_bridge</code></strong> (Pi 4): ROS2-Web-Interface</li>
+</ul>
+<p><strong>Kommunikation:</strong></p>
+<ul>
+<li><strong>DDS</strong> (Data Distribution Service) für Peer-to-Peer-Kommunikation</li>
+<li><strong>micro-ROS</strong> für Mikrocontroller-Integration</li>
+<li><strong>rosbridge</strong> für Web-Dashboard-Verbindung</li>
+</ul>
+<h3 id="62-entwicklungs-workflow">6.2. Entwicklungs-Workflow</h3>
+<p><strong>Version Control:</strong> Git mit Feature-Branch-Workflow<br />
+<strong>Build-System:</strong> Colcon (ROS2-Standard)<br />
+<strong>Testing:</strong> Unit-Tests mit <code>pytest</code>, Integration-Tests mit <code>launch_testing</code><br />
+<strong>Deployment:</strong> Custom <code>docker-compose</code> Setup für Pi 4</p>
+<hr />
+<h2 id="7-kernfunktionen-im-detail">7. Kernfunktionen im Detail</h2>
+<h3 id="71-slam-navigation">7.1. SLAM &amp; Navigation</h3>
+<p><strong>Algorithmus:</strong> SLAM Toolbox (Karto-basiert)<br />
+<strong>Sensor-Fusion:</strong> LiDAR + Odometrie + IMU<br />
+<strong>Features:</strong></p>
+<ul>
+<li>Echtzeit-Kartierung unbekannter Umgebungen</li>
+<li>Persistente Karten-Speicherung</li>
+<li>Loop-Closure-Detection für Konsistenz</li>
+<li>Kostenkartenbasierte Pfadplanung mit dynamischer Hindernisvermeidung</li>
+</ul>
+<h3 id="72-omnidirektionale-bewegung">7.2. Omnidirektionale Bewegung</h3>
+<p><strong>Kinematik:</strong> Mecanum-Räder ermöglichen:</p>
+<ul>
+<li>Vorwärts/Rückwärts-Fahrt</li>
+<li>Seitwärts-Bewegung (Crabbing)</li>
+<li>Rotation auf der Stelle</li>
+<li>Diagonale Bewegungen</li>
+<li>Beliebige Kombinationen</li>
+</ul>
+<p><strong>Regelung:</strong> PID-Controller für jeden Motor mit Encoder-Feedback</p>
+<h3 id="73-computer-vision-launcher">7.3. Computer Vision &amp; Launcher</h3>
+<p><strong>Face Recognition:</strong></p>
+<ul>
+<li>OpenCV + dlib für Gesichtserkennung</li>
+<li>Training mit bekannten Gesichtern</li>
+<li>Echtzeit-Tracking mit Bounding-Box-Publikation</li>
+</ul>
+<p><strong>Launcher-Integration:</strong></p>
+<ul>
+<li>Automatisches Tracking erkannter Gesichter</li>
+<li>Manuelle Übersteuerung via Controller</li>
+<li>Sicherheits-Features (Reichweitenbegrenzung, Timeout)</li>
+</ul>
+<h3 id="74-remote-steuerung">7.4. Remote-Steuerung</h3>
+<p><strong>Manuelle Steuerung:</strong></p>
+<ul>
+<li>Xbox-Controller mit intuitiver Tastenbelegung</li>
+<li>Analog-Stick für omnidirektionale Bewegung</li>
+<li>Trigger für Launcher-Steuerung</li>
+</ul>
+<p><strong>Web-Dashboard:</strong></p>
+<ul>
+<li>Live-Kamera-Stream</li>
+<li>Echtzeit-Karte mit Roboter-Position</li>
+<li>Sensordaten-Visualisierung (Batterie, IMU, ToF)</li>
+<li>Diagnose-Tools und Log-Anzeige</li>
+</ul>
+<hr />
+<h2 id="8-lessons-learned-ausblick">8. Lessons Learned &amp; Ausblick</h2>
+<h3 id="81-herausforderungen">8.1. Herausforderungen</h3>
+<ul>
+<li><strong>Mecanum-Kinematik:</strong> Komplex, aber die Agilität ist jeden Debugging-Alptraum wert</li>
+<li><strong>micro-ROS-Integration:</strong> Gewöhnungsbedürftig, aber die Performance-Vorteile sind enorm</li>
+<li><strong>Real-Time-Constraints:</strong> FreeRTOS auf dem Pico war die richtige Entscheidung</li>
+<li><strong>Energiemanagement:</strong> 3S-Akku reicht für ~45 Min. bei normalem Betrieb</li>
+</ul>
+<h3 id="82-mogliche-erweiterungen">8.2. Mögliche Erweiterungen</h3>
+<ul>
+<li><strong>3D-Navigation:</strong> Integration einer Tiefenkamera für Multi-Level-SLAM</li>
+<li><strong>Sprachsteuerung:</strong> Wake-Word-Detection + Sprachbefehle</li>
+<li><strong>Objektmanipulation:</strong> Greifarm für Pick-and-Place-Aufgaben</li>
+<li><strong>Schwarm-Verhalten:</strong> Multi-Robot-System mit kooperativer Navigation</li>
+<li><strong>ML-basiertes Tracking:</strong> YOLOv8 für robustere Objekterkennung</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>

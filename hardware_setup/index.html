@@ -1,0 +1,2051 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://goldjunge91.github.io/my_steel-robot_ws/hardware_setup/">
+      
+      
+        <link rel="prev" href="../command%20list/">
+      
+      
+        <link rel="next" href="../imu_calibration_guide/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.28">
+    
+    
+      
+        <title>Hardware Preparation and Bringup Guide - goldjunge91/my_steel-robot_ws</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.6543a935.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#hardware-preparation-and-bringup-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="goldjunge91/my_steel-robot_ws" class="md-header__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            goldjunge91/my_steel-robot_ws
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Hardware Preparation and Bringup Guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="goldjunge91/my_steel-robot_ws" class="md-nav__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    goldjunge91/my_steel-robot_ws
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    my_steel Robot Workspace
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Pico Firmware Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE_INDEX/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Documentation Index
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LICENSE/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LICENSE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PINMAP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PINMAP (Template) — my_steel Robot (Digital Board: Raspberry Pi Pico)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Projekt/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Projektbeschreibung: ROS2-Roboter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture_and_packages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture and packages
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../command%20list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    command list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Hardware Preparation and Bringup Guide
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Hardware Preparation and Bringup Guide
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-quick-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Quick Checklist
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-hardware-verification-robot-bench-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Hardware Verification (Robot Bench Test)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-remote-pc-preparation" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Remote PC Preparation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-sbc-preparation-robot-onboard-computer" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. SBC Preparation (Robot Onboard Computer)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. SBC Preparation (Robot Onboard Computer)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-tmux-workflow-from-srcrobot_bringupreadmemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common tmux workflow (from src/robot_bringup/README.md)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-pico-firmware-build-and-flash" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Pico Firmware Build and Flash
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Pico Firmware Build and Flash">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.1 Build
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-flashing-via-uf2-bootsel" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.2 Flashing via UF2 (Bootsel)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-flashing-via-picotool-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.3 Flashing via picotool (optional)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-using-the-python-flashing-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.4 Using the Python flashing helper
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-simulation-with-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Simulation with Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Simulation with Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-direct-launch" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1 Direct launch
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-tmux-convenience" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2 tmux convenience
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-real-robot-bringup" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Real Robot Bringup
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Troubleshooting
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-reference-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. Reference Files
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-package-inventory-src" class="md-nav__link">
+    <span class="md-ellipsis">
+      11. Package Inventory (src/)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Package Inventory (src/)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cross-package-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cross-Package Dependencies
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-per-package-file-breakdown-src" class="md-nav__link">
+    <span class="md-ellipsis">
+      12. Per-Package File Breakdown (src/)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. Per-Package File Breakdown (src/)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#husarion_controllersmecanum_drive_controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      husarion_controllers/mecanum_drive_controller
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mecabridge_hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      mecabridge_hardware
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#micro-ros-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      micro-ROS-Agent
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#open_manipulator_x" class="md-nav__link">
+    <span class="md-ellipsis">
+      open_manipulator_x
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_autonomy" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_autonomy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_bringup" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_bringup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_controller
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_description" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_description
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_firmware
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_gazebo" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_gazebo
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_hardware
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_localization" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_localization
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_nerf_launcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_nerf_launcher
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_utils" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_utils
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_vision" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_vision
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_hardware_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_hardware_interfaces
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serial" class="md-nav__link">
+    <span class="md-ellipsis">
+      serial
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Notes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imu_calibration_guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IMU Calibration Guide - ICM-20948
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Notes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notes_kommentare/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ROS 2 Workspace &amp; Roboter-Steuerung: Befehlsreferenz
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raspberry_pi_setup_plan/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    my_steel Robot - Einfacher Start Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tmux/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tmux
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Github
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            Github
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../github/Workflow%20commands%20for%20GitHub%20Actions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Workflow commands for GitHub Actions (Workflowbefehle für GitHub Actions)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Ros
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            Ros
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/Ros2_docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Ros2 docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/orsf_README/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    OSRF Docker Images
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-quick-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Quick Checklist
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-hardware-verification-robot-bench-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Hardware Verification (Robot Bench Test)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-remote-pc-preparation" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Remote PC Preparation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-sbc-preparation-robot-onboard-computer" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. SBC Preparation (Robot Onboard Computer)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. SBC Preparation (Robot Onboard Computer)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-tmux-workflow-from-srcrobot_bringupreadmemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common tmux workflow (from src/robot_bringup/README.md)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-pico-firmware-build-and-flash" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Pico Firmware Build and Flash
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Pico Firmware Build and Flash">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.1 Build
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-flashing-via-uf2-bootsel" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.2 Flashing via UF2 (Bootsel)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-flashing-via-picotool-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.3 Flashing via picotool (optional)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-using-the-python-flashing-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.4 Using the Python flashing helper
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-simulation-with-controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Simulation with Controller
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Simulation with Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-direct-launch" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1 Direct launch
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-tmux-convenience" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2 tmux convenience
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-real-robot-bringup" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Real Robot Bringup
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Troubleshooting
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-reference-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. Reference Files
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-package-inventory-src" class="md-nav__link">
+    <span class="md-ellipsis">
+      11. Package Inventory (src/)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Package Inventory (src/)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cross-package-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cross-Package Dependencies
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-per-package-file-breakdown-src" class="md-nav__link">
+    <span class="md-ellipsis">
+      12. Per-Package File Breakdown (src/)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. Per-Package File Breakdown (src/)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#husarion_controllersmecanum_drive_controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      husarion_controllers/mecanum_drive_controller
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mecabridge_hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      mecabridge_hardware
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#micro-ros-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      micro-ROS-Agent
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#open_manipulator_x" class="md-nav__link">
+    <span class="md-ellipsis">
+      open_manipulator_x
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_autonomy" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_autonomy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_bringup" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_bringup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_controller" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_controller
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_description" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_description
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_firmware
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_gazebo" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_gazebo
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_hardware
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_localization" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_localization
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_nerf_launcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_nerf_launcher
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_utils" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_utils
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_vision" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_vision
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_hardware_interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      robot_hardware_interfaces
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serial" class="md-nav__link">
+    <span class="md-ellipsis">
+      serial
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Notes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="hardware-preparation-and-bringup-guide">Hardware Preparation and Bringup Guide</h1>
+<p>This guide explains how to prepare the remote development PC, the single-board computer (SBC) on the robot, and the Raspberry Pi Pico firmware. It also covers hardware checks, flashing procedures, and how to start the full system in simulation or on the real robot.</p>
+<h2 id="1-prerequisites">1. Prerequisites</h2>
+<ul>
+<li>Ubuntu 22.04 (or matching ROS 2 Humble environment)</li>
+<li>ROS 2 Humble installed (<code>/opt/ros/humble/setup.bash</code> available)</li>
+<li><code>colcon</code>, <code>rosdep</code>, <code>tmux</code>, <code>git</code>, <code>build-essential</code></li>
+<li>Pico SDK toolchain (or <code>picotool</code>) on the machine that flashes the firmware</li>
+<li>Docker (optional) if the micro-ROS agent shall run in a container</li>
+<li>Access to this workspace and the <code>ros2.repos</code> manifest already imported into <code>src/</code></li>
+</ul>
+<p>Environment variables:</p>
+<pre><code class="language-bash">source /opt/ros/humble/setup.bash
+source ~/ros2_steel_ws/my_steel-robot_ws/install/setup.bash  # after building the workspace
+</code></pre>
+<h2 id="2-quick-checklist">2. Quick Checklist</h2>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Remote PC</th>
+<th>SBC</th>
+<th>Pico</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Update system packages</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Install ROS 2 Humble</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Clone workspace &amp; build</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Micro-ROS agent present</td>
+<td>optional</td>
+<td>✓</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Pico SDK / flashing tools</td>
+<td>optional</td>
+<td>optional</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Firmware flashed</td>
+<td>—</td>
+<td>—</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>ros2_control bringup</td>
+<td>for simulation</td>
+<td>✓</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-hardware-verification-robot-bench-test">3. Hardware Verification (Robot Bench Test)</h2>
+<p>Perform these checks before flashing or running the bringup:</p>
+<ol>
+<li>
+<p><strong>Serial Devices</strong>
+   <code>bash
+   ls -l /dev/ttyACM* /dev/ttyUSB* /dev/ttyAMA* /dev/gpiochip*
+   udevadm info -a -n /dev/ttyACM0  # adjust port</code>
+   Ensure the user is in the <code>dialout</code> group (<code>sudo usermod -aG dialout $USER</code>).</p>
+</li>
+<li>
+<p><strong>Power and Wiring</strong></p>
+</li>
+<li>Confirm Pico USB is connected and, if applicable, external power rails are on.</li>
+<li>
+<p>Compare wiring against <code>docs/PINMAP.md</code>.</p>
+</li>
+<li>
+<p><strong>I2C / SPI peripherals (optional)</strong>
+   <code>bash
+   sudo apt install -y i2c-tools
+   sudo i2cdetect -y 1</code></p>
+</li>
+<li>
+<p><strong>Firmware Sanity</strong></p>
+</li>
+<li>If an older firmware is installed, check that the micro-ROS client enumerates by running the agent and verifying topic output.</li>
+</ol>
+<h2 id="4-remote-pc-preparation">4. Remote PC Preparation</h2>
+<ol>
+<li>Install dependencies and ROS 2 Humble.</li>
+<li>Clone the workspace, import repos, and build:
+   <code>bash
+   cd ~/ros2_steel_ws/my_steel-robot_ws
+   vcs import src &lt; ros2.repos
+   rosdep install --from-paths src --ignore-src -y
+   colcon build --symlink-install
+   source install/setup.bash</code></li>
+<li>Optional convenience targets (<code>just</code> recipes):</li>
+<li><code>just start-gazebo-sim</code> – Gazebo with mecanum controller</li>
+<li><code>just start-sim-tmux</code> – tmux session for simulation</li>
+</ol>
+<h2 id="5-sbc-preparation-robot-onboard-computer">5. SBC Preparation (Robot Onboard Computer)</h2>
+<ol>
+<li>Ensure ROS 2 Humble and required packages are installed (see README).</li>
+<li>Copy the workspace or sync via <code>rsync</code>/<code>git</code>. Build as on the remote PC.</li>
+<li>Configure micro-ROS agent:</li>
+<li>Install the agent (<code>ros-humble-micro-ros-agent</code> or Docker image).</li>
+<li>Optionally enable the provided systemd service (<code>scripts/micro_ros_agent.service</code>).</li>
+<li>Confirm USB permissions and <code>dialout</code> group membership for the runtime user.</li>
+</ol>
+<h3 id="common-tmux-workflow-from-srcrobot_bringupreadmemd">Common tmux workflow (from <code>src/robot_bringup/README.md</code>)</h3>
+<pre><code class="language-bash"># Start micro-ROS agent (Docker example)
+tmux new-session -d -s sbc_agent -n agent
+ tmux send-keys -t sbc_agent:agent 'docker run -it --rm -v /dev:/dev --privileged --net=host \
+   microros/micro-ros-agent:humble serial --dev /dev/ttyACM0 -b 115200 -v6' C-m
+
+# Start bringup with mecanum drive
+tmux new-session -d -s sbc_bringup -n bringup
+ tmux send-keys -t sbc_bringup:bringup 'source /opt/ros/humble/setup.bash; \
+   source ~/ros2_steel_ws/my_steel-robot_ws/install/setup.bash; \
+   ros2 launch mecabridge_hardware mecabridge_hardware.launch.py \
+     drive_type:=mecanum device:=/dev/ttyACM0 baud_rate:=115200 microros:=true' C-m
+</code></pre>
+<p>Adjust <code>drive_type</code>, <code>device</code>, and <code>microros</code> according to the setup. Use <code>tmux attach -t &lt;session&gt;</code> to monitor logs.</p>
+<h2 id="6-pico-firmware-build-and-flash">6. Pico Firmware Build and Flash</h2>
+<p>Firmware sources live in <code>firmware/</code>. Two build modes exist (debug and release).</p>
+<h3 id="61-build">6.1 Build</h3>
+<pre><code class="language-bash">cd ~/ros2_steel_ws/my_steel-robot_ws/firmware
+make clean
+make build_release   # produces build_release/src/my_firmware.uf2
+</code></pre>
+<p>Use <code>make build</code> for a default build in <code>firmware/build/</code>.</p>
+<h3 id="62-flashing-via-uf2-bootsel">6.2 Flashing via UF2 (Bootsel)</h3>
+<ol>
+<li>Hold BOOTSEL while connecting the Pico to USB; it mounts as <code>RPI-RP2</code>.</li>
+<li>Copy the generated UF2 file:
+   <code>bash
+   cp build_release/src/my_firmware.uf2 /media/$USER/RPI-RP2/
+   sync</code></li>
+<li>The board reboots automatically with the new firmware.</li>
+</ol>
+<h3 id="63-flashing-via-picotool-optional">6.3 Flashing via picotool (optional)</h3>
+<pre><code class="language-bash">picotool load -f build_release/src/my_firmware.uf2
+picotool reboot
+</code></pre>
+<h3 id="64-using-the-python-flashing-helper">6.4 Using the Python flashing helper</h3>
+<p><code>robot_utils</code> provides scripts that select ports automatically:</p>
+<pre><code class="language-bash">ros2 run robot_utils flash_firmware.py --robot-model robot \
+  --port /dev/ttyACM0 --file firmware/build_release/src/my_firmware.uf2 --usb
+</code></pre>
+<p>The script also supports downloading prebuilt firmware if no <code>--file</code> is given.</p>
+<h2 id="7-simulation-with-controller">7. Simulation with Controller</h2>
+<h3 id="71-direct-launch">7.1 Direct launch</h3>
+<pre><code class="language-bash">source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 launch robot launch_sim.launch.py \
+  world:=src/robot/worlds/obstacles.world \
+  with_gazebo_gui:=true with_rviz:=true headless:=false
+</code></pre>
+<p>This launch file loads the mecanum drive controller (<code>drive_controller</code>) and <code>joint_state_broadcaster</code> after spawning the robot (<code>src/robot/launch/launch_sim.launch.py</code>).</p>
+<h3 id="72-tmux-convenience">7.2 tmux convenience</h3>
+<pre><code class="language-bash">./scripts/start_sim_tmux.sh
+</code></pre>
+<p>Creates windows for simulation, teleop, and monitoring with the correct environment sourcing.</p>
+<h2 id="8-real-robot-bringup">8. Real Robot Bringup</h2>
+<ol>
+<li>Confirm firmware is flashed and the micro-ROS agent is running (see Section 5).</li>
+<li>Launch the hardware interface with correct parameters:</li>
+</ol>
+<pre><code class="language-bash">ros2 launch mecabridge_hardware mecabridge_hardware.launch.py \
+  drive_type:=mecanum device:=/dev/ttyACM0 baud_rate:=115200 \
+  has_encoders:=false use_mock_hardware:=false
+</code></pre>
+<p>The launch file selects the proper controller (<code>mecanum_cont</code>) and loads URDF/configs (<code>src/mecabridge_hardware/launch/mecabridge_hardware.launch.py</code>).</p>
+<ol>
+<li>Verify controllers:</li>
+</ol>
+<pre><code class="language-bash">ros2 service call /controller_manager/list_controllers ros2_control_msgs/srv/ListControllers
+ros2 topic list
+ros2 topic echo /mecanum_drive_controller/odometry --once
+</code></pre>
+<ol>
+<li>Start teleoperation or navigation nodes as required (e.g., <code>ros2 run teleop_twist_keyboard teleop_twist_keyboard</code>).</li>
+</ol>
+<h2 id="9-troubleshooting">9. Troubleshooting</h2>
+<ul>
+<li><strong>Controller fails to start</strong>: Check <code>configUSE_CORE_AFFINITY</code> in the FreeRTOS configuration and ensure test configs do not override it when building pico SDK tests.</li>
+<li><strong>No serial connection</strong>: Ensure correct port, check <code>udev</code> rules (<code>scripts/99-pico.rules</code>), and confirm user permissions.</li>
+<li><strong>micro-ROS agent silent</strong>: Inspect logs with <code>journalctl -u microros-agent.service -f</code> or the Docker container output.</li>
+<li><strong>Simulation drift</strong>: Verify <code>use_sim_time</code> parameters and controller YAML in <code>robot/config/</code>.</li>
+</ul>
+<h2 id="10-reference-files">10. Reference Files</h2>
+<ul>
+<li><code>README.md</code> – workspace overview and quickstart steps</li>
+<li><code>src/robot_bringup/README.md</code> – detailed bringup and tmux automation</li>
+<li><code>src/robot/launch/launch_sim.launch.py</code> – simulation launch definition</li>
+<li><code>src/mecabridge_hardware/launch/mecabridge_hardware.launch.py</code> – hardware bringup</li>
+<li><code>docs/PINMAP.md</code> – wiring reference</li>
+<li><code>scripts/start_sim_tmux.sh</code> – tmux simulation helper</li>
+</ul>
+<p>Keep this document under version control and update it whenever new hardware or flashing steps are introduced.</p>
+<h2 id="11-package-inventory-src">11. Package Inventory (src/)</h2>
+<p>The workspace mixes ROS 2 packages and support repositories under <code>src/</code>. Use the table below to orient yourself when wiring, flashing, or launching components.</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Type</th>
+<th>Purpose</th>
+<th>Key Assets / Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>husarion_controllers/mecanum_drive_controller</code></td>
+<td>ROS 2 package</td>
+<td>ros2_control velocity controller that converts <code>/cmd_vel</code> into four wheel speed commands for mecanum bases; publishes odometry and TF</td>
+<td>Plugin manifest <code>mecanum_drive_plugin.xml</code>; parameters <code>src/mecanum_drive_controller_parameter.yaml</code>; library registered in <code>CMakeLists.txt</code></td>
+</tr>
+<tr>
+<td><code>mecabridge_hardware</code></td>
+<td>ROS 2 package</td>
+<td>SystemInterface implementation that bridges ros2_control to the Pico firmware via deterministic serial protocol</td>
+<td>Launch files under <code>launch/</code>; configs under <code>config/</code>; hardware interface code in <code>src/mecabridge_hardware/</code>; documented in <code>README.md</code></td>
+</tr>
+<tr>
+<td><code>micro-ROS-Agent/micro_ros_agent</code></td>
+<td>ROS 2 package (upstream)</td>
+<td>Canonical micro-ROS agent executable; allows Pico firmware to attach via serial or UDP</td>
+<td>Launch helper <code>src/robot_bringup/launch/microros_agent.launch.py</code> uses this package; follow upstream README for options</td>
+</tr>
+<tr>
+<td><code>open_manipulator_x/open_manipulator_x_description</code></td>
+<td>ROS 2 package</td>
+<td>URDF/Xacro, meshes, and kinematic data for the OpenMANIPULATOR-X arm</td>
+<td>Use when attaching the manipulator to the chassis; check <code>urdf/</code> and <code>meshes/</code></td>
+</tr>
+<tr>
+<td><code>open_manipulator_x/open_manipulator_x_moveit</code></td>
+<td>ROS 2 package</td>
+<td>MoveIt2 configs and launch files for the manipulator</td>
+<td>Requires MoveIt planners; see <code>launch/</code></td>
+</tr>
+<tr>
+<td><code>open_manipulator_x/open_manipulator_x_joy</code></td>
+<td>ROS 2 package</td>
+<td>Joystick interface nodes for teleoperating the manipulator</td>
+<td>Launch <code>launch/open_manipulator_x_joy.launch.py</code> with joystick hardware</td>
+</tr>
+<tr>
+<td><code>robot</code></td>
+<td>ROS 2 package</td>
+<td>Core simulation package: URDF, Gazebo worlds, RViz configs, and top-level launch (<code>launch_sim.launch.py</code>)</td>
+<td>Description in <code>README.md</code>; adjust <code>description/robot.urdf.xacro</code>; controllers loaded via <code>config/my_controllers.yaml</code></td>
+</tr>
+<tr>
+<td><code>robot_autonomy</code></td>
+<td>Support repo</td>
+<td>Navigation2, SLAM, deployment scripts (Docker/just)</td>
+<td><code>nav2/</code> contains parameter sets; <code>justfile</code> orchestrates nav stack; not a catkin package</td>
+</tr>
+<tr>
+<td><code>robot_bringup</code></td>
+<td>Support repo</td>
+<td>Launch and shell scripts to start micro-ROS agent and overall bringup</td>
+<td><code>launch/microros_agent.launch.py</code>; tmux automation documented in <code>README.md</code>; integrate with controller spawners</td>
+</tr>
+<tr>
+<td><code>robot_controller</code></td>
+<td>ROS 2 package</td>
+<td>Aggregated controller configurations and launch wrappers for the robot family</td>
+<td>Depends on <code>controller_manager</code>, <code>mecanum_drive_controller</code>, <code>diff_drive_controller</code>, etc.; see <code>config/</code> and <code>launch/</code></td>
+</tr>
+<tr>
+<td><code>robot_description</code></td>
+<td>ROS 2 package</td>
+<td>Shared URDF, meshes, and component configs for the chassis (simulation + hardware)</td>
+<td>Primary entrypoint <code>urdf/multi_drive_robot.urdf.xacro</code>; keep joint names consistent with controllers</td>
+</tr>
+<tr>
+<td><code>robot_firmware</code></td>
+<td>External repo</td>
+<td>Placeholder for dedicated Pico firmware project (often maintained separately)</td>
+<td>Use for alternative/build history; actual firmware in workspace’s top-level <code>firmware/</code> directory</td>
+</tr>
+<tr>
+<td><code>robot_gazebo</code></td>
+<td>Support repo</td>
+<td>Additional Gazebo resources or experiments (currently minimal placeholder)</td>
+<td>Extend with custom worlds/plugins as needed</td>
+</tr>
+<tr>
+<td><code>robot_hardware</code></td>
+<td>Support repo</td>
+<td>Notes and prototypes around alternative hardware interfaces</td>
+<td>Check <code>README.md</code>; not an active ROS package yet</td>
+</tr>
+<tr>
+<td><code>robot_localization</code></td>
+<td>Upstream package snapshot</td>
+<td>Contains built artifacts and ignore markers for the <code>robot_localization</code> stack</td>
+<td>When needed, replace with official release or rebuild from source</td>
+</tr>
+<tr>
+<td><code>robot_nerf_launcher</code></td>
+<td>Support repo</td>
+<td>(Placeholder) Code and documentation for the Nerf launcher attachment</td>
+<td>Expand with nodes controlling actuators or sensors for the accessory</td>
+</tr>
+<tr>
+<td><code>robot_utils</code></td>
+<td>ROS 2 package</td>
+<td>Helper scripts/binaries for flashing, serial discovery, deployment</td>
+<td><code>robot_utils/flash_firmware.py</code>, <code>scripts/</code> utilities; depends on <code>ament_index_python</code>; install provides CLI tools</td>
+</tr>
+<tr>
+<td><code>robot_vision</code></td>
+<td>Support repo</td>
+<td>Reserved for camera/vision processing nodes</td>
+<td>Document pipeline once implemented (e.g., face detection, AprilTags)</td>
+</tr>
+<tr>
+<td><code>robot_hardware_interfaces</code></td>
+<td>ROS 2 package (upstream)</td>
+<td>Husarion’s ros2_control integration for robot platforms—used as reference or dependency</td>
+<td>Provides example diff-drive controller, URDF includes, and topics (<code>README.md</code>)</td>
+</tr>
+<tr>
+<td><code>serial</code></td>
+<td>External library</td>
+<td>Vendored serial port utility (likely <code>wjwwood/serial</code>) for low-level communication</td>
+<td>Treat as third-party dependency; do not modify unless updating vendor drop</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cross-package-dependencies">Cross-Package Dependencies</h3>
+<ul>
+<li><code>mecabridge_hardware</code> loads controllers defined in <code>robot/config/my_controllers.yaml</code> and expects URDFs from <code>robot_description</code>.</li>
+<li><code>robot</code> simulation uses <code>mecanum_drive_controller</code> for kinematics and optionally spawns the hardware interface in mock mode.</li>
+<li><code>robot_controller</code> launch files spawn controller manager nodes that depend on both <code>mecabridge_hardware</code> and <code>husarion_controllers</code>.</li>
+<li><code>robot_autonomy</code> assumes <code>/tf</code>, <code>/odom</code>, and controller topics from either simulation (<code>robot</code>) or real hardware (<code>mecabridge_hardware</code>).</li>
+<li><code>micro-ROS-Agent</code> must run before <code>mecabridge_hardware</code> when the Pico firmware uses micro-ROS transports.</li>
+</ul>
+<p>Keep this section updated when new packages are added or deprecated to avoid stale bringup instructions.</p>
+<h2 id="12-per-package-file-breakdown-src">12. Per-Package File Breakdown (<code>src/</code>)</h2>
+<p>Use this deep dive when you need to locate specific launch files, headers, or implementation details. Paths are relative to <code>my_steel-robot_ws/src</code>.</p>
+<h3 id="husarion_controllersmecanum_drive_controller">husarion_controllers/mecanum_drive_controller</h3>
+<ul>
+<li><code>package.xml</code>, <code>CMakeLists.txt</code>: declares ament-based shared library build.</li>
+<li>Headers under <code>include/mecanum_drive_controller/</code></li>
+<li><code>mecanum_drive_controller.hpp</code>: main controller class deriving from <code>controller_interface::ControllerInterface</code>.</li>
+<li><code>odometry.hpp</code>, <code>speed_limiter.hpp</code>: helper classes used by the controller implementation.</li>
+<li><code>visibility_control.h</code>: export macros for Windows/Linux builds.</li>
+<li>Sources in <code>src/</code></li>
+<li><code>mecanum_drive_controller.cpp</code>: lifecycle methods, interface configuration, message subscription, state publishing.</li>
+<li><code>odometry.cpp</code>, <code>speed_limiter.cpp</code>: math helpers for wheel odometry and rate limiting.</li>
+<li><code>mecanum_drive_controller_parameter.yaml</code>: input for <code>generate_parameter_library</code> to create strongly-typed parameters.</li>
+<li><code>mecanum_drive_plugin.xml</code>: registers the controller with pluginlib.</li>
+<li><code>doc/userdoc.rst</code>, <code>CHANGELOG.rst</code>: upstream documentation and release history.</li>
+</ul>
+<h3 id="mecabridge_hardware">mecabridge_hardware</h3>
+<ul>
+<li><code>package.xml</code>, <code>CMakeLists.txt</code>: builds the hardware interface library and installs launch/config assets.</li>
+<li><code>src/mecabridge_hardware/</code></li>
+<li><code>mecabridge_hardware_interface.cpp</code>: implements <code>hardware_interface::SystemInterface</code> lifecycle, read/write loops, and watchdog logic.</li>
+<li><code>mecabridge_serial_protocol.cpp</code>: CRC-validated framing, command/state payload structures.</li>
+<li><code>wheel.cpp</code>: per-wheel state bookkeeping (position, velocity, encoder conversions).</li>
+<li><code>mecabridge_hardware.cpp</code>: plugin entry point.</li>
+<li><code>mecabridge_hardware_interface_temp.cpp</code>: previous revision kept for reference.</li>
+<li><code>config/</code></li>
+<li><code>mecabridge_*_controller.yaml</code>: ros2_control controller definitions (diff, mecanum, four-wheel).</li>
+<li><code>mecabridge_hardware_params.yaml</code>: hardware-specific parameters (serial device, watchdog, drive type).</li>
+<li><code>mecabridge_hardware.xml</code>, <code>robot_hardware.xml</code>, <code>fake_robot_hardware.xml</code>: plugin manifests for ros2_control.</li>
+<li><code>robot_controller_example.yaml</code>, <code>mecabridge_example_configs.yaml</code>: sample controller_manager setups.</li>
+<li><code>launch/</code>: per-drive launch files plus <code>mecabridge_hardware.launch.py</code> master launcher accepting arguments (<code>drive_type</code>, <code>use_mock_hardware</code>, etc.).</li>
+<li><code>test_legacy/</code>: GoogleTest suites and helper headers for protocol/hardware interface regression tests; useful references when writing new tests.</li>
+<li><code>scripts/</code>: developer helpers (build/dev shell, license insertion, header fixes).</li>
+<li><code>README.md</code>, <code>README_drive_arduino.md</code>: architecture, serial protocol, tmux workflows.</li>
+</ul>
+<h3 id="micro-ros-agent">micro-ROS-Agent</h3>
+<ul>
+<li>Top-level licensing (<code>LICENSE</code>, <code>NOTICE</code>, third-party list) and contributor guide.</li>
+<li><code>micro_ros_agent/package.xml</code>, <code>CMakeLists.txt</code>: standard micro-ROS agent build; depends on <code>rcl</code>, <code>rmw</code> implementations.</li>
+<li><code>micro_ros_agent/README.md</code>: runtime options (serial, UDP, CAN).</li>
+<li><code>snap/snapcraft.yaml</code>: snap packaging recipe.</li>
+<li>Treat this as an upstream dependency—avoid local modifications unless tracking forks.</li>
+</ul>
+<h3 id="open_manipulator_x">open_manipulator_x</h3>
+<ul>
+<li>Multi-package repository: <code>open_manipulator_x_description</code>, <code>open_manipulator_x_moveit</code>, <code>open_manipulator_x_joy</code> each provide <code>package.xml</code> + <code>CMakeLists.txt</code>.</li>
+<li><code>*_description</code>: URDF/Xacro, STL meshes for the manipulator; use with <code>robot_description</code> if arm is mounted.</li>
+<li><code>*_moveit</code>: MoveIt2 configs (<code>config/</code>, <code>launch/</code>) and <code>.setup_assistant</code> snapshot.</li>
+<li><code>*_joy</code>: joystick teleop nodes and launch files for the arm.</li>
+<li><code>README.md</code>: upstream quickstart and wiring.</li>
+</ul>
+<h3 id="robot">robot</h3>
+<ul>
+<li>Core mobile base package.</li>
+<li><code>package.xml</code>, <code>CMakeLists.txt</code>, <code>pyproject.toml</code>: builds both C++ launch support and Python utilities.</li>
+<li><code>description/</code>: modular Xacro (sensors, ros2_control, inertials) aggregated by <code>robot.urdf.xacro</code>.</li>
+<li><code>config/</code>: ros2_control controller YAMLs (<code>my_controllers*.yaml</code>), teleop configs, Gazebo parameters, RViz layouts.</li>
+<li><code>launch/</code>: bringup entry points (simulation, dashboard, joystick, camera, RPLIDAR, TF relay).</li>
+<li><code>scripts/</code>: helper scripts (wait for service, xacro check).</li>
+<li><code>docs/</code> and <code>Projekt.md</code>: requirements, vendor datasheets, workflow notes.</li>
+<li><code>todo.md</code>, <code>Tasks.md</code>: outstanding work items.</li>
+</ul>
+<h3 id="robot_autonomy">robot_autonomy</h3>
+<ul>
+<li>Not a ROS package; containerized Nav2/SLAM orchestrations.</li>
+<li>Key directories: <code>docker/</code> (compose definitions), <code>nav2/</code> (param files, launch scripts), <code>justfile</code>/<code>Makefile</code> (developer recipes).</li>
+<li>Use when bringing up autonomy stacks on remote machines.</li>
+</ul>
+<h3 id="robot_bringup">robot_bringup</h3>
+<ul>
+<li>Launch and scripting toolkit around micro-ROS agent and ros2_control bringup.</li>
+<li><code>launch/microros_agent.launch.py</code>: parameterized agent launcher (Docker or native).</li>
+<li><code>scripts/run_microros_agent.sh</code>, <code>scripts/install_microros_agent.sh</code>: automation for agent deployment.</li>
+<li><code>README.md</code>: tmux-based operations guide covering SBC and remote PC flows.</li>
+</ul>
+<h3 id="robot_controller">robot_controller</h3>
+<ul>
+<li>Pure-Python ROS 2 package (<code>setup.py</code>, <code>setup.cfg</code>, <code>package.xml</code>).</li>
+<li><code>launch/controller.launch.py</code>, <code>launch/manipulator.launch.py</code>: spawn controller manager plus specific controllers.</li>
+<li><code>test/</code>: simple pytest hooks verifying xacro and style compliance.</li>
+<li>Acts as glue between hardware interfaces and controllers shipped in this workspace.</li>
+</ul>
+<h3 id="robot_description">robot_description</h3>
+<ul>
+<li>URDF/Xacro + meshes describing the chassis.</li>
+<li><code>README.md</code>: usage instructions.</li>
+<li><code>config/components/</code> (if populated) and sensor macro includes to compose new variants.</li>
+<li>Ensure any joint name changes propagate to matching controller YAMLs.</li>
+</ul>
+<h3 id="robot_firmware">robot_firmware</h3>
+<ul>
+<li>Placeholder for an external firmware repository (currently only <code>.git</code>).</li>
+<li>Actual firmware you build lives in top-level <code>firmware/</code> directory; keep this as a reference if tracking upstream history.</li>
+</ul>
+<h3 id="robot_gazebo">robot_gazebo</h3>
+<ul>
+<li>Currently a stub with <code>README.md</code>; extend with Gazebo plugins/worlds as simulation demands grow.</li>
+</ul>
+<h3 id="robot_hardware">robot_hardware</h3>
+<ul>
+<li>Concept notes and potential future hardware interface experiments documented in <code>README.md</code> (no code yet).</li>
+</ul>
+<h3 id="robot_localization">robot_localization</h3>
+<ul>
+<li>Snapshot of the <code>robot_localization</code> stack, mostly populated with build/install artifacts and <code>COLCON_IGNORE</code> to avoid accidental builds.</li>
+<li>Replace with a clean source checkout if you need to customize EKF/UKF nodes.</li>
+</ul>
+<h3 id="robot_nerf_launcher">robot_nerf_launcher</h3>
+<ul>
+<li>Placeholder for the Nerf attachment; <code>README.md</code> describes intended control interface.</li>
+</ul>
+<h3 id="robot_utils">robot_utils</h3>
+<ul>
+<li>Installable Python package providing CLI helpers.</li>
+<li><code>robot_utils/flash_firmware.py</code>: entry point for flashing via UART/USB (downloads firmware if needed).</li>
+<li><code>flash_firmware_{uart,usb}.py</code>, <code>utils.py</code>: shared helpers (port discovery, subprocess wrappers).</li>
+<li><code>launch/laser_filter.launch.py</code>: example ROS 2 launch included with the package.</li>
+<li><code>README.md</code>: usage examples and best practices.</li>
+</ul>
+<h3 id="robot_vision">robot_vision</h3>
+<ul>
+<li>Placeholder repository; <code>README.md</code> outlines planned vision stack (face detection, AprilTags, etc.).</li>
+</ul>
+<h3 id="robot_hardware_interfaces">robot_hardware_interfaces</h3>
+<ul>
+<li>Upstream ros2_control implementation for robot platforms.</li>
+<li><code>README.md</code>: topic interface summary, launch instructions (<code>example_diff_drive.launch.py</code>).</li>
+<li>Useful reference when comparing mecabridge configuration to existing Husarion robots.</li>
+</ul>
+<h3 id="serial">serial</h3>
+<ul>
+<li>Vendored serial-port library (git submodule). No ROS build files—used as third-party dependency for firmware flashing or hardware interface code.</li>
+</ul>
+<h3 id="additional-notes">Additional Notes</h3>
+<ul>
+<li>Many repositories under <code>src/</code> contain their own <code>.git/</code> directories, indicating they were imported via <code>vcs</code>. Coordinate updates through <code>ros2.repos</code> or submodule management rather than editing history inside the workspace.</li>
+<li><code>COLCON_IGNORE</code> files (e.g., under <code>robot_localization/build/</code>) prevent colcon from descending into generated artifacts—keep them in place to avoid accidental rebuilds of cached outputs.</li>
+</ul>
+<p>Use this breakdown alongside the package inventory to quickly locate implementations, configs, or launch entries when debugging or extending the stack.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>

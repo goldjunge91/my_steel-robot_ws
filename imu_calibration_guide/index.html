@@ -1,0 +1,1408 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://goldjunge91.github.io/my_steel-robot_ws/imu_calibration_guide/">
+      
+      
+        <link rel="prev" href="../hardware_setup/">
+      
+      
+        <link rel="next" href="../notes/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.28">
+    
+    
+      
+        <title>IMU Calibration Guide - ICM-20948 - goldjunge91/my_steel-robot_ws</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.6543a935.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#imu-calibration-guide-icm-20948" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="goldjunge91/my_steel-robot_ws" class="md-header__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            goldjunge91/my_steel-robot_ws
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              IMU Calibration Guide - ICM-20948
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="goldjunge91/my_steel-robot_ws" class="md-nav__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    goldjunge91/my_steel-robot_ws
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    my_steel Robot Workspace
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Pico Firmware Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE_INDEX/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Documentation Index
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LICENSE/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LICENSE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PINMAP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PINMAP (Template) — my_steel Robot (Digital Board: Raspberry Pi Pico)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Projekt/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Projektbeschreibung: ROS2-Roboter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture_and_packages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture and packages
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../command%20list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    command list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware_setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Hardware Preparation and Bringup Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    IMU Calibration Guide - ICM-20948
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    IMU Calibration Guide - ICM-20948
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start-noise-covariance-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quick Start: Noise Covariance Estimation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Start: Noise Covariance Estimation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-run-noise-analyzer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Run noise analyzer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-update-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Update firmware
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-rebuild-and-flash" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: Rebuild and flash
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-calibration-full-6-dof-calibration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Calibration: Full 6-DOF Calibration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Calibration: Full 6-DOF Calibration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-1-using-imu_tk-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method 1: Using imu_tk (Recommended)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Method 1: Using imu_tk (Recommended)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-collect-calibration-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Collect calibration data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-convert-rosbag-to-imu_tk-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Convert rosbag to imu_tk format
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-run-imu_tk-calibration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: Run imu_tk calibration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-2-using-ros-imu_calib-simpler" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method 2: Using ROS imu_calib (Simpler)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gyroscope-bias-calibration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Gyroscope Bias Calibration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Gyroscope Bias Calibration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#online-bias-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Online Bias Estimation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#magnetometer-calibration-future" class="md-nav__link">
+    <span class="md-ellipsis">
+      Magnetometer Calibration (Future)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Magnetometer Calibration (Future)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hard-iron-calibration-offset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hard Iron Calibration (Offset)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soft-iron-calibration-scale-factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Soft Iron Calibration (Scale factors)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-robot_localization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration with robot_localization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Notes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notes_kommentare/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ROS 2 Workspace &amp; Roboter-Steuerung: Befehlsreferenz
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raspberry_pi_setup_plan/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    my_steel Robot - Einfacher Start Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tmux/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tmux
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Github
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            Github
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../github/Workflow%20commands%20for%20GitHub%20Actions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Workflow commands for GitHub Actions (Workflowbefehle für GitHub Actions)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Ros
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            Ros
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/Ros2_docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Ros2 docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/orsf_README/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    OSRF Docker Images
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start-noise-covariance-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quick Start: Noise Covariance Estimation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Start: Noise Covariance Estimation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-run-noise-analyzer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Run noise analyzer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-update-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Update firmware
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-rebuild-and-flash" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: Rebuild and flash
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-calibration-full-6-dof-calibration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Calibration: Full 6-DOF Calibration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Calibration: Full 6-DOF Calibration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-1-using-imu_tk-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method 1: Using imu_tk (Recommended)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Method 1: Using imu_tk (Recommended)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-collect-calibration-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Collect calibration data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-convert-rosbag-to-imu_tk-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Convert rosbag to imu_tk format
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-run-imu_tk-calibration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: Run imu_tk calibration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-2-using-ros-imu_calib-simpler" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method 2: Using ROS imu_calib (Simpler)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gyroscope-bias-calibration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Gyroscope Bias Calibration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Gyroscope Bias Calibration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#online-bias-estimation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Online Bias Estimation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#magnetometer-calibration-future" class="md-nav__link">
+    <span class="md-ellipsis">
+      Magnetometer Calibration (Future)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Magnetometer Calibration (Future)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hard-iron-calibration-offset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hard Iron Calibration (Offset)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soft-iron-calibration-scale-factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Soft Iron Calibration (Scale factors)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-robot_localization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration with robot_localization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="imu-calibration-guide-icm-20948">IMU Calibration Guide - ICM-20948</h1>
+<p>This guide describes the calibration workflow for the ICM-20948 IMU sensor on the robot.</p>
+<h2 id="overview">Overview</h2>
+<p>The ICM-20948 IMU requires calibration for:
+1. <strong>Gyroscope bias</strong> - Zero-rate offset
+2. <strong>Accelerometer</strong> - Scale factors, offsets, misalignment
+3. <strong>Magnetometer</strong> - Hard/soft iron distortion (if used)
+4. <strong>Noise covariance</strong> - For sensor fusion (robot_localization, etc.)</p>
+<h2 id="quick-start-noise-covariance-estimation">Quick Start: Noise Covariance Estimation</h2>
+<p><strong>Required:</strong> Robot must be <strong>completely stationary</strong> on flat surface.</p>
+<h3 id="step-1-run-noise-analyzer">Step 1: Run noise analyzer</h3>
+<pre><code class="language-bash">cd /home/marco/ros2_steel_ws/my_steel-robot_ws/firmware/scripts
+chmod +x analyze_imu_noise.py
+
+# Make sure micro-ROS agent is running and IMU is publishing
+ros2 topic hz /ddd/imu  # Should show ~10 Hz
+
+# Run analyzer (collects 1000 samples = ~100 seconds)
+python3 analyze_imu_noise.py
+</code></pre>
+<h3 id="step-2-update-firmware">Step 2: Update firmware</h3>
+<p>The script will output C++ code like:</p>
+<pre><code class="language-cpp">imu_msg_.linear_acceleration_covariance[0] = 0.045;  // X
+imu_msg_.linear_acceleration_covariance[4] = 0.038;  // Y
+imu_msg_.linear_acceleration_covariance[8] = 0.052;  // Z
+
+imu_msg_.angular_velocity_covariance[0] = 0.00015;  // X
+imu_msg_.angular_velocity_covariance[4] = 0.00018;  // Y
+imu_msg_.angular_velocity_covariance[8] = 0.00012;  // Z
+</code></pre>
+<p>Copy these values to <code>firmware/src/application/ImuAgent.cpp</code> constructor.</p>
+<h3 id="step-3-rebuild-and-flash">Step 3: Rebuild and flash</h3>
+<pre><code class="language-bash">cd /home/marco/ros2_steel_ws/my_steel-robot_ws/firmware/build
+make -j
+# Flash to device
+</code></pre>
+<hr />
+<h2 id="advanced-calibration-full-6-dof-calibration">Advanced Calibration: Full 6-DOF Calibration</h2>
+<p>For precise accelerometer/gyro calibration using sphere-fitting method.</p>
+<h3 id="prerequisites">Prerequisites</h3>
+<pre><code class="language-bash"># Install imu_tools (ROS2 IMU calibration package)
+sudo apt install ros-humble-imu-tools
+
+# Or use imu_tk (more advanced, C++ implementation)
+cd ~/
+git clone https://github.com/Kyle-ak/imu_tk.git
+cd imu_tk
+mkdir build &amp;&amp; cd build
+cmake ..
+make
+</code></pre>
+<h3 id="method-1-using-imu_tk-recommended">Method 1: Using imu_tk (Recommended)</h3>
+<p><strong>Reference:</strong> https://github.com/Kyle-ak/imu_tk</p>
+<p>This method uses Ceres solver for precise calibration including:
+- Accelerometer scale factors, biases, axis misalignment
+- Gyroscope scale factors, biases, axis misalignment</p>
+<h4 id="step-1-collect-calibration-data">Step 1: Collect calibration data</h4>
+<pre><code class="language-bash"># Record rosbag while rotating IMU in ALL orientations
+# Duration: 2-3 minutes
+# Must cover all possible attitudes (sphere surface)
+ros2 bag record -o imu_calibration /ddd/imu
+</code></pre>
+<p><strong>Important rotation sequence:</strong>
+1. Flat on table (Z up)
+2. On each side (6 faces of cube)
+3. Slow continuous rotation around X axis
+4. Slow continuous rotation around Y axis
+5. Slow continuous rotation around Z axis
+6. Random orientations to fill sphere</p>
+<h4 id="step-2-convert-rosbag-to-imu_tk-format">Step 2: Convert rosbag to imu_tk format</h4>
+<pre><code class="language-python">#!/usr/bin/env python3
+import rosbag2_py
+from rclpy.serialization import deserialize_message
+from sensor_msgs.msg import Imu
+
+# Read rosbag and extract IMU data
+storage_options = rosbag2_py.StorageOptions(uri='imu_calibration', storage_id='sqlite3')
+converter_options = rosbag2_py.ConverterOptions('', '')
+reader = rosbag2_py.SequentialReader()
+reader.open(storage_options, converter_options)
+
+with open('imu_raw_data.txt', 'w') as f:
+    while reader.has_next():
+        topic, data, timestamp = reader.read_next()
+        if topic == '/ddd/imu':
+            msg = deserialize_message(data, Imu)
+            # Format: timestamp accel_x accel_y accel_z gyro_x gyro_y gyro_z
+            f.write(f&quot;{timestamp} &quot;
+                   f&quot;{msg.linear_acceleration.x} {msg.linear_acceleration.y} {msg.linear_acceleration.z} &quot;
+                   f&quot;{msg.angular_velocity.x} {msg.angular_velocity.y} {msg.angular_velocity.z}\n&quot;)
+</code></pre>
+<h4 id="step-3-run-imu_tk-calibration">Step 3: Run imu_tk calibration</h4>
+<pre><code class="language-bash">cd ~/imu_tk/build
+./bin/test_imu_calib ../data/xsens_imu.mat  # Replace with your data file
+</code></pre>
+<p>Output will provide calibration matrices that can be applied in firmware.</p>
+<h3 id="method-2-using-ros-imu_calib-simpler">Method 2: Using ROS imu_calib (Simpler)</h3>
+<p><strong>Reference:</strong> http://wiki.ros.org/imu_calib</p>
+<pre><code class="language-bash"># Install package
+sudo apt install ros-humble-imu-calib
+
+# Run calibration node
+ros2 launch imu_calib do_calib.launch.py
+
+# Follow on-screen instructions for 6-point calibration
+</code></pre>
+<hr />
+<h2 id="gyroscope-bias-calibration">Gyroscope Bias Calibration</h2>
+<p><strong>Current implementation:</strong> Automatic at startup (in <code>ensureInitialized()</code>)</p>
+<p><strong>Problem:</strong> Temperature drift during operation causes bias to change.</p>
+<h3 id="online-bias-estimation">Online Bias Estimation</h3>
+<p>Add to <code>ImuAgent::run()</code>:</p>
+<pre><code class="language-cpp">// When robot is stationary (based on cmd_vel or IMU variance)
+if (robot_stationary &amp;&amp; sample_count % 1000 == 0) {
+    // Update gyro bias estimate
+    gyro_bias_x_ = gyro_bias_x_ * 0.9 + gyro.x * 0.1;  // Low-pass filter
+    gyro_bias_y_ = gyro_bias_y_ * 0.9 + gyro.y * 0.1;
+    gyro_bias_z_ = gyro_bias_z_ * 0.9 + gyro.z * 0.1;
+}
+
+// Apply bias correction before publishing
+imu_msg_.angular_velocity.x = (gyro.x - gyro_bias_x_) * kDegToRad;
+imu_msg_.angular_velocity.y = (gyro.y - gyro_bias_y_) * kDegToRad;
+imu_msg_.angular_velocity.z = (gyro.z - gyro_bias_z_) * kDegToRad;
+</code></pre>
+<hr />
+<h2 id="magnetometer-calibration-future">Magnetometer Calibration (Future)</h2>
+<p>The ICM-20948 includes AK09916 magnetometer for full 9-DOF.</p>
+<h3 id="hard-iron-calibration-offset">Hard Iron Calibration (Offset)</h3>
+<p>Caused by permanent magnets near sensor.</p>
+<pre><code class="language-bash"># Collect data while rotating IMU in figure-8 pattern
+ros2 bag record -o mag_calibration /ddd/magnetometer
+
+# Process with magneto calibration tool
+# https://github.com/kriswiner/MPU9250/wiki/Simple-and-Effective-Magnetometer-Calibration
+</code></pre>
+<h3 id="soft-iron-calibration-scale-factors">Soft Iron Calibration (Scale factors)</h3>
+<p>Caused by ferromagnetic materials distorting Earth's magnetic field.</p>
+<p>Requires full sphere fitting with cross-axis terms (more complex).</p>
+<hr />
+<h2 id="integration-with-robot_localization">Integration with robot_localization</h2>
+<p>Once covariances are calibrated, configure <code>robot_localization</code> EKF:</p>
+<pre><code class="language-yaml"># config/ekf.yaml
+ekf_filter_node:
+  ros__parameters:
+    imu0: /ddd/imu
+    imu0_config: [false, false, false,  # x, y, z position
+                  true,  true,  true,   # roll, pitch, yaw
+                  false, false, false,  # x_dot, y_dot, z_dot
+                  true,  true,  true,   # roll_dot, pitch_dot, yaw_dot
+                  true,  true,  true]   # x_ddot, y_ddot, z_ddot
+
+    # Use calibrated covariances from IMU message
+    imu0_differential: false
+    imu0_relative: false
+</code></pre>
+<hr />
+<h2 id="validation">Validation</h2>
+<p>After calibration, verify results:</p>
+<pre><code class="language-bash"># 1. Check noise levels (should match covariance)
+ros2 topic echo /ddd/imu
+
+# 2. Verify gravity norm when stationary (should be 9.81 m/s²)
+python3 -c &quot;
+import rclpy
+from sensor_msgs.msg import Imu
+import numpy as np
+
+def cb(msg):
+    acc = np.array([msg.linear_acceleration.x, 
+                    msg.linear_acceleration.y,
+                    msg.linear_acceleration.z])
+    norm = np.linalg.norm(acc)
+    print(f'Gravity norm: {norm:.4f} m/s² (expected 9.81)')
+
+rclpy.init()
+node = rclpy.create_node('test')
+node.create_subscription(Imu, '/ddd/imu', cb, 10)
+rclpy.spin(node)
+&quot;
+
+# 3. Check gyro bias (should be near zero when stationary)
+ros2 topic echo /ddd/imu | grep angular_velocity -A3
+</code></pre>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://jekel.me/2015/Least-Squares-Sphere-Fit/">Least Squares Sphere Fit</a></li>
+<li><a href="https://github.com/Kyle-ak/imu_tk">imu_tk - Inertial Measurement Unit Toolkit</a></li>
+<li><a href="https://invensense.tdk.com/products/motion-tracking/9-axis/icm-20948/">ICM-20948 Datasheet</a></li>
+<li><a href="https://www.st.com/resource/en/application_note/dm00119044.pdf">STMicroelectronics AN4508 - Accelerometer Calibration</a></li>
+<li><a href="https://github.com/kriswiner/MPU9250/wiki/Simple-and-Effective-Magnetometer-Calibration">Magnetometer Calibration Guide</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1783 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://goldjunge91.github.io/my_steel-robot_ws/ARCHITECTURE/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../ARCHITECTURE_INDEX/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.28">
+    
+    
+      
+        <title>Pico Firmware Architecture - goldjunge91/my_steel-robot_ws</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.6543a935.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#pico-firmware-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="goldjunge91/my_steel-robot_ws" class="md-header__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            goldjunge91/my_steel-robot_ws
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Pico Firmware Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="goldjunge91/my_steel-robot_ws" class="md-nav__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    goldjunge91/my_steel-robot_ws
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    my_steel Robot Workspace
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Pico Firmware Architecture
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Pico Firmware Architecture
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      System Architecture
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Agent Architecture
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Flow Diagram
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sequence-diagram-initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sequence Diagram: Initialization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sequence-diagram-control-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sequence Diagram: Control Loop
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task Scheduling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Layout
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pin-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pin Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pid-control-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      PID Control Flow
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#odometry-calculation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Odometry Calculation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#communication-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      Communication Protocol
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build System
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Parameters
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-characteristics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Characteristics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Handling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependencies
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build Commands
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE_INDEX/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Documentation Index
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LICENSE/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LICENSE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PINMAP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PINMAP (Template) — my_steel Robot (Digital Board: Raspberry Pi Pico)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Projekt/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Projektbeschreibung: ROS2-Roboter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture_and_packages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture and packages
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../command%20list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    command list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware_setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Hardware Preparation and Bringup Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imu_calibration_guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IMU Calibration Guide - ICM-20948
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Notes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notes_kommentare/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ROS 2 Workspace &amp; Roboter-Steuerung: Befehlsreferenz
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raspberry_pi_setup_plan/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    my_steel Robot - Einfacher Start Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tmux/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tmux
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Github
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            Github
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../github/Workflow%20commands%20for%20GitHub%20Actions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Workflow commands for GitHub Actions (Workflowbefehle für GitHub Actions)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Ros
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            Ros
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/Ros2_docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Ros2 docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/orsf_README/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    OSRF Docker Images
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      System Architecture
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Agent Architecture
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Flow Diagram
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sequence-diagram-initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sequence Diagram: Initialization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sequence-diagram-control-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sequence Diagram: Control Loop
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task Scheduling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Layout
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pin-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pin Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pid-control-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      PID Control Flow
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#odometry-calculation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Odometry Calculation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#communication-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      Communication Protocol
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build System
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Parameters
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-characteristics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Characteristics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Error Handling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependencies
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build Commands
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="pico-firmware-architecture">Pico Firmware Architecture</h1>
+<h2 id="overview">Overview</h2>
+<p>Real-time firmware for Raspberry Pi Pico running FreeRTOS with micro-ROS for ROS2 communication. Handles motor control, sensor reading, and odometry calculation.</p>
+<h2 id="system-architecture">System Architecture</h2>
+<pre><code class="language-mermaid">graph TB
+    subgraph &quot;Raspberry Pi Pico&quot;
+        direction TB
+
+        subgraph &quot;FreeRTOS&quot;
+            TASKS[Agent Tasks&lt;br/&gt;100 Hz]
+            SCHED[Scheduler&lt;br/&gt;Priority-based]
+        end
+
+        subgraph &quot;micro-ROS&quot;
+            UROS[uRosBridge&lt;br/&gt;Singleton]
+            PUBS[Publishers]
+            SUBS[Subscribers]
+        end
+
+        subgraph &quot;Application Agents&quot;
+            DDD[DDD Agent&lt;br/&gt;Odometry &amp; Control]
+            MOTORS[Motors Agent&lt;br/&gt;PID Control]
+            IMU[IMU Agent&lt;br/&gt;ICM20948]
+            TOF[VL6180X Agent&lt;br/&gt;ToF Sensor]
+            US[HCSR04 Agent&lt;br/&gt;Ultrasonic]
+        end
+
+        subgraph &quot;HAL&quot;
+            PWM[PWM Manager]
+            ENC[Encoder Manager]
+            SPI[SPI Driver]
+            I2C[I2C Driver]
+        end
+
+        TASKS --&gt; DDD
+        TASKS --&gt; MOTORS
+        TASKS --&gt; IMU
+        TASKS --&gt; TOF
+        TASKS --&gt; US
+
+        DDD --&gt; UROS
+        MOTORS --&gt; UROS
+        IMU --&gt; UROS
+        TOF --&gt; UROS
+        US --&gt; UROS
+
+        UROS --&gt; PUBS
+        UROS --&gt; SUBS
+
+        MOTORS --&gt; PWM
+        MOTORS --&gt; ENC
+        IMU --&gt; SPI
+        TOF --&gt; I2C
+        US --&gt; GPIO
+    end
+
+    subgraph &quot;Hardware&quot;
+        MOTOR_HW[4x DC Motors&lt;br/&gt;with Encoders]
+        IMU_HW[ICM20948&lt;br/&gt;9-DOF IMU]
+        TOF_HW[VL6180X&lt;br/&gt;ToF Sensor]
+        US_HW[HC-SR04&lt;br/&gt;Ultrasonic]
+    end
+
+    PWM --&gt; MOTOR_HW
+    ENC --&gt; MOTOR_HW
+    SPI --&gt; IMU_HW
+    I2C --&gt; TOF_HW
+    GPIO --&gt; US_HW
+
+    UROS &lt;--&gt;|USB Serial| ROS2[ROS2 Host&lt;br/&gt;micro-ROS Agent]
+
+    style UROS fill:#4CAF50
+    style DDD fill:#2196F3
+    style MOTORS fill:#FF9800
+</code></pre>
+<h2 id="agent-architecture">Agent Architecture</h2>
+<pre><code class="language-mermaid">classDiagram
+    class Agent {
+        &lt;&lt;abstract&gt;&gt;
+        #name: string
+        #priority: uint
+        #stack_size: uint
+        +init() bool
+        +run() void*
+        +getName() string
+        +getPriority() uint
+    }
+
+    class BlinkAgent {
+        -led_pin: uint
+        -blink_rate: uint
+        +init() bool
+        +run() void*
+    }
+
+    class DDD {
+        -odom_publisher: rcl_publisher_t
+        -cmd_vel_subscriber: rcl_subscription_t
+        -twist_msg: Twist
+        -odom_msg: Odometry
+        -position: Vector3f
+        -orientation: float
+        +init() bool
+        +run() void*
+        +calculateOdometry() void
+        +publishOdometry() void
+        +cmdVelCallback() void
+    }
+
+    class MotorsAgent {
+        -joint_state_publisher: rcl_publisher_t
+        -motor_mgr: MotorMgr*
+        -pid_controllers: MotorPID[4]
+        +init() bool
+        +run() void*
+        +updatePID() void
+        +publishJointStates() void
+    }
+
+    class ImuAgent {
+        -imu_publisher: rcl_publisher_t
+        -imu_sensor: ICM20948*
+        -imu_msg: Imu
+        +init() bool
+        +run() void*
+        +readSensor() void
+        +publishImuData() void
+    }
+
+    class vl6180xAgent {
+        -range_publisher: rcl_publisher_t
+        -illuminance_publisher: rcl_publisher_t
+        -sensor: VL6180X*
+        +init() bool
+        +run() void*
+        +readRange() void
+        +readIlluminance() void
+    }
+
+    Agent &lt;|-- BlinkAgent
+    Agent &lt;|-- DDD
+    Agent &lt;|-- MotorsAgent
+    Agent &lt;|-- ImuAgent
+    Agent &lt;|-- vl6180xAgent
+</code></pre>
+<h2 id="data-flow-diagram">Data Flow Diagram</h2>
+<pre><code class="language-mermaid">flowchart TB
+    subgraph &quot;ROS2 Host&quot;
+        AGENT[micro-ROS Agent]
+        CTRL[Controller]
+    end
+
+    subgraph &quot;Pico Firmware&quot;
+        direction TB
+
+        subgraph &quot;micro-ROS Layer&quot;
+            UROS[uRosBridge]
+            SUB[/rt/cmd_vel&lt;br/&gt;Subscriber]
+            PUB_JS[/rt/joint_states&lt;br/&gt;Publisher]
+            PUB_IMU[/rt/imu/data_raw&lt;br/&gt;Publisher]
+            PUB_ODOM[/rt/odom&lt;br/&gt;Publisher]
+            PUB_SENS[/rt/sensors/*&lt;br/&gt;Publishers]
+        end
+
+        subgraph &quot;Control Layer&quot;
+            DDD_A[DDD Agent&lt;br/&gt;Odometry]
+            MOTOR_A[Motors Agent&lt;br/&gt;PID Control]
+        end
+
+        subgraph &quot;Sensor Layer&quot;
+            IMU_A[IMU Agent]
+            TOF_A[ToF Agent]
+        end
+
+        subgraph &quot;Hardware Layer&quot;
+            PWM_M[PWM Manager]
+            ENC_M[Encoder Manager]
+            SPI_D[SPI Driver]
+            I2C_D[I2C Driver]
+        end
+    end
+
+    subgraph &quot;Hardware&quot;
+        MOTORS[DC Motors]
+        ENCODERS[Encoders]
+        IMU_HW[ICM20948]
+        TOF_HW[VL6180X]
+    end
+
+    CTRL --&gt;|/cmd_vel| AGENT
+    AGENT &lt;--&gt;|USB Serial| UROS
+
+    UROS --&gt; SUB
+    SUB --&gt; DDD_A
+    DDD_A --&gt; MOTOR_A
+
+    MOTOR_A --&gt; PWM_M
+    PWM_M --&gt; MOTORS
+
+    ENCODERS --&gt; ENC_M
+    ENC_M --&gt; MOTOR_A
+    MOTOR_A --&gt; PUB_JS
+
+    MOTOR_A --&gt; DDD_A
+    DDD_A --&gt; PUB_ODOM
+
+    IMU_HW --&gt; SPI_D
+    SPI_D --&gt; IMU_A
+    IMU_A --&gt; PUB_IMU
+
+    TOF_HW --&gt; I2C_D
+    I2C_D --&gt; TOF_A
+    TOF_A --&gt; PUB_SENS
+
+    PUB_JS --&gt; UROS
+    PUB_IMU --&gt; UROS
+    PUB_ODOM --&gt; UROS
+    PUB_SENS --&gt; UROS
+
+    UROS --&gt; AGENT
+    AGENT --&gt; CTRL
+</code></pre>
+<h2 id="sequence-diagram-initialization">Sequence Diagram: Initialization</h2>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Main
+    participant FreeRTOS
+    participant uRosBridge
+    participant Agents
+    participant Hardware
+
+    Main-&gt;&gt;Hardware: Initialize GPIO, PWM, SPI, I2C
+    Main-&gt;&gt;uRosBridge: Initialize micro-ROS
+    uRosBridge-&gt;&gt;uRosBridge: Create node
+    uRosBridge-&gt;&gt;uRosBridge: Create executor
+
+    Main-&gt;&gt;Agents: Create agent instances
+    loop For each agent
+        Main-&gt;&gt;Agents: agent-&gt;init()
+        Agents-&gt;&gt;uRosBridge: Create publishers/subscribers
+        Agents-&gt;&gt;Hardware: Initialize hardware
+        Agents--&gt;&gt;Main: Success
+    end
+
+    Main-&gt;&gt;FreeRTOS: Create agent tasks
+    loop For each agent
+        FreeRTOS-&gt;&gt;Agents: xTaskCreate(agent-&gt;run)
+    end
+
+    Main-&gt;&gt;FreeRTOS: Start scheduler
+
+    Note over FreeRTOS,Agents: Tasks running at 100 Hz
+</code></pre>
+<h2 id="sequence-diagram-control-loop">Sequence Diagram: Control Loop</h2>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Host as ROS2 Host
+    participant uRos as uRosBridge
+    participant DDD as DDD Agent
+    participant Motors as Motors Agent
+    participant PWM as PWM Manager
+    participant Enc as Encoders
+
+    loop 100 Hz Control Loop
+        Host-&gt;&gt;uRos: /cmd_vel (Twist)
+        uRos-&gt;&gt;DDD: cmdVelCallback()
+        DDD-&gt;&gt;DDD: Store target velocities
+
+        DDD-&gt;&gt;Motors: Set target wheel velocities&lt;br/&gt;(inverse kinematics)
+
+        Enc-&gt;&gt;Motors: Read encoder positions
+        Motors-&gt;&gt;Motors: Calculate velocities
+        Motors-&gt;&gt;Motors: PID control
+        Motors-&gt;&gt;PWM: Set PWM duty cycles
+        PWM-&gt;&gt;PWM: Update motor outputs
+
+        Motors-&gt;&gt;uRos: Publish /joint_states
+        uRos-&gt;&gt;Host: Forward joint states
+
+        Motors-&gt;&gt;DDD: Provide wheel velocities
+        DDD-&gt;&gt;DDD: Calculate odometry&lt;br/&gt;(forward kinematics)
+        DDD-&gt;&gt;uRos: Publish /odom
+        uRos-&gt;&gt;Host: Forward odometry
+    end
+</code></pre>
+<h2 id="task-scheduling">Task Scheduling</h2>
+<pre><code class="language-mermaid">gantt
+    title FreeRTOS Task Scheduling (10ms period)
+    dateFormat X
+    axisFormat %L ms
+
+    section High Priority
+    Motors Agent (100Hz)    :0, 2
+    DDD Agent (100Hz)       :2, 4
+
+    section Medium Priority
+    IMU Agent (50Hz)        :4, 6
+
+    section Low Priority
+    ToF Agent (Variable)    :6, 7
+    Ultrasonic (Variable)   :7, 8
+    Blink Agent (1Hz)       :8, 9
+
+    section Idle
+    Idle Task               :9, 10
+</code></pre>
+<h2 id="memory-layout">Memory Layout</h2>
+<pre><code class="language-mermaid">graph TB
+    subgraph &quot;Pico Memory (264 KB RAM)&quot;
+        direction TB
+
+        STACK[FreeRTOS Stacks&lt;br/&gt;~64 KB]
+        HEAP[FreeRTOS Heap&lt;br/&gt;~128 KB]
+        UROS[micro-ROS Buffers&lt;br/&gt;~32 KB]
+        STATIC[Static Data&lt;br/&gt;~16 KB]
+        BSS[BSS&lt;br/&gt;~8 KB]
+        FREE[Free&lt;br/&gt;~16 KB]
+    end
+
+    style STACK fill:#4CAF50
+    style HEAP fill:#2196F3
+    style UROS fill:#FF9800
+</code></pre>
+<h2 id="pin-configuration">Pin Configuration</h2>
+<pre><code class="language-mermaid">graph LR
+    subgraph &quot;GPIO Pins&quot;
+        direction TB
+
+        subgraph &quot;Motors&quot;
+            M_FL[GP20/21&lt;br/&gt;Front Left PWM]
+            M_FR[GP4/5&lt;br/&gt;Front Right PWM]
+            M_RL[GP14/15&lt;br/&gt;Rear Left PWM]
+            M_RR[GP22/28&lt;br/&gt;Rear Right PWM]
+        end
+
+        subgraph &quot;Encoders&quot;
+            E_FL[GP6/7&lt;br/&gt;Front Left Enc]
+            E_FR[GP8/9&lt;br/&gt;Front Right Enc]
+            E_RL[GP10/11&lt;br/&gt;Rear Left Enc]
+            E_RR[GP12/13&lt;br/&gt;Rear Right Enc]
+        end
+
+        subgraph &quot;Sensors&quot;
+            IMU_SPI[GP16-19&lt;br/&gt;IMU SPI0]
+            TOF_I2C[GP2/3&lt;br/&gt;ToF I2C1]
+        end
+
+        subgraph &quot;Status&quot;
+            LED[GP26&lt;br/&gt;Status LED]
+        end
+    end
+
+    style M_FL fill:#4CAF50
+    style M_FR fill:#4CAF50
+    style M_RL fill:#4CAF50
+    style M_RR fill:#4CAF50
+</code></pre>
+<h2 id="pid-control-flow">PID Control Flow</h2>
+<pre><code class="language-mermaid">flowchart TB
+    START[Control Loop Start] --&gt; READ[Read Encoder Position]
+    READ --&gt; CALC_VEL[Calculate Velocity&lt;br/&gt;position delta / dt]
+    CALC_VEL --&gt; ERROR[Calculate Error&lt;br/&gt;target - actual]
+
+    ERROR --&gt; P[Proportional Term&lt;br/&gt;Kp * error]
+    ERROR --&gt; I[Integral Term&lt;br/&gt;Ki * Σerror]
+    ERROR --&gt; D[Derivative Term&lt;br/&gt;Kd * Δerror]
+
+    P --&gt; SUM[Sum PID Terms]
+    I --&gt; SUM
+    D --&gt; SUM
+
+    SUM --&gt; LIMIT[Apply Limits&lt;br/&gt;-100% to +100%]
+    LIMIT --&gt; PWM[Set PWM Duty Cycle]
+    PWM --&gt; PUBLISH[Publish Joint State]
+    PUBLISH --&gt; WAIT[Wait 10ms]
+    WAIT --&gt; START
+
+    style ERROR fill:#4CAF50
+    style SUM fill:#2196F3
+    style PWM fill:#FF9800
+</code></pre>
+<h2 id="odometry-calculation">Odometry Calculation</h2>
+<pre><code class="language-mermaid">flowchart TB
+    START[Get Wheel Velocities] --&gt; FK[Forward Kinematics&lt;br/&gt;Mecanum Drive]
+
+    FK --&gt; VX[Calculate vx&lt;br/&gt;Σwheel_vel / 4]
+    FK --&gt; VY[Calculate vy&lt;br/&gt;weighted sum]
+    FK --&gt; OMEGA[Calculate ω&lt;br/&gt;weighted sum]
+
+    VX --&gt; INTEGRATE[Integrate Velocities&lt;br/&gt;Δt = 10ms]
+    VY --&gt; INTEGRATE
+    OMEGA --&gt; INTEGRATE
+
+    INTEGRATE --&gt; UPDATE_POS[Update Position&lt;br/&gt;x, y, θ]
+    UPDATE_POS --&gt; CREATE_MSG[Create Odometry Message]
+    CREATE_MSG --&gt; PUBLISH[Publish /odom]
+
+    style FK fill:#4CAF50
+    style INTEGRATE fill:#2196F3
+</code></pre>
+<h2 id="communication-protocol">Communication Protocol</h2>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Pico as Pico Firmware
+    participant USB as USB CDC
+    participant Agent as micro-ROS Agent
+    participant ROS2 as ROS2 Network
+
+    Note over Pico,Agent: Initialization
+    Pico-&gt;&gt;USB: Open USB CDC
+    Agent-&gt;&gt;USB: Connect to /dev/ttyACM0
+    Pico-&gt;&gt;Agent: micro-ROS handshake
+    Agent--&gt;&gt;Pico: Connection established
+
+    Note over Pico,ROS2: Runtime Communication
+
+    loop Every 10ms
+        Pico-&gt;&gt;Agent: Publish /joint_states
+        Agent-&gt;&gt;ROS2: Forward to ROS2 network
+
+        ROS2-&gt;&gt;Agent: /cmd_vel command
+        Agent-&gt;&gt;Pico: Forward to firmware
+    end
+
+    loop Every 20ms
+        Pico-&gt;&gt;Agent: Publish /imu/data_raw
+        Pico-&gt;&gt;Agent: Publish /odom
+        Agent-&gt;&gt;ROS2: Forward to ROS2 network
+    end
+</code></pre>
+<h2 id="build-system">Build System</h2>
+<pre><code class="language-mermaid">graph TB
+    subgraph &quot;Source Files&quot;
+        SRC[src/*.cpp]
+        HDR[src/*.h]
+        HAL[src/hal/*.cpp]
+        APP[src/application/*.cpp]
+    end
+
+    subgraph &quot;Dependencies&quot;
+        PICO_SDK[Pico SDK]
+        FREERTOS[FreeRTOS]
+        MICROROS[micro-ROS]
+        EIGEN[Eigen]
+    end
+
+    subgraph &quot;Build Process&quot;
+        CMAKE[CMakeLists.txt]
+        MAKE[Makefile Wrapper]
+    end
+
+    subgraph &quot;Output&quot;
+        ELF[firmware.elf]
+        UF2[firmware.uf2]
+        BIN[firmware.bin]
+    end
+
+    SRC --&gt; CMAKE
+    HDR --&gt; CMAKE
+    HAL --&gt; CMAKE
+    APP --&gt; CMAKE
+
+    PICO_SDK --&gt; CMAKE
+    FREERTOS --&gt; CMAKE
+    MICROROS --&gt; CMAKE
+    EIGEN --&gt; CMAKE
+
+    CMAKE --&gt; MAKE
+    MAKE --&gt; ELF
+    ELF --&gt; UF2
+    ELF --&gt; BIN
+
+    style CMAKE fill:#4CAF50
+    style UF2 fill:#2196F3
+</code></pre>
+<h2 id="configuration-parameters">Configuration Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Location</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Control Loop Rate</td>
+<td>MotorsAgent</td>
+<td>100 Hz</td>
+<td>PID update frequency</td>
+</tr>
+<tr>
+<td>IMU Rate</td>
+<td>ImuAgent</td>
+<td>50 Hz</td>
+<td>IMU reading frequency</td>
+</tr>
+<tr>
+<td>PID Gains (Kp, Ki, Kd)</td>
+<td>MotorPID</td>
+<td>Tuned</td>
+<td>Per-motor PID parameters</td>
+</tr>
+<tr>
+<td>Wheel Radius</td>
+<td>DDD</td>
+<td>0.047 m</td>
+<td>For odometry calculation</td>
+</tr>
+<tr>
+<td>Wheel Base</td>
+<td>DDD</td>
+<td>0.220 m</td>
+<td>For odometry calculation</td>
+</tr>
+<tr>
+<td>Encoder CPR</td>
+<td>MotorMgr</td>
+<td>1440</td>
+<td>Counts per revolution</td>
+</tr>
+<tr>
+<td>PWM Frequency</td>
+<td>PWMManager</td>
+<td>20 kHz</td>
+<td>Motor PWM frequency</td>
+</tr>
+</tbody>
+</table>
+<h2 id="performance-characteristics">Performance Characteristics</h2>
+<ul>
+<li><strong>Control Loop</strong>: 100 Hz (10 ms period)</li>
+<li><strong>IMU Reading</strong>: 50 Hz (20 ms period)</li>
+<li><strong>Odometry Publishing</strong>: 50 Hz</li>
+<li><strong>Joint States Publishing</strong>: 100 Hz</li>
+<li><strong>USB Latency</strong>: &lt; 2 ms</li>
+<li><strong>PID Computation</strong>: &lt; 0.5 ms</li>
+<li><strong>Total CPU Usage</strong>: ~60% (with all agents)</li>
+</ul>
+<h2 id="error-handling">Error Handling</h2>
+<table>
+<thead>
+<tr>
+<th>Error Condition</th>
+<th>Detection</th>
+<th>Action</th>
+<th>Recovery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>micro-ROS connection lost</td>
+<td>Timeout</td>
+<td>Log error, continue operation</td>
+<td>Auto-reconnect</td>
+</tr>
+<tr>
+<td>Encoder read failure</td>
+<td>Invalid value</td>
+<td>Use last valid value</td>
+<td>Retry next cycle</td>
+</tr>
+<tr>
+<td>IMU read failure</td>
+<td>SPI error</td>
+<td>Skip publish</td>
+<td>Retry next cycle</td>
+</tr>
+<tr>
+<td>Motor stall</td>
+<td>Zero velocity despite command</td>
+<td>Reduce PWM</td>
+<td>Automatic</td>
+</tr>
+<tr>
+<td>Watchdog timeout</td>
+<td>No host communication</td>
+<td>Stop motors</td>
+<td>Wait for reconnect</td>
+</tr>
+</tbody>
+</table>
+<h2 id="dependencies">Dependencies</h2>
+<ul>
+<li><strong>Pico SDK</strong>: Hardware abstraction, USB, GPIO</li>
+<li><strong>FreeRTOS</strong>: Real-time task scheduling</li>
+<li><strong>micro-ROS</strong>: ROS2 communication</li>
+<li><strong>Eigen</strong>: Linear algebra for odometry</li>
+</ul>
+<h2 id="build-commands">Build Commands</h2>
+<pre><code class="language-bash"># Debug build
+cd firmware &amp;&amp; make build
+
+# Release build
+cd firmware &amp;&amp; make build_release
+
+# Flash to Pico
+make flash
+
+# Monitor output
+./monitor_firmware.sh
+
+# Run tests
+cd tests &amp;&amp; mkdir -p build &amp;&amp; cd build
+cmake .. &amp;&amp; make &amp;&amp; ctest
+</code></pre>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Possible Cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Firmware won't flash</td>
+<td>Pico not in BOOTSEL mode</td>
+<td>Hold BOOTSEL while connecting</td>
+</tr>
+<tr>
+<td>No USB device</td>
+<td>Driver issue</td>
+<td>Check /dev/ttyACM* exists</td>
+</tr>
+<tr>
+<td>Motors don't respond</td>
+<td>PWM not initialized</td>
+<td>Check pin configuration</td>
+</tr>
+<tr>
+<td>Encoders not counting</td>
+<td>Interrupt not working</td>
+<td>Verify encoder connections</td>
+</tr>
+<tr>
+<td>IMU data all zeros</td>
+<td>SPI not working</td>
+<td>Check SPI wiring</td>
+</tr>
+<tr>
+<td>High CPU usage</td>
+<td>Too many agents</td>
+<td>Reduce agent frequencies</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>

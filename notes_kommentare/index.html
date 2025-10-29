@@ -1,0 +1,1362 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://goldjunge91.github.io/my_steel-robot_ws/notes_kommentare/">
+      
+      
+        <link rel="prev" href="../notes/">
+      
+      
+        <link rel="next" href="../raspberry_pi_setup_plan/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.28">
+    
+    
+      
+        <title>ROS 2 Workspace & Roboter-Steuerung: Befehlsreferenz - goldjunge91/my_steel-robot_ws</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.6543a935.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ros-2-workspace-roboter-steuerung-befehlsreferenz" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="goldjunge91/my_steel-robot_ws" class="md-header__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            goldjunge91/my_steel-robot_ws
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ROS 2 Workspace &amp; Roboter-Steuerung: Befehlsreferenz
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="goldjunge91/my_steel-robot_ws" class="md-nav__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    goldjunge91/my_steel-robot_ws
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    my_steel Robot Workspace
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Pico Firmware Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE_INDEX/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Documentation Index
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LICENSE/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LICENSE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PINMAP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PINMAP (Template) — my_steel Robot (Digital Board: Raspberry Pi Pico)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Projekt/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Projektbeschreibung: ROS2-Roboter
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture_and_packages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture and packages
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../command%20list/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    command list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware_setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Hardware Preparation and Bringup Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imu_calibration_guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IMU Calibration Guide - ICM-20948
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Notes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    ROS 2 Workspace &amp; Roboter-Steuerung: Befehlsreferenz
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    ROS 2 Workspace &amp; Roboter-Steuerung: Befehlsreferenz
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#inhaltsverzeichnis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inhaltsverzeichnis
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-ros-2-workspace-roboter-steuerung" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. ROS 2 Workspace &amp; Roboter-Steuerung
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-github-actions-lokales-testen-mit-act" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. GitHub Actions (Lokales Testen mit 'act')
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-micro-ros-visualisierung" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Micro-ROS &amp; Visualisierung
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-docker-lokale-builds" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Docker lokale Builds
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#container-starten" class="md-nav__link">
+    <span class="md-ellipsis">
+      Container starten:
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-ros-2-diagnose-befehle" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. ROS 2 Diagnose-Befehle
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-docker-build-push-verschiedene-varianten" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Docker Build &amp; Push (Verschiedene Varianten)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Docker Build & Push (Verschiedene Varianten)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lokale-builds" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lokale Builds
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interaktive-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interaktive Tests
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-arch-build-arm64-fur-lokales-testen" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-Arch-Build (ARM64) für lokales Testen
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-docker-compose-fur-lokale-testumgebungen" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Docker Compose (Für lokale Testumgebungen)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Docker Compose (Für lokale Testumgebungen)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interaktion-mit-compose-containern" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interaktion mit Compose-Containern
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-docker-exec-umfassende-referenz" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Docker Exec (Umfassende Referenz)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-finale-production-builds-mit-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Finale Production-Builds (mit Logging)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-hilfsbefehle-fur-den-build-push" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. Hilfsbefehle für den Build &amp; Push
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raspberry_pi_setup_plan/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    my_steel Robot - Einfacher Start Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tmux/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tmux
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Github
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            Github
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../github/Workflow%20commands%20for%20GitHub%20Actions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Workflow commands for GitHub Actions (Workflowbefehle für GitHub Actions)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Ros
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            Ros
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/Ros2_docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Ros2 docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/docker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Docker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros/orsf_README/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    OSRF Docker Images
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#inhaltsverzeichnis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inhaltsverzeichnis
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-ros-2-workspace-roboter-steuerung" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. ROS 2 Workspace &amp; Roboter-Steuerung
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-github-actions-lokales-testen-mit-act" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. GitHub Actions (Lokales Testen mit 'act')
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-micro-ros-visualisierung" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Micro-ROS &amp; Visualisierung
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-docker-lokale-builds" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Docker lokale Builds
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#container-starten" class="md-nav__link">
+    <span class="md-ellipsis">
+      Container starten:
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-ros-2-diagnose-befehle" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. ROS 2 Diagnose-Befehle
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-docker-build-push-verschiedene-varianten" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Docker Build &amp; Push (Verschiedene Varianten)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Docker Build & Push (Verschiedene Varianten)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lokale-builds" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lokale Builds
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interaktive-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interaktive Tests
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-arch-build-arm64-fur-lokales-testen" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-Arch-Build (ARM64) für lokales Testen
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-docker-compose-fur-lokale-testumgebungen" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Docker Compose (Für lokale Testumgebungen)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Docker Compose (Für lokale Testumgebungen)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interaktion-mit-compose-containern" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interaktion mit Compose-Containern
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-docker-exec-umfassende-referenz" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Docker Exec (Umfassende Referenz)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-finale-production-builds-mit-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Finale Production-Builds (mit Logging)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-hilfsbefehle-fur-den-build-push" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. Hilfsbefehle für den Build &amp; Push
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="ros-2-workspace-roboter-steuerung-befehlsreferenz">ROS 2 Workspace &amp; Roboter-Steuerung: Befehlsreferenz</h1>
+<!-- omit from toc -->
+
+<p>Dies ist eine strukturierte Übersicht der Befehle und Notizen aus der bereitgestellten Datei, formatiert für bessere Lesbarkeit und Nutzung als Referenz.</p>
+<!-- omit from toc -->
+<h2 id="inhaltsverzeichnis">Inhaltsverzeichnis</h2>
+<!-- omit from toc -->
+
+<ul>
+<li><a href="#ros-2-workspace--roboter-steuerung-befehlsreferenz">ROS 2 Workspace \&amp; Roboter-Steuerung: Befehlsreferenz</a></li>
+<li><a href="#1-ros-2-workspace--roboter-steuerung">1. ROS 2 Workspace \&amp; Roboter-Steuerung</a></li>
+<li><a href="#2-github-actions-lokales-testen-mit-act">2. GitHub Actions (Lokales Testen mit 'act')</a></li>
+<li><a href="#3-micro-ros--visualisierung">3. Micro-ROS \&amp; Visualisierung</a></li>
+<li><a href="#4-ros-2-diagnose-befehle">4. ROS 2 Diagnose-Befehle</a></li>
+<li><a href="#5-docker-schneller-smoke-test-im-container">5. Docker: Schneller "Smoke Test" im Container</a></li>
+<li><a href="#6-docker-workspace-build-in-sauberer-umgebung">6. Docker: Workspace-Build in sauberer Umgebung</a></li>
+<li><a href="#7-python-testing">7. Python Testing</a></li>
+<li><a href="#8-docker-build--push-verschiedene-varianten">8. Docker Build \&amp; Push (Verschiedene Varianten)</a><ul>
+<li><a href="#lokale-builds">Lokale Builds</a></li>
+<li><a href="#interaktive-tests">Interaktive Tests</a></li>
+<li><a href="#multi-arch-build-arm64-für-lokales-testen">Multi-Arch-Build (ARM64) für lokales Testen</a></li>
+</ul>
+</li>
+<li><a href="#9-docker-compose-für-lokale-testumgebungen">9. Docker Compose (Für lokale Testumgebungen)</a><ul>
+<li><a href="#interaktion-mit-compose-containern">Interaktion mit Compose-Containern</a></li>
+</ul>
+</li>
+<li><a href="#10-docker-exec-umfassende-referenz">10. Docker Exec (Umfassende Referenz)</a></li>
+<li><a href="#11-finale-production-builds-mit-logging">11. Finale Production-Builds (mit Logging)</a></li>
+<li><a href="#12-hilfsbefehle-für-den-build--push">12. Hilfsbefehle für den Build \&amp; Push</a></li>
+</ul>
+<hr />
+<h2 id="1-ros-2-workspace-roboter-steuerung">1. ROS 2 Workspace &amp; Roboter-Steuerung</h2>
+<p>Baut den ROS 2 Workspace mit Colcon:</p>
+<ul>
+<li><code>--symlink-install</code>: Erstellt Symlinks statt Dateien zu kopieren (schneller).</li>
+<li><code>--merge-install</code>: Legt alle Pakete in ein einziges "install"-Verzeichnis.</li>
+<li><code>--event-handlers console_direct+</code>: Zeigt die Build-Ausgabe live in der Konsole an.</li>
+</ul>
+<!-- end list -->
+
+<pre><code class="language-bash">colcon build --symlink-install --merge-install --event-handlers console_direct+
+</code></pre>
+<p>Führt das Haupt-Skript des Roboters aus (vermutlich ein Launch-File):</p>
+<pre><code class="language-bash">bash scripts/start_robot.sh
+</code></pre>
+<hr />
+<h2 id="2-github-actions-lokales-testen-mit-act">2. GitHub Actions (Lokales Testen mit 'act')</h2>
+<p>Führt einen kompletten GitHub Actions-Workflow lokal aus:</p>
+<ul>
+<li><code>-W</code>: Gibt die Workflow-Datei an.</li>
+<li><code>--container-architecture</code>: Simuliert eine ARM64-Architektur (wichtig für Pi-Builds).</li>
+<li><code>--verbose</code>: Zeigt detaillierte Logs an.</li>
+</ul>
+<!-- end list -->
+
+<pre><code class="language-bash">act workflow_dispatch -W .github/workflows/docker-build-robot-pi-test.yml --container-architecture linux/arm64 --verbose --no-skip-checkout
+</code></pre>
+<p>Führt nur einen <em>bestimmten Job</em> ("build-test-image") aus dem Workflow aus:</p>
+<pre><code class="language-bash">act workflow_dispatch -W .github/workflows/docker-build-robot-pi-test.yml --container-architecture linux/arm64 --job build-test-image --no-skip-checkout
+</code></pre>
+<p><strong>Empfohlener kurzer Befehl (verhält sich wie echte GitHub Actions):</strong></p>
+<pre><code class="language-bash">act push -j build-test-image --no-skip-checkout
+</code></pre>
+<hr />
+<h2 id="3-micro-ros-visualisierung">3. Micro-ROS &amp; Visualisierung</h2>
+<p>Startet den Micro-ROS Agent als Brücke zum Mikrocontroller (<code>--dev /dev/ttyACM0</code> gibt den seriellen Port/USB des Mikrocontrollers an):</p>
+<pre><code class="language-bash">source install/setup.bash
+ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0
+</code></pre>
+<p>Startet die Foxglove Bridge, um ROS 2-Daten in der Foxglove-Web-UI zu visualisieren (Alternative zu RViz):</p>
+<pre><code class="language-bash">ros2 run foxglove_bridge foxglove_bridge --port 8765
+</code></pre>
+<hr />
+<h2 id="4-docker-lokale-builds">4. Docker lokale Builds</h2>
+<p>Test-Image lokal</p>
+<pre><code class="language-bash">docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi.test -t goldjunge491/my-steel-robot:test-local --load .
+</code></pre>
+<p>Production-Image lokal  </p>
+<pre><code class="language-bash">docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi -t goldjunge491/my-steel-robot:prod-local --load .
+</code></pre>
+<h2 id="container-starten">Container starten:</h2>
+<p>Als robot user</p>
+<pre><code class="language-bash">docker run -it --rm goldjunge491/my-steel-robot:pi-test-local /bin/bash
+</code></pre>
+<p>root user</p>
+<pre><code class="language-bash">docker run -it --rm --entrypoint /bin/bash --user root goldjunge491/my-steel-robot:pi-test-local
+</code></pre>
+<hr />
+<h2 id="5-ros-2-diagnose-befehle">5. ROS 2 Diagnose-Befehle</h2>
+<p>Zeigt die verfügbaren Hardware-Interfaces von <code>ros2_control</code> an (z.B. Gelenke):</p>
+<pre><code class="language-bash">ros2 control list_hardware_interfaces
+</code></pre>
+<p>Zeigt die Interfaces an, leitet aber Fehler (<code>2&gt;&amp;1</code>) um und begrenzt die Ausgabe auf 30 Zeilen, um Terminal-Spam bei Fehlern zu verhindern:</p>
+<pre><code class="language-bash">ros2 control list_hardware_interfaces 2&gt;&amp;1 | head -30
+</code></pre>
+<p>Listet alle aktiven ROS 2-Nodes auf:</p>
+<pre><code class="language-bash">ros2 node list
+</code></pre>
+<hr />
+<h2 id="6-docker-build-push-verschiedene-varianten">6. Docker Build &amp; Push (Verschiedene Varianten)</h2>
+<p>Wechselt in das Verzeichnis, das den Build-Kontext (Dockerfile etc.) enthält:</p>
+<pre><code class="language-bash">cd /Users/marco/Github.tmp/my_steel-robot_ws
+</code></pre>
+<p>Baut ein Docker-Image für ARM64 (Pi) und pusht es direkt zu Docker Hub:</p>
+<ul>
+<li><code>--platform</code>: Gibt die Zielarchitektur an.</li>
+<li><code>-f</code>: Gibt den Pfad zum Dockerfile an (hier das Test-Dockerfile).</li>
+<li><code>-t</code>: Taggt das Image für das Repository.</li>
+<li><code>--push</code>: Pusht das Image nach erfolgreichem Build in die Registry.</li>
+</ul>
+<!-- end list -->
+
+<pre><code class="language-bash">docker buildx build \
+  --platform linux/arm64 \
+  -f docker/Dockerfile.robot-pi.test \
+  -t goldjunge491/my-steel-robot:working-latest \
+  --push \
+  .
+</code></pre>
+<h3 id="lokale-builds">Lokale Builds</h3>
+<p>Schneller lokaler Build. Nutzt den Docker-Cache und baut für die Host-Architektur (z.B. x86_64 auf einem Laptop):</p>
+<pre><code class="language-bash">docker build -f docker/Dockerfile.robot-pi.test -t goldjunge491/my-steel-robot:test-latest .
+</code></pre>
+<p>Gleicher Build, aber explizit mit <code>DOCKER_BUILDKIT=1</code> aktiviert (BuildKit bietet besseres Caching und parallele Build-Schritte):</p>
+<pre><code class="language-bash">DOCKER_BUILDKIT=1 docker build -f docker/Dockerfile.robot-pi.test -t goldjunge491/my-steel-robot:test-latest .
+</code></pre>
+<h3 id="interaktive-tests">Interaktive Tests</h3>
+<p>Startet eine interaktive Shell (<code>-it</code>) im frisch gebauten Test-Image (<code>--rm</code> löscht den Container nach dem Beenden):</p>
+<pre><code class="language-bash">docker run -it --rm goldjunge491/my-steel-robot:test-latest bash
+</code></pre>
+<p>Dieser "Copy &amp; Paste"-Block kann <em>innerhalb</em> der laufenden Container-Shell ausgeführt werden, um die ROS-Umgebung zu überprüfen:</p>
+<pre><code class="language-bash">source /opt/ros/humble/setup.bash &amp;&amp; \
+source /home/robot/workspace/my_steel-robot_ws/install/setup.bash &amp;&amp; \
+echo &quot;=== ROS2 Packages ===&quot; &amp;&amp; \
+ros2 pkg list | grep -E &quot;(micro_ros|robot)&quot; &amp;&amp; \
+echo &quot;=== Workspace Structure ===&quot; &amp;&amp; \
+ls -la /home/robot/workspace/my_steel-robot_ws/ &amp;&amp; \
+echo &quot;=== Install Directory ===&quot; &amp;&amp; \
+ls -la /home/robot/workspace/my_steel-robot_ws/install/
+</code></pre>
+<h3 id="multi-arch-build-arm64-fur-lokales-testen">Multi-Arch-Build (ARM64) für lokales Testen</h3>
+<p>Baut für ARM64, aber lädt das Image in den lokalen Docker-Daemon (<code>--load</code>). Nützlich auf M1/M2 Macs oder um das Image vor dem Push zu prüfen:</p>
+<pre><code class="language-bash">docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi.test -t goldjunge491/my-steel-robot:pi-test-local . --load
+</code></pre>
+<hr />
+<h2 id="7-docker-compose-fur-lokale-testumgebungen">7. Docker Compose (Für lokale Testumgebungen)</h2>
+<p>Startet alle Dienste (z.B. 'microros-agent') im Hintergrund (<code>-d</code>):</p>
+<pre><code class="language-bash">docker compose -f docker/compose.robot-pi.test.yaml up -d
+</code></pre>
+<p>Stoppt alle Dienste und löscht die Volumes (<code>-v</code>) für einen sauberen Neustart:</p>
+<pre><code class="language-bash">docker compose -f docker/compose.robot-pi.test.yaml down -v
+</code></pre>
+<h3 id="interaktion-mit-compose-containern">Interaktion mit Compose-Containern</h3>
+<p>Öffnet eine interaktive Shell im Service, der in der Compose-Datei "microros-agent" heißt:</p>
+<pre><code class="language-bash">docker compose exec -it microros-agent /bin/bash
+</code></pre>
+<hr />
+<h2 id="8-docker-exec-umfassende-referenz">8. Docker Exec (Umfassende Referenz)</h2>
+<p>Öffnet eine interaktive Shell im Container namens "microros-agent":</p>
+<pre><code class="language-bash">docker exec -it microros-agent /bin/bash
+</code></pre>
+<p>Fallback mit <code>/bin/sh</code>:</p>
+<pre><code class="language-bash">docker exec -it microros-agent /bin/sh
+</code></pre>
+<p>Führt den Befehl als ein anderer Benutzer aus (hier: <code>root</code>):</p>
+<pre><code class="language-bash">docker exec -it -u root microros-agent /bin/bash
+</code></pre>
+<p>Führt <code>id</code> als Benutzer mit der UID 1000 aus (nützlich für Berechtigungen):</p>
+<pre><code class="language-bash">docker exec -it -u 1000 microros-agent id
+</code></pre>
+<p>Führt einen nicht-interaktiven Befehl aus (z.B. Logs auflisten):</p>
+<pre><code class="language-bash">docker exec microros-agent ls -la /var/log/robot
+</code></pre>
+<p>Nutzt <code>sh -c</code>, um einen Befehl mit Shell-Funktionen (wie <code>&amp;&amp;</code> oder <code>|</code>) auszuführen:</p>
+<pre><code class="language-bash">docker exec microros-agent sh -c 'ros2 topic list'
+</code></pre>
+<p>Führt einen Befehl im Hintergrund (detached) im Container aus:</p>
+<pre><code class="language-bash">docker exec -d microros-agent sh -c 'long_running_cmd &amp;'
+</code></pre>
+<p>Setzt eine Umgebungsvariable nur für diesen einen Befehl:</p>
+<pre><code class="language-bash">docker exec -e ROS_DOMAIN_ID=1 microros-agent env | grep ROS_DOMAIN_ID
+</code></pre>
+<p>Lädt Umgebungsvariablen aus einer Datei für diesen Befehl:</p>
+<pre><code class="language-bash">docker exec --env-file ./env.list microros-agent env
+</code></pre>
+<p>Setzt das Arbeitsverzeichnis (<code>-w</code>) für den Befehl (<code>-lc</code> startet bash als "login shell", um <code>.bashrc</code>/.profile zu laden):</p>
+<pre><code class="language-bash">docker exec -w /home/ros microros-agent bash -lc 'pwd &amp;&amp; ls'
+</code></pre>
+<p>Findet dynamisch die Container-ID/Namen über einen Filter und führt <code>exec</code> darauf aus:</p>
+<pre><code class="language-bash">docker exec -it $(docker ps -qf &quot;name=microros-agent&quot;) /bin/bash
+</code></pre>
+<p>Ändert die "detach"-Tastenkombination (Standard ist Strg+P, Strg+Q):</p>
+<pre><code class="language-bash">docker exec --detach-keys=&quot;ctrl-x&quot; -it microros-agent /bin/bash
+</code></pre>
+<p><code>docker container exec</code> ist der modernere, explizitere Alias für <code>docker exec</code>:</p>
+<pre><code class="language-bash">docker container exec -it microros-agent /bin/bash
+</code></pre>
+<hr />
+<h2 id="9-finale-production-builds-mit-logging">9. Finale Production-Builds (mit Logging)</h2>
+<p>Baut das <em>finale</em> Production-Image (<code>docker/Dockerfile.robot-pi</code>) für ARM64, pusht es zu Docker Hub und leitet die gesamte Ausgabe (<code>stdout</code> &amp; <code>stderr</code>) in eine Log-Datei <em>und</em> auf die Konsole (dank <code>tee</code>):</p>
+<pre><code class="language-bash">docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi -t goldjunge491/my-steel-robot:humble-arm64 --push . 2&gt;&amp;1 | tee docker-build-production.log
+</code></pre>
+<p>Baut das <em>Production</em>-Image (<code>Dockerfile.robot-pi</code>), lädt es aber lokal (<code>--load</code>) und speichert das Log in einem Unterverzeichnis:</p>
+<pre><code class="language-bash">docker buildx build \
+  --platform linux/arm64 \
+  -f docker/Dockerfile.robot-pi \
+  -t goldjunge491/my-steel-robot:humble-arm64 \
+  --load . \
+  2&gt;&amp;1 | tee docker/docker-build-production-fixed.log
+</code></pre>
+<p>Baut das <em>Test</em>-Image (<code>Dockerfile.robot-pi.test</code>), lädt es lokal. Das Log wird nun korrekterweise als 'test-fixed.log' gespeichert:</p>
+<pre><code class="language-bash">docker buildx build \
+  --platform linux/arm64 \
+  -f docker/Dockerfile.robot-pi.test \
+  -t goldjunge491/my-steel-robot:humble-arm64 \
+  --load . \
+  2&gt;&amp;1 | tee docker/docker-build-test-fixed.log
+</code></pre>
+<p><strong>Best Practice:</strong> Baut das Production-Image und versieht es mit mehreren Tags (z.B. spezifisch, <code>latest</code> und ein einzigartiger Build-Zeitstempel). Pusht alle Tags und loggt den gesamten Vorgang:</p>
+<pre><code class="language-bash">docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi \
+  -t goldjunge491/my-steel-robot:humble-arm64 \
+  -t goldjunge491/my-steel-robot:latest \
+  -t goldjunge491/my-steel-robot:$(date +%Y%m%d)-$(git rev-parse --short HEAD) \
+  --push . 2&gt;&amp;1 | tee docker-build-production.log
+</code></pre>
+<hr />
+<h2 id="10-hilfsbefehle-fur-den-build-push">10. Hilfsbefehle für den Build &amp; Push</h2>
+<p>Beobachtet die Log-Datei des Builds in Echtzeit (in einem separaten Terminal):</p>
+<pre><code class="language-bash">tail -f docker-build-production.log
+</code></pre>
+<p>Überprüft <em>nach</em> dem Push, ob das Image korrekt in der Registry (Docker Hub) mit den richtigen Architekturen (z.B. <code>linux/arm64</code>) vorhanden ist:</p>
+<pre><code class="language-bash">docker buildx imagetools inspect goldjunge491/my-steel-robot:humble-arm64
+</code></pre>
+<p>Lokaler Test: Lädt das frisch gepushte Image aus der Registry und führt einen schnellen Test aus (prüft, ob 'robot'-Pakete da sind):</p>
+<pre><code class="language-bash">docker run --rm -it goldjunge491/my-steel-robot:humble-arm64 bash -c &quot;source /opt/ros/humble/setup.bash &amp;&amp; source /home/robot/workspace/my_steel-robot_ws/install/setup.bash &amp;&amp; ros2 pkg list | grep robot&quot;
+</code></pre>
+<p>Alle unbenutzte Images löschen</p>
+<pre><code class="language-bash">docker image prune -a
+</code></pre>
+<p>Alle gestoppten Container löschen</p>
+<pre><code class="language-bash">docker container prune
+</code></pre>
+<p>Alle Container stoppen und löschen</p>
+<pre><code class="language-bash">docker stop $(docker ps -aq) &amp;&amp; docker rm $(docker ps -aq)
+</code></pre>
+<p>Unbenutzte Volumes löschen</p>
+<pre><code class="language-bash">docker volume prune
+</code></pre>
+<p>Unbenutzte Networks löschen</p>
+<pre><code class="language-bash">docker network prune
+</code></pre>
+<p>Kompletten Build Cache löschen</p>
+<pre><code class="language-bash">docker builder prune -a
+</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>

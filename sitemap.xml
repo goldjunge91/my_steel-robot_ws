@@ -1,13 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://athackst.github.io/vscode_ros2_workspace/</loc>
-         <lastmod>2023-07-06</lastmod>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/ARCHITECTURE/</loc>
+         <lastmod>2025-10-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://athackst.github.io/vscode_ros2_workspace/LICENSE/</loc>
-         <lastmod>2023-07-06</lastmod>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/ARCHITECTURE_INDEX/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/PINMAP/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/architecture_and_packages/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/command%20list/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/hardware_setup/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/imu_calibration_guide/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/raspberry_pi_setup_plan/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/tmux/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/github/Workflow%20commands%20for%20GitHub%20Actions/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/ros/Ros2_docker/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/ros/docker/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/ros/orsf_README/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/LICENSE/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/notes_kommentare/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/notes/</loc>
+         <lastmod>2025-10-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://goldjunge91.github.io/my_steel-robot_ws/Projekt/</loc>
+         <lastmod>2025-10-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
