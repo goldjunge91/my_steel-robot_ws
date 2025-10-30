@@ -14,20 +14,20 @@ on:
       - "humble/**"
       - "feat_CI_CD"
       # - "/**"
-    paths:
-      - "docker/Dockerfile.robot-pi"
-      - "docker/Dockerfile.robot-pi.v2"
-      - ".github/workflows/image-build-raspberry-pi.yml"
+    # paths:
+    #   - "docker/Dockerfile.robot-pi"
+    #   - "docker/Dockerfile.robot-pi.v2"
+    #   - ".github/workflows/image-build-raspberry-pi.yml"
   push:
     tags:
       - "v*.*.*"
     # branches-ignore:
     #   - humble
-    paths:
-      # - "docker/Dockerfile.robot-pi"
-      - "docker/Dockerfile.robot-pi"
-      - "docker/Dockerfile.robot-pi.v2"
-      - "docker/compose.robot-pi.yaml"
+    # paths:
+    #   # - "docker/Dockerfile.robot-pi"
+    #   - "docker/Dockerfile.robot-pi"
+    #   - "docker/Dockerfile.robot-pi.v2"
+    #   - "docker/compose.robot-pi.yaml"
   # schedule:
   #   - cron: "* * 1-31 * *"
   #   - cron: "* * * 1-12 1-5" #At every minute on every day-of-week from Monday through Friday in every month from January through December.
@@ -92,7 +92,7 @@ jobs:
             runner: ubuntu-22.04-arm
             arch: arm64
             ros_distro: humble
-          
+
           - dockerfile: docker/Dockerfile.hardware
             dockerfile_name: hardware
             repo_name: my-steel-robot
@@ -108,7 +108,6 @@ jobs:
             ros_distro: humble
 
     steps:
-
       - name: Check Docker Hub credentials
         id: check-secrets
         run: |
@@ -254,7 +253,6 @@ jobs:
           echo "**Platform:** ${{ matrix.platform }}" >> $GITHUB_STEP_SUMMARY
           echo "**Runner:** ${{ matrix.runner }}" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ steps.version.outputs.git_tag }}" >> $GITHUB_STEP_SUMMARY
-
 
           echo "- **Dockerfile:** \`docker/Dockerfile.robot-pi\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Platform:** \`${{ matrix.platform }}\`" >> "$GITHUB_STEP_SUMMARY"
