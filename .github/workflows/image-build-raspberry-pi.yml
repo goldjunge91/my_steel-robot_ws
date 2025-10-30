@@ -172,7 +172,18 @@ jobs:
             VERSION="dev-${GITHUB_SHA:0:7}"
             echo "✅ Building development version: ${VERSION}"
           fi
+          BUILD_DATE=$(date +%Y%m%d)
 
+          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "✅ Building from Git tag: v${VERSION}"
+          elif [[ "${GITHUB_EVENT_NAME:-}" == "pull_request" ]]; then
+            VERSION="pr-${PR_NUMBER}"
+            echo "✅ Building from Pull Request #${PR_NUMBER}"
+          else
+            VERSION="dev-${GITHUB_SHA:0:7}"
+            echo "✅ Building development version: ${VERSION}"
+          fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
           echo "git_tag=v${VERSION}" >> $GITHUB_OUTPUT
