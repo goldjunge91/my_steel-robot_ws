@@ -1,6 +1,5 @@
----
-name: Image Build  Raspberry Pi
-run-name: ${{ github.actor }} is learning GitHub Actions
+name: Image Build Raspberry Pi
+run-name: ${{ github.actor }} is learning GitHub Actions Build Images (Native)
 permissions:
   contents: read
   packages: write
@@ -14,20 +13,24 @@ on:
       - "humble/**"
       - "feat_CI_CD"
       # - "/**"
-    # paths:
-    #   - "docker/Dockerfile.robot-pi"
-    #   - "docker/Dockerfile.robot-pi.v2"
-    #   - ".github/workflows/image-build-raspberry-pi.yml"
+    paths:
+      - "docker/Dockerfile.robot-pi"
+      - "docker/Dockerfile.**"
+      - "docker/Dockerfile.robot-pi.v2"
+      - ".github/workflows/image-build-raspberry-pi.yml"
+      - ".github/workflows/**"
   push:
     tags:
       - "v*.*.*"
     # branches-ignore:
     #   - humble
-    # paths:
-    #   # - "docker/Dockerfile.robot-pi"
-    #   - "docker/Dockerfile.robot-pi"
-    #   - "docker/Dockerfile.robot-pi.v2"
-    #   - "docker/compose.robot-pi.yaml"
+    paths:
+      - "docker/Dockerfile.**"
+      - ".github/workflows/**"
+      # - "docker/Dockerfile.robot-pi"
+      - "docker/Dockerfile.robot-pi"
+      - "docker/Dockerfile.robot-pi.v2"
+      - "docker/compose.robot-pi.yaml"
   # schedule:
   #   - cron: "* * 1-31 * *"
   #   - cron: "* * * 1-12 1-5" #At every minute on every day-of-week from Monday through Friday in every month from January through December.
