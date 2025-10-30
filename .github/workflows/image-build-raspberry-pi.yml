@@ -24,6 +24,12 @@ on:
       - "v*.*.*"
     # branches-ignore:
     #   - humble
+  push:
+    branches:
+      - humble
+      - "humble/**"
+      - "feat_CI_CD"
+      - "/**"
     paths:
       - "docker/Dockerfile.**"
       - ".github/workflows/**"
