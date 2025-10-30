@@ -24,19 +24,18 @@ on:
       - "v*.*.*"
     # branches-ignore:
     #   - humble
-  push:
     branches:
       - humble
       - "humble/**"
       - "feat_CI_CD"
       - "/**"
-    paths:
-      - "docker/Dockerfile.**"
-      - ".github/workflows/**"
-      # - "docker/Dockerfile.robot-pi"
-      - "docker/Dockerfile.robot-pi"
-      - "docker/Dockerfile.robot-pi.v2"
-      - "docker/compose.robot-pi.yaml"
+    # paths:
+    #   - "docker/Dockerfile.**"
+    #   - ".github/workflows/**"
+    #   # - "docker/Dockerfile.robot-pi"
+    #   - "docker/Dockerfile.robot-pi"
+    #   - "docker/Dockerfile.robot-pi.v2"
+    #   - "docker/compose.robot-pi.yaml"
   # schedule:
   #   - cron: "* * 1-31 * *"
   #   - cron: "* * * 1-12 1-5" #At every minute on every day-of-week from Monday through Friday in every month from January through December.
