@@ -158,12 +158,11 @@ jobs:
         run: |
           BUILD_DATE=$(date +%Y%m%d)
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            # Extract version from Git tag (e.g., v1.2.3 -> 1.2.3)
             VERSION=${GITHUB_REF#refs/tags/v}
             echo "✅ Building from Git tag: v${VERSION}"
-          elif [[ "$GITHUB_EVENT_NAME" == "pull_request"]]; then
+          elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             VERSION="pr-${PR_NUMBER}"
-            VERSION="pr-${{ github.event.pull_request #$ }}"
+            VERSION="pr-${{ github.event.pull_request}}"
             echo "✅ Building from Pull Request #${{ github.event.pull_request.number }}"
           else
             # Workflow Dispatch oder anderer Trigger
