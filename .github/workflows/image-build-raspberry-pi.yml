@@ -1,0 +1,261 @@
+---
+name: Image Build  Raspberry Pi
+run-name: ${{ github.actor }} is learning GitHub Actions
+permissions:
+  contents: read
+  packages: write
+
+on:
+  pull_request:
+    types:
+      - opened
+    branches:
+      - humble
+      - "humble/**"
+      - "feat_CI_CD"
+      # - "/**"
+    paths:
+      - "docker/Dockerfile.robot-pi"
+      - "docker/Dockerfile.robot-pi.v2"
+      - ".github/workflows/image-build-raspberry-pi.yml"
+  push:
+    tags:
+      - "v*.*.*"
+    # branches-ignore:
+    #   - humble
+    paths:
+      # - "docker/Dockerfile.robot-pi"
+      - "docker/Dockerfile.robot-pi"
+      - "docker/Dockerfile.robot-pi.v2"
+      - "docker/compose.robot-pi.yaml"
+  # schedule:
+  #   - cron: "* * 1-31 * *"
+  #   - cron: "* * * 1-12 1-5" #At every minute on every day-of-week from Monday through Friday in every month from January through December.
+  workflow_dispatch:
+
+jobs:
+  build-image:
+    name: Build robot-pi (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      packages: write
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+        include:
+          # AMD64 Builds
+          - dockerfile: docker/Dockerfile.robot-pi
+            dockerfile_name: robot-pi
+            repo_name: my-steel-robot
+            runner: ubuntu-22.04
+            arch: amd64
+            ros_distro: humble
+
+          - dockerfile: docker/Dockerfile.robot-pi.v2
+            dockerfile_name: robot-pi-v2
+            repo_name: my-steel-robot
+            runner: ubuntu-22.04
+            arch: amd64
+            ros_distro: humble
+
+          - dockerfile: docker/Dockerfile.hardware
+            dockerfile_name: hardware
+            repo_name: my-steel-robot
+            runner: ubuntu-22.04
+            arch: amd64
+            ros_distro: humble
+
+          - dockerfile: docker/Dockerfile.simulation
+            dockerfile_name: simulation
+            repo_name: my-steel-robot
+            runner: ubuntu-22.04
+            arch: amd64
+            ros_distro: humble
+
+            # ARM64 Builds (native runners)
+          - dockerfile: docker/Dockerfile.robot-pi
+            dockerfile_name: robot-pi
+            repo_name: my-steel-robot
+            runner: ubuntu-22.04-arm
+            arch: arm64
+            ros_distro: humble
+
+          - dockerfile: docker/Dockerfile.robot-pi.v2
+            dockerfile_name: robot-pi-v2
+            repo_name: my-steel-robot
+            runner: ubuntu-22.04-arm
+            arch: arm64
+            ros_distro: humble
+          
+          - dockerfile: docker/Dockerfile.hardware
+            dockerfile_name: hardware
+            repo_name: my-steel-robot
+            runner: ubuntu-22.04-arm
+            arch: arm64
+            ros_distro: humble
+
+          - dockerfile: docker/Dockerfile.simulation
+            dockerfile_name: simulation
+            repo_name: my-steel-robot
+            runner: ubuntu-22.04
+            arch: amd64
+            ros_distro: humble
+
+    steps:
+
+      - name: Check Docker Hub credentials
+        id: check-secrets
+        run: |
+          BUILD_DATE=$(date +%Y%m%d)
+          if [ "${{ env.ACT }}" = "true" ]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Running in LOCAL mode with act - skipping credentials check"
+          elif [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Missing Credentials::Missing DOCKERHUB_USERNAME and/or DOCKERHUB_TOKEN secrets. Skipping build."
+            echo "⚠️  Missing DOCKERHUB_USERNAME or DOCKERHUB_TOKEN secrets. Skipping build." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "✅ Docker Hub credentials found for ${{ secrets.DOCKERHUB_USERNAME }}"
+          fi
+
+      - name: Checkout repository
+        if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      # - name: Bootstrap Buildx (start workers)
+      #   if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
+      #   run: |
+      #     echo "::group::Bootstrap Docker Buildx"
+      #     docker buildx use ${{ steps.buildx.outputs.name }}
+      #     docker buildx inspect --bootstrap
+      #     echo "::endgroup::"
+
+      - name: Log in to Docker Hub
+        if: ${{ steps.check-secrets.outputs.skip != 'true' && !env.ACT }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract version Git tag
+        if: steps.check-secrets.outputs.skip != 'true'
+        id: version
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number || '' }}
+        run: |
+          BUILD_DATE=$(date +%Y%m%d)
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            # Extract version from Git tag (e.g., v1.2.3 -> 1.2.3)
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "✅ Building from Git tag: v${VERSION}"
+          elif [[ "$GITHUB_EVENT_NAME" == "pull_request"]]; then
+            VERSION="pr-${PR_NUMBER}"
+            VERSION="pr-${{ github.event.pull_request #$ }}"
+            echo "✅ Building from Pull Request #${{ github.event.pull_request.number }}"
+          else
+            # Workflow Dispatch oder anderer Trigger
+            VERSION="dev-${GITHUB_SHA:0:7}"
+            echo "✅ Building development version: ${VERSION}"
+          fi
+
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
+          echo "git_tag=v${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.repo_name }}
+          tags: |
+            type=raw,value=${{ matrix.ros_distro }}-${{ steps.version.outputs.version }}-${{ matrix.dockerfile_name }}-${{ steps.version.outputs.build_date }}
+            type=raw,value=${{ matrix.ros_distro }}-${{ steps.version.outputs.version }}-${{ matrix.dockerfile_name }}
+            type=raw,value=${{ matrix.ros_distro }}-latest-${{ matrix.dockerfile_name }}
+
+      - name: Build robot-pi image (${{ matrix.arch }}) [CI]
+        if: ${{ steps.check-secrets.outputs.skip != 'true' && !env.ACT }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: ${{ matrix.platform }}
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:${{ matrix.dockerfile_name }}-ci-${{ matrix.arch }}
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
+          labels: |
+            org.opencontainers.image.title=my_steel Robot Image
+            org.opencontainers.image.description=CI build (${{ matrix.platform }})
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      # - name: Build robot-pi image (${{ matrix.arch }}) [LOCAL]
+      #   if: ${{ env.ACT }}
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: .
+      #     file: ${{ matrix.dockerfile }}
+      #     platforms: ${{ matrix.platform }}
+      #     push: false
+      #     load: true
+      #     tags: goldjunge491/my-steel-robot:pi-local-${{ matrix.arch }}
+      #     cache-from: type=gha,scope=${{ matrix.arch }}
+      #     cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
+      #     labels: |
+      #       org.opencontainers.image.title=my_steel Robot Image (LOCAL)
+      #       org.opencontainers.image.description=Local build (${{ matrix.platform }})
+      #       org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Summarize build result (${{ matrix.arch }})
+        if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
+        run: |
+          echo "## ########## ${{ matrix.arch }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "## 🤖 Raspberry Pi Robot Image (Build - ${{ matrix.arch }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY" # Leerzeile
+
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ **Build completed successfully.**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "❌ **Build failed.** Check the logs above for details." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "---" >> "$GITHUB_STEP_SUMMARY" # Trennlinie
+          echo "### Details" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "${{ env.ACT }}" = "true" ]; then
+            IMAGE_TAG="goldjunge491/my-steel-robot:pi-local-${{ matrix.arch }}"
+            echo "- **Mode:** LOCAL (mit \`act\` ausgeführt)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Image:** \`$IMAGE_TAG\` (nur lokal geladen)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            IMAGE_TAG="goldjunge491/my-steel-robot:pi-${{ matrix.arch }}"
+            IMAGE_TAG="${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-ci-${{ matrix.arch }}"
+            echo "- **Mode:** CI (Push nach Docker Hub)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Image:** \`$IMAGE_TAG\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Link:** [View on Docker Hub](https://hub.docker.com/r/goldjunge491/my-steel-robot/tags)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** ghcr.io/${{ github.repository_owner }}/${{ matrix.repo_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Dockerfile:** ${{ matrix.dockerfile }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Platform:** ${{ matrix.platform }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Runner:** ${{ matrix.runner }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.git_tag }}" >> $GITHUB_STEP_SUMMARY
+
+
+          echo "- **Dockerfile:** \`docker/Dockerfile.robot-pi\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Platform:** \`${{ matrix.platform }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Commit:** \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
