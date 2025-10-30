@@ -11,34 +11,23 @@ on:
     branches:
       - humble
       - "humble/**"
-      - "feat_CI_CD"
-      - "/**"
+      - feat_CI_CD
     paths:
-      - "docker/Dockerfile.robot-pi"
-      - "docker/Dockerfile.**"
-      - "docker/Dockerfile.robot-pi.v2"
+      - "docker/Dockerfile*"
       - ".github/workflows/image-build-raspberry-pi.yml"
-      - ".github/workflows/**"
+  
   push:
-    tags:
-      - "v*.*.*"
-    # branches-ignore:
-    #   - humble
     branches:
       - humble
       - "humble/**"
-      - "feat_CI_CD"
-      - "/**"
-    # paths:
-    #   - "docker/Dockerfile.**"
-    #   - ".github/workflows/**"
-    #   # - "docker/Dockerfile.robot-pi"
-    #   - "docker/Dockerfile.robot-pi"
-    #   - "docker/Dockerfile.robot-pi.v2"
-    #   - "docker/compose.robot-pi.yaml"
-  # schedule:
-  #   - cron: "* * 1-31 * *"
-  #   - cron: "* * * 1-12 1-5" #At every minute on every day-of-week from Monday through Friday in every month from January through December.
+      - feat_CI_CD
+    tags:
+      - "v*.*.*"
+    paths:
+      - "docker/Dockerfile*"
+      - "docker/compose.robot-pi.yaml"
+      - ".github/workflows/image-build-raspberry-pi.yml"
+  
   workflow_dispatch:
 
 jobs:
@@ -53,14 +42,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
         include:
           # AMD64 Builds
           - dockerfile: docker/Dockerfile.robot-pi
             dockerfile_name: robot-pi
             repo_name: my-steel-robot
+            platform: linux/amd64
             runner: ubuntu-22.04
             arch: amd64
             ros_distro: humble
@@ -68,6 +55,7 @@ jobs:
           - dockerfile: docker/Dockerfile.robot-pi.v2
             dockerfile_name: robot-pi-v2
             repo_name: my-steel-robot
+            platform: linux/amd64
             runner: ubuntu-22.04
             arch: amd64
             ros_distro: humble
@@ -75,6 +63,7 @@ jobs:
           - dockerfile: docker/Dockerfile.hardware
             dockerfile_name: hardware
             repo_name: my-steel-robot
+            platform: linux/amd64
             runner: ubuntu-22.04
             arch: amd64
             ros_distro: humble
@@ -82,14 +71,16 @@ jobs:
           - dockerfile: docker/Dockerfile.simulation
             dockerfile_name: simulation
             repo_name: my-steel-robot
+            platform: linux/amd64
             runner: ubuntu-22.04
             arch: amd64
             ros_distro: humble
 
-            # ARM64 Builds (native runners)
+          # ARM64 Builds (native runners)
           - dockerfile: docker/Dockerfile.robot-pi
             dockerfile_name: robot-pi
             repo_name: my-steel-robot
+            platform: linux/arm64
             runner: ubuntu-22.04-arm
             arch: arm64
             ros_distro: humble
@@ -97,6 +88,7 @@ jobs:
           - dockerfile: docker/Dockerfile.robot-pi.v2
             dockerfile_name: robot-pi-v2
             repo_name: my-steel-robot
+            platform: linux/arm64
             runner: ubuntu-22.04-arm
             arch: arm64
             ros_distro: humble
@@ -104,15 +96,9 @@ jobs:
           - dockerfile: docker/Dockerfile.hardware
             dockerfile_name: hardware
             repo_name: my-steel-robot
+            platform: linux/arm64
             runner: ubuntu-22.04-arm
             arch: arm64
-            ros_distro: humble
-
-          - dockerfile: docker/Dockerfile.simulation
-            dockerfile_name: simulation
-            repo_name: my-steel-robot
-            runner: ubuntu-22.04
-            arch: amd64
             ros_distro: humble
 
     steps:
@@ -164,21 +150,9 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number || '' }}
         run: |
+          set -euo pipefail
           BUILD_DATE=$(date +%Y%m%d)
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-            echo "✅ Building from Git tag: v${VERSION}"
-          elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            VERSION="pr-${PR_NUMBER}"
-            VERSION="pr-${{ github.event.pull_request}}"
-            echo "✅ Building from Pull Request #${{ github.event.pull_request.number }}"
-          else
-            # Workflow Dispatch oder anderer Trigger
-            VERSION="dev-${GITHUB_SHA:0:7}"
-            echo "✅ Building development version: ${VERSION}"
-          fi
-          BUILD_DATE=$(date +%Y%m%d)
-
+          
           if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
             echo "✅ Building from Git tag: v${VERSION}"
@@ -189,11 +163,13 @@ jobs:
             VERSION="dev-${GITHUB_SHA:0:7}"
             echo "✅ Building development version: ${VERSION}"
           fi
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
-          echo "git_tag=v${VERSION}" >> $GITHUB_OUTPUT
+          
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "build_date=${BUILD_DATE}" >> "$GITHUB_OUTPUT"
+          echo "git_tag=v${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Extract Docker metadata
+        if: ${{ steps.check-secrets.outputs.skip != 'true' || env.ACT }}
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -258,20 +234,16 @@ jobs:
             echo "- **Mode:** LOCAL (mit \`act\` ausgeführt)" >> "$GITHUB_STEP_SUMMARY"
             echo "- **Image:** \`$IMAGE_TAG\` (nur lokal geladen)" >> "$GITHUB_STEP_SUMMARY"
           else
-            IMAGE_TAG="goldjunge491/my-steel-robot:pi-${{ matrix.arch }}"
-            IMAGE_TAG="${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:pi-ci-${{ matrix.arch }}"
+            IMAGE_TAG="${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:${{ matrix.dockerfile_name }}-ci-${{ matrix.arch }}"
             echo "- **Mode:** CI (Push nach Docker Hub)" >> "$GITHUB_STEP_SUMMARY"
             echo "- **Image:** \`$IMAGE_TAG\`" >> "$GITHUB_STEP_SUMMARY"
             echo "- **Link:** [View on Docker Hub](https://hub.docker.com/r/goldjunge491/my-steel-robot/tags)" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** ghcr.io/${{ github.repository_owner }}/${{ matrix.repo_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Dockerfile:** ${{ matrix.dockerfile }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Platform:** ${{ matrix.platform }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Runner:** ${{ matrix.runner }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${{ steps.version.outputs.git_tag }}" >> $GITHUB_STEP_SUMMARY
-
-          echo "- **Dockerfile:** \`docker/Dockerfile.robot-pi\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Platform:** \`${{ matrix.platform }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Commit:** \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Image:** ghcr.io/${{ github.repository_owner }}/${{ matrix.repo_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Dockerfile:** \`${{ matrix.dockerfile }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Platform:** \`${{ matrix.platform }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Runner:** \`${{ matrix.runner }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Version:** \`${{ steps.version.outputs.git_tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Commit:** \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
