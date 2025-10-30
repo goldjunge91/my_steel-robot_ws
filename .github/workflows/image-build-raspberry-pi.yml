@@ -12,7 +12,7 @@ on:
       - humble
       - "humble/**"
       - "feat_CI_CD"
-      # - "/**"
+      - "/**"
     paths:
       - "docker/Dockerfile.robot-pi"
       - "docker/Dockerfile.**"
@@ -38,7 +38,7 @@ on:
 
 jobs:
   build-image:
-    name: Build robot-pi (${{ matrix.arch }})
+    name: Image Build Raspberry Pi-(${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     permissions:
