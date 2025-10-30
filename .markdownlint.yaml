@@ -2,13 +2,21 @@
 # Default state for all rules
 default: true
 
+MD004: false
+
 # MD013/line-length
+MD012: false
 MD013: false
+MD014: false
 
 # MD024/no-duplicate-heading
 MD024: false
 
+MD028: false
+
+MD032: false
 # MD033/no-inline-html
 MD033: false
 
-MD004: false
+MD041: false
+MD047: false
