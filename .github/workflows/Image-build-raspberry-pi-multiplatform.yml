@@ -28,7 +28,7 @@ on:
 jobs:
   build-image:
     name: Build Multi-Platform Image (${{ matrix.dockerfile_name }})
-    runs-on: ubuntu-22.04  # Oder ubuntu-22.04-arm für native ARM
+    runs-on: ubuntu-22.04 # Oder ubuntu-22.04-arm für native ARM
     timeout-minutes: 120
     permissions:
       contents: read
