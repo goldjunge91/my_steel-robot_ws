@@ -2,6 +2,8 @@ name: ROS
 
 on:
   pull_request:
+   types:
+      - closed
   push:
     branches:
       - humble*
