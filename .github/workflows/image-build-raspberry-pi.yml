@@ -21,8 +21,8 @@ on:
       - humble
       - "humble/**"
       - feat_CI_CD
-    tags:
-      - "v*.*.*"
+    # tags:
+    #   - "v*.*.*"  # Deaktiviert - multiplatform Workflow übernimmt Tag-Builds
     paths:
       - "docker/Dockerfile*"
       - "docker/compose.robot-pi.yaml"

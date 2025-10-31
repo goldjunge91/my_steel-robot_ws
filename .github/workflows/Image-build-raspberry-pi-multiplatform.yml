@@ -1,5 +1,5 @@
-name: Image Build Raspberry Pi (Multi-Platform)
-run-name: ${{ github.actor }} is building Multi-Platform Images
+name: Image Build Raspberry Pi (Native)
+run-name: ${{ github.actor }} is building Native Images
 permissions:
   contents: read
   packages: write
@@ -178,7 +178,7 @@ jobs:
           file: ${{ matrix.dockerfile }}
           platforms: ${{ matrix.platform }}
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:${{ matrix.dockerfile_name }}-ci-${{ matrix.arch }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:${{ matrix.dockerfile_name }}-${{ steps.version.outputs.version }}-${{ matrix.arch }}
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
           labels: |
@@ -195,7 +195,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: false
           load: true
-          tags: goldjunge491/my-steel-robot:${{ matrix.dockerfile_name }}-local-${{ matrix.arch }}
+          tags: goldjunge491/my-steel-robot:${{ matrix.dockerfile_name }}-${{ steps.version.outputs.version }}-${{ matrix.arch }}
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
           labels: |
@@ -217,7 +217,7 @@ jobs:
 
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "### Details" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Image:** ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:${{ matrix.dockerfile_name }}-ci-${{ matrix.arch }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Image:** ${{ secrets.DOCKERHUB_USERNAME }}/my-steel-robot:${{ matrix.dockerfile_name }}-${{ steps.version.outputs.version }}-${{ matrix.arch }}" >> "$GITHUB_STEP_SUMMARY"
           echo "**Platform:** ${{ matrix.platform }}" >> "$GITHUB_STEP_SUMMARY"
           echo "**Runner:** ${{ matrix.runner }}" >> "$GITHUB_STEP_SUMMARY"
           echo "**Dockerfile:** ${{ matrix.dockerfile }}" >> "$GITHUB_STEP_SUMMARY"
