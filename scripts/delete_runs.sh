@@ -24,7 +24,7 @@ log() {
         shift 3
         # Ausgabe auf Console, nur wenn $log_to_console "true" ist
         if [ "$log_to_console" = "true" ]; then
-                echo -e "${color}[$log_level]${NC} $*"
+                echo -e "${color}[$log_level]${NC} $*" >&2
         fi
 
         # In die Log-Datei schreiben wenn true
@@ -33,7 +33,7 @@ log() {
         # >> Append an die Datei anhängen
                 echo "$(date): $log_level: $*" >> "${filename}"
                 if [ $? -ne 0 ]; then
-                        echo -e "${RED}[FEHLER]${NC} Konnte nicht in '${filename}' schreiben. Bitte Berechtigungen prüfen."
+                        echo -e "${RED}[FEHLER]${NC} Konnte nicht in '${filename}' schreiben. Bitte Berechtigungen prüfen." >&2
                 fi
         fi
         # How to use  log "true" "true" "INFO" "Github workflow Helper gestartet"
@@ -50,7 +50,7 @@ ausgabe() {
         # Ausgaben funktion um farbige Texte zu erzeugen
         local input_text="$2"
         local start_color="$1"
-        echo -e "${start_color}${input_text}${NC}"
+        echo -e "${start_color}${input_text}${NC}" >&2
 }
 
 get_active_workflows_json() {
@@ -80,12 +80,9 @@ get_workflow_id_from_json() {
 
 prompt_user_for_workflow() {
         # Diese Funktion baut das Menü, verarbeitet die Auswahl
-        # und gibt die finalen IDs zurück.
-        # Braucht: $1 = JSON-Daten
+        # und zeigt für jeden ausgewählten Workflow die Statistiken und Aktionen
         local json_data="$1"
         local workflow_names=() # Namen aus dem JSON in ein Array laden
-        local all_selected_ids=()  # Diese Variable sammelt alle IDs, die du auswählst
-        local selected_id=""  # ID für den gewählten Namen finden
         local choice=""       # (Variable für 'select' hinzugefügt)
         COLUMNS=1
         # 1. ZUERST die Namen aus dem JSON laden
@@ -94,7 +91,7 @@ prompt_user_for_workflow() {
         # 2. DANACH die Option "Fertig/Abbrechen" hinzufügen
         workflow_names+=("Fertig/Abbrechen")
 
-        ausgabe "$BLUE" "\nBitte einen oder mehrere Workflows auswählen:"
+        ausgabe "$BLUE" "\nBitte einen Workflow auswählen:"
         PS3="Deine Wahl (Nummer): " # Prompt für das 'select' Menü
         
         # Diese Schleife läuft, bis du "Fertig/Abbrechen" wählst
@@ -102,7 +99,6 @@ prompt_user_for_workflow() {
                 select choice in "${workflow_names[@]}"; do
                 
                 # Abbruch bedingung "Fertig/Abbrechen"
-                # (KORRIGIERTE LOGIK: Muss den exakten String prüfen)
                 if [ "$choice" = "Fertig/Abbrechen" ]; then
                         log "true" "true" "INFO" "Auswahl beendet."
                         break 2 # Beendet beide 'select' und 'while' Schleifen
@@ -110,12 +106,17 @@ prompt_user_for_workflow() {
 
                 # Korrekte Auswahl 
                 if [ -n "$choice" ]; then
-                        selected_id=$(get_workflow_id_from_json "$json_data" "$choice")
-                        all_selected_ids+=("$selected_id") # Füge die ID zur Sammel-Liste hinzu
-                        log "true" "false" "SUCCESS" "Workflow '$choice' (ID: $selected_id) hinzugefügt."
+                        local selected_id=$(get_workflow_id_from_json "$json_data" "$choice")
+                        log "true" "false" "SUCCESS" "Workflow '$choice' (ID: $selected_id) ausgewählt."
                         
-                        # Wir müssen 'break' aufrufen, um das 'select' Menü 
-                        # neu zu laden (und die 'while' Schleife fortzusetzen)
+                        # Zeige Statistiken
+                        get_workflow_run_stats "$selected_id"
+                        
+                        # Zeige Aktionen
+                        prompt_workflow_actions "$selected_id"
+                        
+                        # Zurück zum Menü
+                        ausgabe "$BLUE" "\nBitte einen Workflow auswählen:"
                         break 
                 
                 # ungültige Zahl ein
@@ -125,17 +126,6 @@ prompt_user_for_workflow() {
                 fi
                 done
         done
-
-        # Alle gesammelten IDs ausgeben (jede in einer neuen Zeile)
-        if [ ${#all_selected_ids[@]} -gt 0 ]; then
-                for id in "${all_selected_ids[@]}"; do
-                echo "$id"
-                done
-                return 0 # Erfolgscode
-        else
-                # "Abbrechen" gewählt, ohne etwas auszuwählen
-                return 1 # Fehlercode
-        fi
 }
 
 show_workflow_runs() {
@@ -182,7 +172,8 @@ prompt_user_for_runs() {
     COLUMNS=1
 
     log "true" "true" "INFO" "Lade Runs für Workflow-ID: $workflow_id"
-    json_runs=$(gh run list --workflow "$workflow_id" --limit "$limit" --json databaseId,status,createdAt,headSha)
+    # WICHTIG: Wir brauchen 'conclusion' für success/failure
+    json_runs=$(gh run list --workflow "$workflow_id" --limit "$limit" --json databaseId,status,conclusion,createdAt,headSha)
 
     if [ $? -ne 0 ]; then
         log "true" "true" "ERROR" "Fehler beim Abrufen der Runs für Workflow-ID $workflow_id."
@@ -195,7 +186,7 @@ prompt_user_for_runs() {
     fi
 
     # Runs in Array laden für Menü
-    mapfile -t run_options < <(echo "$json_runs" | jq -r '"ID: \(.databaseId) - Status: \(.status) - SHA: \(.headSha)"')
+    mapfile -t run_options < <(echo "$json_runs" | jq -r '"ID: \(.databaseId) - Status: \(.status) (\(.conclusion)) - SHA: \(.headSha)"')
     run_options+=("Fertig/Abbrechen")
 
     ausgabe "$BLUE" "\nBitte Runs zum Löschen auswählen (mehrere möglich):"
@@ -232,6 +223,150 @@ prompt_user_for_runs() {
     fi
 }
 
+# ==================================================================
+# NEUE FUNKTIONEN START
+# ==================================================================
+
+get_workflow_run_stats() {
+    local workflow_id="$1"
+    log "true" "true" "INFO" "Zähle Runs für Workflow-ID: $workflow_id (Limit 1000)"
+    
+    local json_data
+    # Wir brauchen 'status' (aktiv) und 'conclusion' (beendet)
+    json_data=$(gh run list --workflow "$workflow_id" --limit 1000 --json status,conclusion)
+    
+    if [ $? -ne 0 ]; then
+        log "true" "true" "ERROR" "Konnte Run-Status nicht abrufen."
+        return 1
+    fi
+
+    # Zähle die verschiedenen Status mit jq
+    local succeeded=$(echo "$json_data" | jq '[.[] | select(.conclusion == "success")] | length')
+    local failed=$(echo "$json_data" | jq '[.[] | select(.conclusion == "failure")] | length')
+    local cancelled=$(echo "$json_data" | jq '[.[] | select(.conclusion == "cancelled")] | length')
+    local active=$(echo "$json_data" | jq '[.[] | select(.status == "queued" or .status == "in_progress")] | length')
+
+    ausgabe "$GREEN" "  Erfolgreich:   $succeeded"
+    ausgabe "$RED"   "  Fehlgeschlagen:  $failed"
+    ausgabe "$YELLOW" "  Abgebrochen:     $cancelled"
+    ausgabe "$BLUE"  "  Aktiv/Wartend: $active"
+    echo "" # Leere Zeile
+}
+
+delete_runs_by_status() {
+    local workflow_id="$1"
+    local conclusion_status="$2" # "failure", "cancelled", "success"
+    
+    log "true" "true" "INFO" "Suche nach Runs mit Status '$conclusion_status'..."
+    
+    local run_ids
+    run_ids=$(gh run list --workflow "$workflow_id" --limit 1000 --json databaseId,conclusion --jq ".[] | select(.conclusion == \"$conclusion_status\") | .databaseId")
+    
+    if [ -z "$run_ids" ]; then
+        log "true" "true" "INFO" "Keine Runs mit Status '$conclusion_status' gefunden."
+        return
+    fi
+    
+    local count=$(echo "$run_ids" | wc -l)
+    log "true" "true" "WARN" "$count Runs mit Status '$conclusion_status' gefunden. Lösche sie jetzt..."
+    
+    # Lösche alle gefundenen Runs
+    echo "$run_ids" | while read -r run_id; do
+        if [ -n "$run_id" ]; then
+            gh run delete "$run_id"
+        fi
+    done
+    
+    log "true" "true" "SUCCESS" "$count Runs gelöscht."
+}
+
+prompt_workflow_actions() {
+    local workflow_id="$1"
+    local choice=""
+    COLUMNS=1
+    
+    # Endlosschleife, bis "Zurück" gewählt wird
+    while true; do
+        ausgabe "$BLUE" "\nAktionen für Workflow $workflow_id:"
+        local options=(
+            "Alle 'failed' Runs löschen"
+            "Alle 'cancelled' Runs löschen"
+            "Alle 'success' Runs löschen"
+            "Interaktiv einzelne Runs zum Löschen auswählen (Limit 10)"
+            "Letzte 10 Runs anzeigen"
+            "Statistiken neu laden"
+            "Zurück (nächster Workflow / Hauptmenü)"
+        )
+        PS3="Deine Wahl: "
+        
+        select choice in "${options[@]}"; do
+            case "$choice" in
+                "Alle 'failed' Runs löschen")
+                    delete_runs_by_status "$workflow_id" "failure"
+                    break # Zurück zum "Aktionen"-Menü
+                    ;;
+                    
+                "Alle 'cancelled' Runs löschen")
+                    delete_runs_by_status "$workflow_id" "cancelled"
+                    break # Zurück zum "Aktionen"-Menü
+                    ;;
+
+                "Alle 'success' Runs löschen")
+                    delete_runs_by_status "$workflow_id" "success"
+                    break # Zurück zum "Aktionen"-Menü
+                    ;;
+                    
+                "Interaktiv einzelne Runs zum Löschen auswählen (Limit 10)")
+                    # Rufe deine existierende Funktion auf
+                    local selected_run_ids=()
+                    mapfile -t selected_run_ids < <(prompt_user_for_runs "$workflow_id")
+                    
+                    if [ ${#selected_run_ids[@]} -gt 0 ]; then
+                        log "true" "true" "INFO" "Lösche ${#selected_run_ids[@]} ausgewählte Runs..."
+                        for run_id in "${selected_run_ids[@]}"; do
+                            # Filtert wieder Log-Zeilen raus, falls mapfile sie aufnimmt
+                             if ! [[ "$run_id" =~ ^[0-9]+$ ]]; then continue; fi
+                             
+                            log "true" "true" "INFO" "Lösche Run ID: $run_id"
+                            gh run delete "$run_id"
+                        done
+                        log "true" "true" "SUCCESS" "Ausgewählte Runs gelöscht."
+                    else
+                        log "true" "true" "INFO" "Keine Runs zum Löschen ausgewählt."
+                    fi
+                    break # Zurück zum "Aktionen"-Menü
+                    ;;
+                    
+                "Letzte 10 Runs anzeigen")
+                    show_workflow_runs "$workflow_id" 10
+                    # Bleibe im "Aktionen"-Menü (kein 'break')
+                    # Zeige Menü-Prompt erneut an
+                    ausgabe "$BLUE" "\nAktionen für Workflow $workflow_id:"
+                    ;;
+                    
+                "Statistiken neu laden")
+                    get_workflow_run_stats "$workflow_id"
+                    break # Zurück zum "Aktionen"-Menü
+                    ;;
+
+                "Zurück (nächster Workflow / Hauptmenü)")
+                    break 2 # Beendet die 'select' und 'while' Schleife
+                    ;;
+                    
+                *)
+                    ausgabe "$RED" "Ungültige Auswahl."
+                    break # Zurück zum "Aktionen"-Menü (select)
+                    ;;
+            esac
+        done
+    done
+}
+
+
+# ==================================================================
+# NEUE FUNKTIONEN ENDE
+# ==================================================================
+
 start_date="2025-10-30"
 end_date="2025-10-31"
 current_date="$start_date"
@@ -243,64 +378,14 @@ echo ""
 
 log "true" "false" "INFO" "Lade aktive Workflows..."
 workflow_json_cache=$(get_active_workflows_json)
-exit_status=$? # Speichert den Exit-Code
+exit_status=$? 
 
-# Prüfen, ob das Holen der Daten fehlgeschlagen ist (und 'workflow_json_cache' leer ist)
 if [ $exit_status -ne 0 ]; then
     log "true" "false" "ERROR" "Skript wird aufgrund eines Fehlers beim Laden beendet."
     exit 1
 fi
 
-# (Dein 'selected_workflow_id=...' würde nur die erste ID speichern)
-selected_id_list=()
-mapfile -t selected_id_list < <(prompt_user_for_workflow "$workflow_json_cache")
-exit_status=$? 
+# Starte die Workflow-Auswahl und Verarbeitung
+prompt_user_for_workflow "$workflow_json_cache"
 
-# Prüfen, ob der Benutzer "Abbrechen" gewählt hat (oder nichts ausgewählt hat)
-if [ $exit_status -ne 0 ] || [ ${#selected_id_list[@]} -eq 0 ]; then
-    log "true" "false" "WARN" "Keine Workflows ausgewählt. Skript wird beendet."
-    exit 1
-fi
-
-# Ab hier mit der Liste der IDs weiterarbeiten
-log "true" "true" "INFO" "Verarbeite ${#selected_id_list[@]} ausgewählte Workflows:"
-
-for github_workflow_id in "${selected_id_list[@]}"; do
-        log "true" "true" "INFO" "Verarbeite jetzt ID: $github_workflow_id"
-        # show_workflow_runs "$github_workflow_id"  # Optional: Limit ändern, z.B. 20
-        # ...
-        # ... 'while' 
-        # ... angepasst, um mit der '$id' zu arbeiten
-        # ... while loop anpassen  mit $id benutzt werden kann
-        # while [[ "$current_date" < "$end_date" ]] || [[ "$current_date" == "$end_date" ]]; do
-        # 	echo "Checking runs for $current_date"
-        # 	runs=$(gh run list --created $current_date --json databaseId --jq '.[].databaseId')
-        # 	if [[]]
-        # 	if [[ -n "$runs" ]]; then
-        # 		echo "Found runs for $current_date, deleting..."
-        # 		echo "$runs" | xargs -I {} gh run delete {}
-        # 	else
-        # 		echo "No runs found for $current_date"
-        # 	fi
-        # 	current_date=$(date -j -v+1d -f "%Y-%m-%d" "$current_date" +%Y-%m-%d)
-        # done
-        # echo "Done deleting runs from $start_date to $end_date"
-         show_workflow_runs "$github_workflow_id"
-        
-        selected_run_ids=()
-        mapfile -t selected_run_ids < <(prompt_user_for_runs "$github_workflow_id")
-        
-        if [ ${#selected_run_ids[@]} -gt 0 ]; then
-            for run_id in "${selected_run_ids[@]}"; do
-                log "true" "true" "INFO" "Lösche Run ID: $run_id"
-                gh run delete "$run_id"
-                if [ $? -eq 0 ]; then
-                    log "true" "true" "SUCCESS" "Run ID $run_id erfolgreich gelöscht."
-                else
-                    log "true" "true" "ERROR" "Fehler beim Löschen von Run ID $run_id."
-                fi
-            done
-        else
-            log "true" "true" "INFO" "Keine Runs zum Löschen ausgewählt für Workflow $github_workflow_id."
-        fi
-done
+log "true" "true" "INFO" "Skript beendet."
