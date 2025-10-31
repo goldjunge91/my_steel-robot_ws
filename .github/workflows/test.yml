@@ -94,9 +94,9 @@ jobs:
           - dockerfile: docker/Dockerfile.simulation
             dockerfile_name: simulation
             repo_name: my-steel-robot
-            platform: linux/arm64 # <-- KORRIGIERT
-            runner: ubuntu-22.04-arm # <-- KORRIGIERT
-            arch: arm64 # <-- KORRIGIERT
+            platform: linux/arm64
+            runner: ubuntu-22.04-arm
+            arch: arm64
             ros_distro: humble
 
     steps:

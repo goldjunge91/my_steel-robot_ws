@@ -1,5 +1,5 @@
-name: Image Build Raspberry Pi (Native)
-run-name: ${{ github.actor }} is building Native Images
+name: Image Multi platform (Native)
+run-name: ${{ github.actor }}-Image Multi platform (Native)
 permissions:
   contents: read
   packages: write
@@ -27,7 +27,7 @@ on:
 
 jobs:
   build-image:
-    name: Build Image (${{ matrix.dockerfile_name }}-${{ matrix.arch }})
+    name: Image Multi platform (Native)-(${{ matrix.dockerfile_name }}-${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     permissions:
