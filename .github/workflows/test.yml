@@ -9,18 +9,18 @@ on:
     branches:
       - humble
       - "humble/**"
-      - "feat_CI_CD"
+      - feat_CI_CD
     paths:
+      - "docker/Dockerfile.**"
+      - ".github/workflows/**"
       - "docker/Dockerfile.robot-pi"
       - "docker/Dockerfile.robot-pi.v2"
       - "docker/Dockerfile.hardware"
       - "docker/Dockerfile.simulation"
-      - ".github/workflows/image-build-raspberry-pi.yml"
+      - "docker/compose.robot-pi.yaml"
+      - ".github/workflows/test.yml"
     tags:
       - "v*.*.*"
-    paths:
-      - "docker/Dockerfile.*"
-      - "docker/compose.robot-pi.yaml"
   workflow_dispatch:
 
 jobs:

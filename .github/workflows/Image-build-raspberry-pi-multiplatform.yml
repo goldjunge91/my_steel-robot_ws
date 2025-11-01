@@ -18,11 +18,13 @@ on:
       - "docker/Dockerfile.robot-pi.v2"
       - ".github/workflows/image-build-raspberry-pi-multiplatform.yml"
   push:
+    branches:
+      - feat_CI_CD
+    paths:
+      - "docker/Dockerfile.*"
+      - ".github/workflows/Image-build-raspberry-pi-multiplatform.yml"
     tags:
       - "v*.*.*"
-    paths:
-      - "docker/Dockerfile.**"
-      - ".github/workflows/**"
   workflow_dispatch:
 
 jobs:
