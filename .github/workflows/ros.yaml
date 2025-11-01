@@ -2,6 +2,8 @@ name: ROS
 
 on:
   pull_request:
+   types:
+      - closed
   push:
     branches:
       - humble*
@@ -21,16 +23,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Cache colcon build
-        uses: actions/cache@v4
-        with:
-          path: |
-            build
-            install
-            log
-          key: ${{ runner.os }}-colcon-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-colcon-
       - name: Test
         uses: ./.github/actions/test/
 
@@ -46,16 +38,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Cache colcon build
-        uses: actions/cache@v4
-        with:
-          path: |
-            build
-            install
-            log
-          key: ${{ runner.os }}-colcon-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-colcon-
       - name: Run linter
         uses: ./.github/actions/lint/
         env:

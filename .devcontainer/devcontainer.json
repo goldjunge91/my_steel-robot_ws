@@ -3,9 +3,9 @@
 	"dockerFile": "Dockerfile",
 	"context": "..",
 	"build": {
+		"platform": "linux/arm64",
 		"args": {
-			"WORKSPACE": "${containerWorkspaceFolder}",
-			// "TARGET": "${localEnv:TARGET:-remote_pc}"
+			"WORKSPACE": "${containerWorkspaceFolder}"
 		}
 	},
 	"remoteUser": "ros",
@@ -15,7 +15,7 @@
 		"--security-opt=seccomp:unconfined",
 		"--security-opt=apparmor:unconfined",
 		"--volume=/tmp/.X11-unix:/tmp/.X11-unix",
-		"--volume=/mnt/wslg:/mnt/wslg",
+		// "--volume=/mnt/wslg:/mnt/wslg",
 		"--ipc=host",
 		"--volume=/var/run/docker.sock:/var/run/docker.sock"
 		// uncomment to use intel iGPU
@@ -43,11 +43,8 @@
 				"althack.ament-task-provider",
 				"betwo.b2-catkin-tools",
 				"dotjoshjohnson.xml",
-				"github.copilot",
-				"github.copilot-chat",
 				"ms-azuretools.vscode-containers",
 				"ms-azuretools.vscode-docker",
-				"ms-python.debugpy",
 				"ms-python.python",
 				"ms-python.vscode-pylance",
 				"ms-python.vscode-python-envs",
@@ -64,12 +61,11 @@
 				"doppler.doppler-vscode",
 				"VisualStudioExptTeam.vscodeintellicode",
 				"VisualStudioExptTeam.vscodeintellicode-completions",
-				"openai.chatgpt",
-				"eamodio.gitlens",
 				"WakaTime.vscode-wakatime",
-				"Ranch-Hand-Robotics.rde-pack",
-				"Ranch-Hand-Robotics.urdf-editor",
-				"Ranch-Hand-Robotics.rde-ros-2"
+				"eamodio.gitlens",
+				"github.copilot",
+				"github.copilot-chat",
+				"openai.chatgpt"
 			]
 		}
 	}

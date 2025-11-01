@@ -14,6 +14,14 @@
 	path = src/open_manipulator_x
 	url = https://github.com/goldjunge91/open_manipulator_x.git
 	branch = main
+[submodule "src/components_description"]
+	path = src/components_description
+	url = https://github.com/goldjunge91/components_description.git
+	branch = ros2
+[submodule "src/micro_ros_msgs"]
+	path = src/micro_ros_msgs
+	url = https://github.com/micro-ROS/micro_ros_msgs.git
+	branch = humble
 [submodule "src/robot_autonomy"]
 	path = src/robot_autonomy
 	url = https://github.com/goldjunge91/robot_autonomy.git

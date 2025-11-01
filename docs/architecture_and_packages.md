@@ -23,7 +23,7 @@ Empfohlener Root: goldjunge91/my_steel-robot_ws (root workspace)
 | robot_autonomy/      | Nav2 / Deployment      | SBC / Docker   | docker/just recipes, Nav2 configs                        | /map, /tf, /path                                    | docker-compose/*, justfile, .env                                    |
 | robot_sim/           | Simulation             | Dev / Remote   | Gazebo/Webots assets & launches                          | simulated sensors (/scan, /odom)                    | worlds/, launch/sim*.launch.py                                      |
 | docs/                | Dokumentation          | n/a            | PINMAP.md, wiring, deployment                            | —                                                   | PINMAP.md (single source of truth for pinout)                       |
-| .github/             | CI / Workflows         | GitHub Actions | firmware-ci.yml, build pipelines                         | artifacts (firmware uf2/hex)                        | CI für Firmware und Paketchecks                                     |
+| .github/             | CI / Workflows         | GitHub Actions | firmware.yml, build pipelines                         | artifacts (firmware uf2/hex)                        | CI für Firmware und Paketchecks                                     |
 
 ----------------------------------------
 3) Wichtige Topics & Schnittstellen (Datenfluss)

@@ -8,6 +8,8 @@ ARG WORKSPACE=/workspace
 # Environment variables
 ENV ROS_DISTRO=humble
 ENV DEBIAN_FRONTEND=noninteractive
+ARG UID=1001
+ARG GID=$UID
 
 # Set up dev packages
 RUN apt-get update \
@@ -22,6 +24,11 @@ RUN apt-get update \
     python3-pip \
     python3-rosdep \
     python3-vcstool \
+    ros-$ROS_DISTRO-plotjuggler \
+    ros-$ROS_DISTRO-plotjuggler-ros \
+    ros-$ROS_DISTRO-rqt* \
+    ros-$ROS_DISTRO-rviz2 \
+    ros-$ROS_DISTRO-teleop-twist-keyboard \
     sudo \
     # For GUI
     libx11-xcb1 libxcb1 libxcb-render0 libxcb-shm0 libxcb-xfixes0 libxcb-shape0 \
@@ -41,7 +48,7 @@ RUN python3 -m pip install --no-cache-dir \
 
 # Set up auto-source of workspace for ros 
 ARG USERNAME=ros
-ARG USER_UID=1000
+ARG USER_UID=1001
 ARG USER_GID=$USER_UID
 
 # Find and replace any user with matching UID
@@ -100,5 +107,7 @@ ENV AMENT_TRACE_SETUP_FILES=""
 RUN mkdir -p ${WORKSPACE} && \
     chown -R $USER_UID:$USER_GID ${WORKSPACE}
 
-USER ros
+# No USER instruction - container runs as root by default
+# VS Code will override to 'ros' user via devcontainer.json remoteUser
+# GitHub Actions stays as root to avoid permission issues
 WORKDIR ${WORKSPACE}
