@@ -30,7 +30,7 @@ on:
 
 jobs:
   build-image:
-    name: Image Build Raspberry Pi-(${{ matrix.arch }})
+    name: ${{ matrix.ros_distro }}-${{ matrix.dockerfile_name }}-${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     permissions:
