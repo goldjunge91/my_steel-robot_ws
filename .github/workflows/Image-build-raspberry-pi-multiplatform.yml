@@ -47,6 +47,7 @@ jobs:
       actions: read
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         include:
           # AMD64 Builds

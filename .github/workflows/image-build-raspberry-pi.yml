@@ -46,6 +46,7 @@ jobs:
       actions: read
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         include:
           # AMD64 Builds
@@ -148,6 +149,14 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GitHub Container Registry
+        if: ${{ steps.check-secrets.outputs.skip != 'true' && !env.ACT }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract version Git tag
         if: steps.check-secrets.outputs.skip != 'true'
