@@ -37,7 +37,24 @@ log() {
                 fi
         fi
         # How to use  log "true" "true" "INFO" "Github workflow Helper gestartet"
+}
 
+banner_counter() {
+    local succeeded="$1"
+    local failed="$2"
+    local cancelled="$3"
+    local active="$4"
+    
+    echo ""
+    ausgabe "$BLUE" "╔════════════════════════════════════════╗"
+    ausgabe "$BLUE" "║  Workflow Statistiken                  ║"
+    ausgabe "$BLUE" "╠════════════════════════════════════════╣"
+    printf "${BLUE}║${NC} ${GREEN}%-38s${NC} ${BLUE}║${NC}\n" "Erfolgreich:     $succeeded" >&2
+    printf "${BLUE}║${NC} ${RED}%-38s${NC} ${BLUE}║${NC}\n" "Fehlgeschlagen:  $failed" >&2
+    printf "${BLUE}║${NC} ${YELLOW}%-38s${NC} ${BLUE}║${NC}\n" "Abgebrochen:     $cancelled" >&2
+    printf "${BLUE}║${NC} ${BLUE}%-38s${NC} ${BLUE}║${NC}\n" "Aktiv/Wartend:   $active" >&2
+    ausgabe "$BLUE" "╚════════════════════════════════════════╝"
+    echo ""
 }
 
 ausgabe() {
@@ -84,27 +101,21 @@ prompt_user_for_workflow() {
         local json_data="$1"
         local workflow_names=() # Namen aus dem JSON in ein Array laden
         local choice=""       # (Variable für 'select' hinzugefügt)
-        COLUMNS=1
-        # 1. ZUERST die Namen aus dem JSON laden
+        # Laden der Namen aus dem JSON laden
         mapfile -t workflow_names < <(echo "$json_data" | jq -r '.name')
-        
-        # 2. DANACH die Option "Fertig/Abbrechen" hinzufügen
-        workflow_names+=("Fertig/Abbrechen")
-
+        # Option "Beenden" hinzufügen
+        workflow_names+=("Beenden")
         ausgabe "$BLUE" "\nBitte einen Workflow auswählen:"
         PS3="Deine Wahl (Nummer): " # Prompt für das 'select' Menü
-        
-        # Diese Schleife läuft, bis du "Fertig/Abbrechen" wählst
+        # Diese Schleife läuft, bis du "Beenden" wählst
         while true; do
+                COLUMNS=1
                 select choice in "${workflow_names[@]}"; do
-                
-                # Abbruch bedingung "Fertig/Abbrechen"
-                if [ "$choice" = "Fertig/Abbrechen" ]; then
+                # Abbruch bedingung "Beenden"
+                if [ "$choice" = "Beenden" ]; then
                         log "true" "true" "INFO" "Auswahl beendet."
                         break 2 # Beendet beide 'select' und 'while' Schleifen
                 fi
-
-                # Korrekte Auswahl 
                 if [ -n "$choice" ]; then
                         local selected_id=$(get_workflow_id_from_json "$json_data" "$choice")
                         log "true" "false" "SUCCESS" "Workflow '$choice' (ID: $selected_id) ausgewählt."
@@ -118,8 +129,7 @@ prompt_user_for_workflow() {
                         # Zurück zum Menü
                         ausgabe "$BLUE" "\nBitte einen Workflow auswählen:"
                         break 
-                
-                # ungültige Zahl ein
+                # ungültige Zahl
                 else
                         ausgabe "$RED" "Ungültige Auswahl. Bitte erneut versuchen."
                         break
@@ -133,10 +143,7 @@ show_workflow_runs() {
     local workflow_id="$1"
     local limit="${2:-10}"  # Optional: Anzahl der Runs (default 10)
     local json_runs
-    
-    # Logge den Start
-    log "true" "true" "INFO" "Zeige Runs für Workflow-ID: $workflow_id (Limit: $limit)"
-    
+    log "true" "true" "INFO" "Zeige Runs für Workflow-ID: $workflow_id (Limit: $limit)"  # Logge den Start
     # Rufe die Runs ab (mit --workflow filtert nach ID)
     json_runs=$(gh run list --workflow "$workflow_id" --limit "$limit" --json databaseId,status,createdAt,headSha)
     
@@ -168,7 +175,6 @@ prompt_user_for_runs() {
     local run_options=()
     local selected_run_ids=()
     local choice=""
-    COLUMNS=1
 
     log "true" "true" "INFO" "Lade Runs für Workflow-ID: $workflow_id"
     # WICHTIG: Wir brauchen 'conclusion' für success/failure
@@ -186,14 +192,15 @@ prompt_user_for_runs() {
 
     # Runs in Array laden für Menü
     mapfile -t run_options < <(echo "$json_runs" | jq -r '"ID: \(.databaseId) - Status: \(.status) (\(.conclusion)) - SHA: \(.headSha)"')
-    run_options+=("Fertig/Abbrechen")
+    run_options+=("Beenden")
 
     ausgabe "$BLUE" "\nBitte Runs zum Löschen auswählen (mehrere möglich):"
     PS3="Deine Wahl (Nummer): "
 
     while true; do
+        COLUMNS=1  # Setze COLUMNS direkt vor select
         select choice in "${run_options[@]}"; do
-            if [ "$choice" = "Fertig/Abbrechen" ]; then
+            if [ "$choice" = "Beenden" ]; then
                 log "true" "true" "INFO" "Auswahl der Runs beendet."
                 break 2
             fi
@@ -238,34 +245,26 @@ get_workflow_run_stats() {
         log "true" "true" "ERROR" "Konnte Run-Status nicht abrufen."
         return 1
     fi
-
     # Zähle die verschiedenen Status mit jq
     local succeeded=$(echo "$json_data" | jq '[.[] | select(.conclusion == "success")] | length')
     local failed=$(echo "$json_data" | jq '[.[] | select(.conclusion == "failure")] | length')
     local cancelled=$(echo "$json_data" | jq '[.[] | select(.conclusion == "cancelled")] | length')
     local active=$(echo "$json_data" | jq '[.[] | select(.status == "queued" or .status == "in_progress")] | length')
 
-    ausgabe "$GREEN" "  Erfolgreich:   $succeeded"
-    ausgabe "$RED"   "  Fehlgeschlagen:  $failed"
-    ausgabe "$YELLOW" "  Abgebrochen:     $cancelled"
-    ausgabe "$BLUE"  "  Aktiv/Wartend: $active"
-    echo "" # Leere Zeile
+    # Zeige Statistiken im Banner-Format
+    banner_counter "$succeeded" "$failed" "$cancelled" "$active"
 }
 
 delete_runs_by_status() {
     local workflow_id="$1"
     local conclusion_status="$2" # "failure", "cancelled", "success"
-    
     log "true" "true" "INFO" "Suche nach Runs mit Status '$conclusion_status'..."
-    
     local run_ids
     run_ids=$(gh run list --workflow "$workflow_id" --limit 1000 --json databaseId,conclusion --jq ".[] | select(.conclusion == \"$conclusion_status\") | .databaseId")
-    
     if [ -z "$run_ids" ]; then
         log "true" "true" "INFO" "Keine Runs mit Status '$conclusion_status' gefunden."
         return
-    fi
-    
+    fi    
     local count=$(echo "$run_ids" | wc -l)
     log "true" "true" "WARN" "$count Runs mit Status '$conclusion_status' gefunden. Lösche sie jetzt..."
     
@@ -275,14 +274,12 @@ delete_runs_by_status() {
             gh run delete "$run_id"
         fi
     done
-    
     log "true" "true" "SUCCESS" "$count Runs gelöscht."
 }
 
 prompt_workflow_actions() {
     local workflow_id="$1"
     local choice=""
-    COLUMNS=1
     
     # Endlosschleife, bis "Zurück" gewählt wird
     while true; do
@@ -298,6 +295,7 @@ prompt_workflow_actions() {
         )
         PS3="Deine Wahl: "
         
+        COLUMNS=1  # Setze COLUMNS direkt vor select
         select choice in "${options[@]}"; do
             case "$choice" in
                 "Alle 'failed' Runs löschen")
@@ -324,8 +322,8 @@ prompt_workflow_actions() {
                         log "true" "true" "INFO" "Lösche ${#selected_run_ids[@]} ausgewählte Runs..."
                         for run_id in "${selected_run_ids[@]}"; do
                             # Filtert wieder Log-Zeilen raus, falls mapfile sie aufnimmt
-                             if ! [[ "$run_id" =~ ^[0-9]+$ ]]; then continue; fi
-                             
+                            if ! [[ "$run_id" =~ ^[0-9]+$ ]]; then continue; fi
+                            
                             log "true" "true" "INFO" "Lösche Run ID: $run_id"
                             gh run delete "$run_id"
                         done
@@ -342,7 +340,7 @@ prompt_workflow_actions() {
                     # Zeige Menü-Prompt erneut an
                     ausgabe "$BLUE" "\nAktionen für Workflow $workflow_id:"
                     ;;
-                    
+
                 "Statistiken neu laden")
                     get_workflow_run_stats "$workflow_id"
                     break # Zurück zum "Aktionen"-Menü
@@ -356,6 +354,7 @@ prompt_workflow_actions() {
                     ausgabe "$RED" "Ungültige Auswahl."
                     break # Zurück zum "Aktionen"-Menü (select)
                     ;;
+
             esac
         done
     done
