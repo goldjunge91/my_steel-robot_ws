@@ -5,9 +5,7 @@ permissions:
   packages: write
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - humble
       - "humble/**"
@@ -18,7 +16,6 @@ on:
       - "docker/Dockerfile.hardware"
       - "docker/Dockerfile.simulation"
       - ".github/workflows/image-build-raspberry-pi.yml"
-  push:
     tags:
       - "v*.*.*"
     paths:

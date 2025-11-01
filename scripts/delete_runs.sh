@@ -161,7 +161,6 @@ show_workflow_runs() {
     return 0
 }
 
-
 prompt_user_for_runs() {
     local workflow_id="$1"
     local limit="${2:-10}"
@@ -361,7 +360,6 @@ prompt_workflow_actions() {
         done
     done
 }
-
 
 # ==================================================================
 # NEUE FUNKTIONEN ENDE

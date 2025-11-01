@@ -18,8 +18,7 @@ on:
 
   push:
     branches:
-      - humble
-      - "humble/**"
+      - humble/**
       - feat_CI_CD
     # tags:
     #   - "v*.*.*"  # Deaktiviert - multiplatform Workflow übernimmt Tag-Builds
