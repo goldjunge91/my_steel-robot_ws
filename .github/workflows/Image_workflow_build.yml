@@ -4,6 +4,11 @@ permissions:
   contents: read
   packages: write
 
+env:
+  REPO_NAME: my-steel-robot
+  ROS_DISTRO: humble
+  DOCKERHUB_USERNAME: goldjunge491
+
 on:
   push:
     branches:
@@ -31,7 +36,7 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
-      packages: write # Notwendig für Push-by-Digest
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -39,55 +44,42 @@ jobs:
           # AMD64 Builds
           - dockerfile: docker/Dockerfile.robot-pi
             dockerfile_name: robot-pi
-            repo_name: my-steel-robot
             platform: linux/amd64
             runner: ubuntu-22.04
             arch: amd64
-            ros_distro: humble
+
           - dockerfile: docker/Dockerfile.robot-pi.v2
             dockerfile_name: robot-pi-v2
-            repo_name: my-steel-robot
             platform: linux/amd64
             runner: ubuntu-22.04
             arch: amd64
-            ros_distro: humble
           - dockerfile: docker/Dockerfile.hardware
             dockerfile_name: hardware
-            repo_name: my-steel-robot
             platform: linux/amd64
             runner: ubuntu-22.04
             arch: amd64
-            ros_distro: humble
           - dockerfile: docker/Dockerfile.simulation
             dockerfile_name: simulation
-            repo_name: my-steel-robot
             platform: linux/amd64
             runner: ubuntu-22.04
             arch: amd64
-            ros_distro: humble
 
           # ARM64 Builds (native runners)
           - dockerfile: docker/Dockerfile.robot-pi
             dockerfile_name: robot-pi
-            repo_name: my-steel-robot
             platform: linux/arm64
             runner: ubuntu-22.04-arm
             arch: arm64
-            ros_distro: humble
           - dockerfile: docker/Dockerfile.robot-pi.v2
             dockerfile_name: robot-pi-v2
-            repo_name: my-steel-robot
             platform: linux/arm64
             runner: ubuntu-22.04-arm
             arch: arm64
-            ros_distro: humble
           - dockerfile: docker/Dockerfile.hardware
             dockerfile_name: hardware
-            repo_name: my-steel-robot
             platform: linux/arm64
             runner: ubuntu-22.04-arm
             arch: arm64
-            ros_distro: humble
 
     steps:
       - name: Check Docker Hub credentials
@@ -136,11 +128,11 @@ jobs:
           file: ${{ matrix.dockerfile }}
           platforms: ${{ matrix.platform }}
           push: true
-          outputs: type=image,name=${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.repo_name }},push-by-digest=true,name-canonical=true
+          outputs: type=image,name=${{ env.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }},push-by-digest=true,name-canonical=true
           cache-from: type=gha,scope=${{ matrix.dockerfile_name }}-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.dockerfile_name }}-${{ matrix.arch }}
           labels: |
-            org.opencontainers.image.title=my_steel Robot Image-${{ matrix.dockerfile_name }}-${{ matrix.ros_distro }}
+            org.opencontainers.image.title=my_steel Robot Image-${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ steps.version.outputs.build_date }}
@@ -158,12 +150,21 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           # Einzigartiger Name für diesen Build, z.B. "digests-robot-pi-amd64"
-          name: digests-${{ matrix.dockerfile_name }}-${{ matrix.ros_distro }}-${{ matrix.arch }}
+          name: digests-${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}-${{ matrix.arch }}
           path: ${{ runner.temp }}/digests/*
           if-no-files-found: error
           retention-days: 1
 
   # JOB 2: FÜHRT MANIFESTS ZUSAMMEN, NACHDEM ALLE BUILDS FERTIG SIND
+  # merge:
+  #   name: Merge Manifests
+  #   runs-on: ubuntu-latest
+  #   needs: build # Startet erst, wenn Job 'build' komplett fertig ist
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       # Führt diesen Job 4x aus, einmal pro Image-Typ
+  #       dockerfile_name: [robot-pi, robot-pi-v2, hardware, simulation]
   merge:
     name: Merge Manifests
     runs-on: ubuntu-latest
@@ -175,17 +176,17 @@ jobs:
         dockerfile_name: [robot-pi, robot-pi-v2, hardware, simulation]
         include:
           - dockerfile_name: robot-pi
-            repo_name: my-steel-robot
-            ros_distro: humble
+            repo_name: ${{ env.REPO_NAME }}
+            ros_distro: ${{ env.ROS_DISTRO }}
           - dockerfile_name: robot-pi-v2
-            repo_name: my-steel-robot
-            ros_distro: humble
+            repo_name: ${{ env.REPO_NAME }}
+            ros_distro: ${{ env.ROS_DISTRO }}
           - dockerfile_name: hardware
-            repo_name: my-steel-robot
-            ros_distro: humble
+            repo_name: ${{ env.REPO_NAME }}
+            ros_distro: ${{ env.ROS_DISTRO }}
           - dockerfile_name: simulation
-            repo_name: my-steel-robot
-            ros_distro: humble
+            repo_name: ${{ env.REPO_NAME }}
+            ros_distro: ${{ env.ROS_DISTRO }}
 
     steps:
       - name: Check Docker Hub credentials
@@ -239,10 +240,10 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.repo_name }}
+          images: ${{ env.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}
           tags: |
-            type=raw,value=${{ matrix.dockerfile_name }}-${{ matrix.ros_distro }}-${{ steps.version.outputs.build_date }}-${{ steps.version.outputs.version }}
-            type=raw,value=${{ matrix.dockerfile_name }}-${{ matrix.ros_distro }}-${{ steps.version.outputs.build_date }}-latest
+            type=raw,value=${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}-${{ steps.version.outputs.build_date }}-${{ steps.version.outputs.version }}
+            type=raw,value=${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}-${{ steps.version.outputs.build_date }}-latest
           flavor: |
             latest=false
 
@@ -251,7 +252,7 @@ jobs:
         env:
           # Übergibt die JSON-Ausgabe des meta-Schritts an den 'jq'-Befehl
           DOCKER_METADATA_OUTPUT_JSON: ${{ steps.meta.outputs.json }}
-          REGISTRY_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.repo_name }}
+          REGISTRY_IMAGE: ${{ env.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}
         working-directory: ${{ runner.temp }}/digests
         run: |
           # Prüfen, ob Digests heruntergeladen wurden

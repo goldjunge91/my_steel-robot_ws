@@ -5,7 +5,7 @@ permissions:
   packages: write
 
 env:
-  REPO_NAME: my-steel-robot_v1_multiplatform
+  REPO_NAME: my-steel-robot_raspberry_pi_multiplatform
   ROS_DISTRO: humble
   DOCKERHUB_USERNAME: goldjunge491
 
