@@ -277,256 +277,256 @@ jobs:
 
 
 
-name: Image Build Multi-Platform Native
-run-name: ${{ github.actor }} is building ${{ github.ref_name }} Image Build Multi-Platform Native
-permissions:
-  contents: read
-  packages: write
+# name: Image Build Multi-Platform Native
+# run-name: ${{ github.actor }} is building ${{ github.ref_name }} Image Build Multi-Platform Native
+# permissions:
+#   contents: read
+#   packages: write
 
-env:
-  REPO_NAME: my-steel-robot
-  ROS_DISTRO: humble
-  DOCKERHUB_USERNAME: goldjunge491
-  # Use GitHub Container Registry to avoid Docker Hub rate limits
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+# env:
+#   REPO_NAME: my-steel-robot
+#   ROS_DISTRO: humble
+#   DOCKERHUB_USERNAME: goldjunge491
+#   # Use GitHub Container Registry to avoid Docker Hub rate limits
+#   REGISTRY: ghcr.io
+#   IMAGE_NAME: ${{ github.repository }}
 
-on:
-  push:
-    branches:
-      - humble
-      - "humble/**"
-      - feat_CI_CD
-    paths:
-      - "docker/Dockerfile.**"
-      - ".github/workflows/**"
-      - "docker/Dockerfile.robot-pi"
-      - "docker/Dockerfile.robot-pi.v2"
-      - "docker/Dockerfile.hardware"
-      - "docker/Dockerfile.simulation"
-      - "docker/compose.robot-pi.yaml"
-      - ".github/workflows/test.yml"
-    tags:
-      - "v*.*.*"
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - humble
+#       - "humble/**"
+#       - feat_CI_CD
+#     paths:
+#       - "docker/Dockerfile.**"
+#       - ".github/workflows/**"
+#       - "docker/Dockerfile.robot-pi"
+#       - "docker/Dockerfile.robot-pi.v2"
+#       - "docker/Dockerfile.hardware"
+#       - "docker/Dockerfile.simulation"
+#       - "docker/compose.robot-pi.yaml"
+#       - ".github/workflows/test.yml"
+#     tags:
+#       - "v*.*.*"
+#   workflow_dispatch:
 
-jobs:
-  # JOB 1: BAUT JEDE PLATTFORM SEPARAT AUF NATIVEN RUNNERN
-  build:
-    name: Build ${{ matrix.dockerfile_name }} (${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 120
-    permissions:
-      contents: read
-      packages: write
-    strategy:
-      fail-fast: false
-      max-parallel: 2
-      matrix:
-        include:
-          # AMD64 Builds
-          - dockerfile: docker/Dockerfile.robot-pi
-            dockerfile_name: robot-pi
-            platform: linux/amd64
-            runner: ubuntu-22.04
-            arch: amd64
+# jobs:
+#   # JOB 1: BAUT JEDE PLATTFORM SEPARAT AUF NATIVEN RUNNERN
+#   build:
+#     name: Build ${{ matrix.dockerfile_name }} (${{ matrix.arch }})
+#     runs-on: ${{ matrix.runner }}
+#     timeout-minutes: 120
+#     permissions:
+#       contents: read
+#       packages: write
+#     strategy:
+#       fail-fast: false
+#       max-parallel: 2
+#       matrix:
+#         include:
+#           # AMD64 Builds
+#           - dockerfile: docker/Dockerfile.robot-pi
+#             dockerfile_name: robot-pi
+#             platform: linux/amd64
+#             runner: ubuntu-22.04
+#             arch: amd64
 
-          - dockerfile: docker/Dockerfile.robot-pi.v2
-            dockerfile_name: robot-pi-v2
-            platform: linux/amd64
-            runner: ubuntu-22.04
-            arch: amd64
-          - dockerfile: docker/Dockerfile.hardware
-            dockerfile_name: hardware
-            platform: linux/amd64
-            runner: ubuntu-22.04
-            arch: amd64
-          - dockerfile: docker/Dockerfile.simulation
-            dockerfile_name: simulation
-            platform: linux/amd64
-            runner: ubuntu-22.04
-            arch: amd64
+#           - dockerfile: docker/Dockerfile.robot-pi.v2
+#             dockerfile_name: robot-pi-v2
+#             platform: linux/amd64
+#             runner: ubuntu-22.04
+#             arch: amd64
+#           - dockerfile: docker/Dockerfile.hardware
+#             dockerfile_name: hardware
+#             platform: linux/amd64
+#             runner: ubuntu-22.04
+#             arch: amd64
+#           - dockerfile: docker/Dockerfile.simulation
+#             dockerfile_name: simulation
+#             platform: linux/amd64
+#             runner: ubuntu-22.04
+#             arch: amd64
 
-          # ARM64 Builds (native runners)
-          - dockerfile: docker/Dockerfile.robot-pi
-            dockerfile_name: robot-pi
-            platform: linux/arm64
-            runner: ubuntu-22.04-arm
-            arch: arm64
-          - dockerfile: docker/Dockerfile.robot-pi.v2
-            dockerfile_name: robot-pi-v2
-            platform: linux/arm64
-            runner: ubuntu-22.04-arm
-            arch: arm64
-          - dockerfile: docker/Dockerfile.hardware
-            dockerfile_name: hardware
-            platform: linux/arm64
-            runner: ubuntu-22.04-arm
-            arch: arm64
+#           # ARM64 Builds (native runners)
+#           - dockerfile: docker/Dockerfile.robot-pi
+#             dockerfile_name: robot-pi
+#             platform: linux/arm64
+#             runner: ubuntu-22.04-arm
+#             arch: arm64
+#           - dockerfile: docker/Dockerfile.robot-pi.v2
+#             dockerfile_name: robot-pi-v2
+#             platform: linux/arm64
+#             runner: ubuntu-22.04-arm
+#             arch: arm64
+#           - dockerfile: docker/Dockerfile.hardware
+#             dockerfile_name: hardware
+#             platform: linux/arm64
+#             runner: ubuntu-22.04-arm
+#             arch: arm64
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+#       - name: Set up Docker Buildx
+#         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+#       - name: Log in to GitHub Container Registry
+#         uses: docker/login-action@v3
+#         with:
+#           registry: ghcr.io
+#           username: ${{ github.actor }}
+#           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Log in to Docker Hub (optional)
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
-        continue-on-error: true
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#       - name: Log in to Docker Hub (optional)
+#         if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+#         continue-on-error: true
+#         uses: docker/login-action@v3
+#         with:
+#           username: ${{ secrets.DOCKERHUB_USERNAME }}
+#           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract version for digest build
-        id: version
-        run: |
-          BUILD_DATE=$(date +%Y%m%d)
-          # Hole die letzte Git-Tag-Version
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          VERSION=${LATEST_TAG#v}
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
-          echo "Using version: ${VERSION}"
+#       - name: Extract version for digest build
+#         id: version
+#         run: |
+#           BUILD_DATE=$(date +%Y%m%d)
+#           # Hole die letzte Git-Tag-Version
+#           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+#           VERSION=${LATEST_TAG#v}
+#           echo "version=${VERSION}" >> $GITHUB_OUTPUT
+#           echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
+#           echo "Using version: ${VERSION}"
 
-      - name: Build and push by digest
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          platforms: ${{ matrix.platform }}
-          push: true
-          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }},push-by-digest=true,name-canonical=true
-          cache-from: type=gha,scope=${{ matrix.dockerfile_name }}-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.dockerfile_name }}-${{ matrix.arch }}
-          labels: |
-            org.opencontainers.image.title=my_steel Robot Image-${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}
-            org.opencontainers.image.version=${{ steps.version.outputs.version }}
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.created=${{ steps.version.outputs.build_date }}
+#       - name: Build and push by digest
+#         id: build
+#         uses: docker/build-push-action@v6
+#         with:
+#           context: .
+#           file: ${{ matrix.dockerfile }}
+#           platforms: ${{ matrix.platform }}
+#           push: true
+#           outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }},push-by-digest=true,name-canonical=true
+#           cache-from: type=gha,scope=${{ matrix.dockerfile_name }}-${{ matrix.arch }}
+#           cache-to: type=gha,mode=max,scope=${{ matrix.dockerfile_name }}-${{ matrix.arch }}
+#           labels: |
+#             org.opencontainers.image.title=my_steel Robot Image-${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}
+#             org.opencontainers.image.version=${{ steps.version.outputs.version }}
+#             org.opencontainers.image.revision=${{ github.sha }}
+#             org.opencontainers.image.created=${{ steps.version.outputs.build_date }}
 
-      - name: Export digest
-        run: |
-          mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build.outputs.digest }}"
-          # Erstellt eine leere Datei mit dem Digest als Namen
-          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+#       - name: Export digest
+#         run: |
+#           mkdir -p ${{ runner.temp }}/digests
+#           digest="${{ steps.build.outputs.digest }}"
+#           # Erstellt eine leere Datei mit dem Digest als Namen
+#           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
-      - name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          # Einzigartiger Name für diesen Build, z.B. "digests-robot-pi-amd64"
-          name: digests-${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}-${{ matrix.arch }}
-          path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
-          retention-days: 1
+#       - name: Upload digest
+#         uses: actions/upload-artifact@v4
+#         with:
+#           # Einzigartiger Name für diesen Build, z.B. "digests-robot-pi-amd64"
+#           name: digests-${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}-${{ matrix.arch }}
+#           path: ${{ runner.temp }}/digests/*
+#           if-no-files-found: error
+#           retention-days: 1
 
-  # JOB 2: FÜHRT MANIFESTS ZUSAMMEN, NACHDEM ALLE BUILDS FERTIG SIND
-  merge:
-    name: Merge Manifests
-    runs-on: ubuntu-latest
-    needs: build # Startet erst, wenn Job 'build' komplett fertig ist
-    strategy:
-      fail-fast: false
-      matrix:
-        # Führt diesen Job 4x aus, einmal pro Image-Typ
-        dockerfile_name: [robot-pi, robot-pi-v2, hardware, simulation]
-        # include:
-        #   - dockerfile_name: robot-pi
-        #     repo_name: my-steel-robot
-        #     ros_distro: humble
-        #   - dockerfile_name: robot-pi-v2
-        #     repo_name: my-steel-robot
-        #     ros_distro: humble
-        #   - dockerfile_name: hardware
-        #     repo_name: my-steel-robot
-        #     ros_distro: humble
-        #   - dockerfile_name: simulation
-        #     repo_name: my-steel-robot
-        #     ros_distro: humble
+#   # JOB 2: FÜHRT MANIFESTS ZUSAMMEN, NACHDEM ALLE BUILDS FERTIG SIND
+#   merge:
+#     name: Merge Manifests
+#     runs-on: ubuntu-latest
+#     needs: build # Startet erst, wenn Job 'build' komplett fertig ist
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         # Führt diesen Job 4x aus, einmal pro Image-Typ
+#         dockerfile_name: [robot-pi, robot-pi-v2, hardware, simulation]
+#         # include:
+#         #   - dockerfile_name: robot-pi
+#         #     repo_name: my-steel-robot
+#         #     ros_distro: humble
+#         #   - dockerfile_name: robot-pi-v2
+#         #     repo_name: my-steel-robot
+#         #     ros_distro: humble
+#         #   - dockerfile_name: hardware
+#         #     repo_name: my-steel-robot
+#         #     ros_distro: humble
+#         #   - dockerfile_name: simulation
+#         #     repo_name: my-steel-robot
+#         #     ros_distro: humble
 
-    steps:
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ runner.temp }}/digests
-          # Lädt nur die Artifacts für diesen Job herunter, z.B. "digests-robot-pi-*"
-          pattern: digests-${{ matrix.dockerfile_name }}-*
-          merge-multiple: true
+#     steps:
+#       - name: Download digests
+#         uses: actions/download-artifact@v4
+#         with:
+#           path: ${{ runner.temp }}/digests
+#           # Lädt nur die Artifacts für diesen Job herunter, z.B. "digests-robot-pi-*"
+#           pattern: digests-${{ matrix.dockerfile_name }}-*
+#           merge-multiple: true
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+#       - name: Log in to GitHub Container Registry
+#         uses: docker/login-action@v3
+#         with:
+#           registry: ghcr.io
+#           username: ${{ github.actor }}
+#           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout repository for version
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+#       - name: Checkout repository for version
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
 
-      # Brauchen die Versions-Infos hier erneut für die finalen Tags
-      - name: Extract version Git tag
-        id: version
-        run: |
-          # Datum im Format yyyy_mm_dd
-          BUILD_DATE=$(date +%Y%m%d)
-          # Hole die letzte Git-Tag-Version
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          VERSION=${LATEST_TAG#v}
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
-          echo "Using version: ${VERSION}, Date: ${BUILD_DATE}"
+#       # Brauchen die Versions-Infos hier erneut für die finalen Tags
+#       - name: Extract version Git tag
+#         id: version
+#         run: |
+#           # Datum im Format yyyy_mm_dd
+#           BUILD_DATE=$(date +%Y%m%d)
+#           # Hole die letzte Git-Tag-Version
+#           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+#           VERSION=${LATEST_TAG#v}
+#           echo "version=${VERSION}" >> $GITHUB_OUTPUT
+#           echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
+#           echo "Using version: ${VERSION}, Date: ${BUILD_DATE}"
 
-      - name: Extract Docker metadata (final tags)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}
-          tags: |
-            type=raw,value=${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}-${{ steps.version.outputs.build_date }}-${{ steps.version.outputs.version }}
-            type=raw,value=${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}-${{ steps.version.outputs.build_date }}-latest
-          flavor: |
-            latest=false
+#       - name: Extract Docker metadata (final tags)
+#         id: meta
+#         uses: docker/metadata-action@v5
+#         with:
+#           images: ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}
+#           tags: |
+#             type=raw,value=${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}-${{ steps.version.outputs.build_date }}-${{ steps.version.outputs.version }}
+#             type=raw,value=${{ matrix.dockerfile_name }}-${{ env.ROS_DISTRO }}-${{ steps.version.outputs.build_date }}-latest
+#           flavor: |
+#             latest=false
 
-      - name: Create manifest list and push
-        env:
-          # Übergibt die JSON-Ausgabe des meta-Schritts an den 'jq'-Befehl
-          DOCKER_METADATA_OUTPUT_JSON: ${{ steps.meta.outputs.json }}
-          REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}
-        working-directory: ${{ runner.temp }}/digests
-        run: |
-          if [ -z "$(ls)" ]; then
-            echo "::error::No digests found. Expected: digests-${{ matrix.dockerfile_name }}-*"
-            echo "Available artifacts:"
-            ls -la ${{ runner.temp }}/ || true
-            exit 1
-          fi
+#       - name: Create manifest list and push
+#         env:
+#           # Übergibt die JSON-Ausgabe des meta-Schritts an den 'jq'-Befehl
+#           DOCKER_METADATA_OUTPUT_JSON: ${{ steps.meta.outputs.json }}
+#           REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/${{ env.REPO_NAME }}
+#         working-directory: ${{ runner.temp }}/digests
+#         run: |
+#           if [ -z "$(ls)" ]; then
+#             echo "::error::No digests found. Expected: digests-${{ matrix.dockerfile_name }}-*"
+#             echo "Available artifacts:"
+#             ls -la ${{ runner.temp }}/ || true
+#             exit 1
+#           fi
 
-          echo "Downloaded digests:"
-          ls -l
+#           echo "Downloaded digests:"
+#           ls -l
 
-          # Erstellt die Tag-Argumente, z.B. "-t user/app:tag1 -t user/app:tag2"
-          TAGS=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+#           # Erstellt die Tag-Argumente, z.B. "-t user/app:tag1 -t user/app:tag2"
+#           TAGS=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")
 
-          # Erstellt die Digest-Liste, z.B. "user/app@sha256:digest1 user/app@sha256:digest2"
-          # Der '*' erweitert sich zu den Dateinamen, die die Digests sind
-          DIGESTS=$(printf "$REGISTRY_IMAGE@sha256:%s " *)
+#           # Erstellt die Digest-Liste, z.B. "user/app@sha256:digest1 user/app@sha256:digest2"
+#           # Der '*' erweitert sich zu den Dateinamen, die die Digests sind
+#           DIGESTS=$(printf "$REGISTRY_IMAGE@sha256:%s " *)
 
-          echo "Merging tags: $TAGS"
-          echo "Merging digests: $DIGESTS"
+#           echo "Merging tags: $TAGS"
+#           echo "Merging digests: $DIGESTS"
 
-          docker buildx imagetools create $TAGS $DIGESTS
+#           docker buildx imagetools create $TAGS $DIGESTS
 
 
 
