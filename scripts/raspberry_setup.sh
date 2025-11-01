@@ -38,10 +38,6 @@ log() {
 	echo "$(date): $level: $*" >>setup.log 2>/dev/null || true
 }
 # Simple logging / helper functions
-log() {
-	echo -e "${BLUE}[INFO]${RESET} $*"
-	echo "$(date): INFO: $*" >>setup.log 2>/dev/null || true
-}
 log_warn() {
 	echo -e "${RED}[WARN]${RESET} $*"
 	echo "$(date): WARN: $*" >>errors.log 2>/dev/null || true
