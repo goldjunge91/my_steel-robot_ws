@@ -5,7 +5,7 @@ permissions:
   packages: write
 
 env:
-  REPO_NAME: my-steel-robot
+  REPO_NAME: my-steel-robot_v1
   ROS_DISTRO: humble
   DOCKERHUB_USERNAME: goldjunge491
 
@@ -120,7 +120,7 @@ jobs:
             echo "⚠️  Missing DOCKERHUB_USERNAME or DOCKERHUB_TOKEN secrets. Skipping build." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
-            echo "✅ Docker Hub credentials found for ${{ secrets.DOCKERHUB_USERNAME }}"
+            echo "✅ Docker Hub credentials found for ${{ env.DOCKERHUB_USERNAME }}"
           fi
 
       - name: Checkout repository
@@ -192,11 +192,11 @@ jobs:
           file: ${{ matrix.dockerfile }}
           platforms: ${{ matrix.platform }}
           push: true
-          tags: goldjunge491/my-steel-robot:${{ matrix.dockerfile_name }}-${{ matrix.arch }}
+          tags: ${{ env.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ matrix.dockerfile_name }}-${{ matrix.arch }}
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
           labels: |
-            org.opencontainers.image.title=my_steel Robot Image
+            org.opencontainers.image.title=${{ env.REPO_NAME }} Robot Image
             org.opencontainers.image.description=CI build (${{ matrix.platform }})
             org.opencontainers.image.revision=${{ github.sha }}
 
@@ -236,15 +236,14 @@ jobs:
           echo "# Details" >> "$GITHUB_STEP_SUMMARY"
 
           if [ "${{ env.ACT }}" = "true" ]; then
-            IMAGE_TAG="goldjunge491/my-steel-robot:pi-local-${{ matrix.arch }}"
+            IMAGE_TAG="${{ env.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:pi-local-${{ matrix.arch }}"
             echo "- **Mode:** LOCAL (mit \`act\` ausgeführt)" >> "$GITHUB_STEP_SUMMARY"
             echo "- **Image:** \`$IMAGE_TAG\` (nur lokal geladen)" >> "$GITHUB_STEP_SUMMARY"
           else
-            IMAGE_TAG="goldjunge491/my-steel-robot:${{ matrix.dockerfile_name }}-${{ matrix.arch }}"
+            IMAGE_TAG="${{ env.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ matrix.dockerfile_name }}-${{ matrix.arch }}"
             echo "- **Mode:** CI (Push nach Docker Hub)" >> "$GITHUB_STEP_SUMMARY"
             echo "- **Image:** \`$IMAGE_TAG\`" >> "$GITHUB_STEP_SUMMARY"
-            echo "- **Link:** [View on Docker Hub] goldjunge491/${{ matrix.repo_name }}/tags)" >> "$GITHUB_STEP_SUMMARY"
-            # echo "- **Link:** [View on Docker Hub](https://hub.docker.com/r/goldjunge491/my-steel-robot/tags)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Link:** [View on Docker Hub](${{ env.DOCKERHUB_USERNAME }}/${{ matrix.repo_name }}/tags)" >> "$GITHUB_STEP_SUMMARY"
           fi
 
           echo "" >> "$GITHUB_STEP_SUMMARY"
