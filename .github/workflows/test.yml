@@ -122,6 +122,18 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Extract version for digest build
+        if: steps.check-secrets.outputs.skip != 'true'
+        id: version
+        run: |
+          BUILD_DATE=$(date +%Y%m%d)
+          # Hole die letzte Git-Tag-Version
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          VERSION=${LATEST_TAG#v}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
+          echo "Using version: ${VERSION}"
+
       - name: Build and push by digest
         if: steps.check-secrets.outputs.skip != 'true'
         id: build
@@ -129,12 +141,15 @@ jobs:
         with:
           context: .
           file: ${{ matrix.dockerfile }}
-          platforms: ${{ matrix.platform }} # Baut nur die eine, native Plattform
+          platforms: ${{ matrix.platform }}
           push: true
-          # Pusht nur mit Digest, nicht mit Tag
-          outputs: type=image,push-by-digest=true,name-canonical=true
+          outputs: type=image,name=${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.repo_name }},push-by-digest=true,name-canonical=true
           cache-from: type=gha,scope=${{ matrix.dockerfile_name }}-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.dockerfile_name }}-${{ matrix.arch }}
+          labels: |
+            org.opencontainers.image.title=my_steel Robot ${{ matrix.dockerfile_name }}
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Export digest
         if: steps.check-secrets.outputs.skip != 'true'
@@ -205,23 +220,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Checkout repository for version
+        if: steps.check-secrets.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       # Brauchen die Versions-Infos hier erneut für die finalen Tags
       - name: Extract version Git tag
         if: steps.check-secrets.outputs.skip != 'true'
         id: version
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number || '' }}
         run: |
           BUILD_DATE=$(date +%Y%m%d)
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            VERSION="pr-${PR_NUMBER}"
-          else
-            VERSION="dev-${GITHUB_SHA:0:7}"
-          fi
+          # Hole die letzte Git-Tag-Version
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          VERSION=${LATEST_TAG#v}
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
+          echo "Using version: ${VERSION}"
 
       - name: Extract Docker metadata (final tags)
         if: steps.check-secrets.outputs.skip != 'true'
