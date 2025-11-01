@@ -98,13 +98,6 @@ jobs:
             arch: arm64
             ros_distro: humble
 
-          - dockerfile: docker/Dockerfile.simulation
-            dockerfile_name: simulation
-            repo_name: my-steel-robot
-            platform: linux/arm64
-            runner: ubuntu-22.04-arm
-            arch: arm64
-            ros_distro: humble
 
     steps:
       - name: Check Docker Hub credentials
