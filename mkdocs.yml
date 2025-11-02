@@ -1,0 +1,81 @@
+site_name: my_steel Robot Documentation
+site_url: https://goldjunge91.github.io/my_steel-robot_ws/
+repo_url: https://github.com/goldjunge91/my_steel-robot_ws
+repo_name: goldjunge91/my_steel-robot_ws
+docs_dir: docs/doc
+
+theme:
+  name: material
+  language: de
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+
+nav:
+  - "Home": "README.md"
+  - "Projekt": "PROJEKT.md"
+  - "Architecture":
+      - "Overview": "ARCHITECTURE.md"
+      - "Architecture Index": "ARCHITECTURE_INDEX.md"
+  - "Hardware":
+      - "Pin Assignments": "PINMAP.md"
+      - "Hardware Setup": "hardware_setup.md"
+      - "Raspberry Pi Setup": "raspberry_pi_setup_plan.md"
+  - "Guides":
+      - "tmux Usage": "tmux.md"
+
+plugins:
+  - search:
+      lang: de
+  - awesome-pages:
+      collapse_single_pages: false
+  - mermaid2:
+      arguments:
+        theme: "default"
+  - code-validator:
+      enabled: true
+      identifiers:
+        python: {}
+        cpp: {}
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+      enable_git_follow: false
+      locale: "de"
+  - minify:
+      minify_html: true
+  - redirects:
+      redirect_maps:
+        "old-page.md": "new-page.md"
+  - glightbox
