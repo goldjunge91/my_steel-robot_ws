@@ -589,7 +589,7 @@ The simulation includes:
 - [Projekt.md](PROJEKT.md) - Comprehensive project description (German)
 - [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed system architecture
 - [hardware_setup.md](hardware_setup.md) - Hardware assembly guide
-- [Firmware Documentation](https://github.com/goldjunge91/my_steel-robot_ws/blob/main/src/robot_firmware/README.md) - Raspberry Pi Pico firmware 
+- [Firmware Documentation](https://github.com/goldjunge91/my_steel-robot_ws/blob/main/src/robot_firmware/README.md) - Raspberry Pi Pico firmware
 
 ## References
 

@@ -256,7 +256,7 @@ cd lib/FreeRTOS-Kernel && git checkout V10.6.2
 
 ### Directory Structure
 
-```
+```txt
 my_steel-robot_ws/
 ├── src/                    # ROS2 Packages → VCS managed
 │   ├── robot/             # Your packages, frequent updates
@@ -297,7 +297,7 @@ my_steel-robot_ws/
 
 ### Package Structure
 
-```
+```txt
 src/
 ├── robot_description/          # URDF, meshes, component configs
 ├── robot_bringup/             # Launch files and configurations

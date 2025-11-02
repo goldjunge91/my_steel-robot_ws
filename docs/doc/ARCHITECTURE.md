@@ -160,22 +160,21 @@ flowchart TB
         AGENT[micro-ROS Agent]
         CTRL[Controller]
     end
-    
     subgraph "Pico Firmware"
         direction TB
         
         subgraph "micro-ROS Layer"
             UROS[uRosBridge]
-            SUB[/rt/cmd_vel<br/>Subscriber]
-            PUB_JS[/rt/joint_states<br/>Publisher]
-            PUB_IMU[/rt/imu/data_raw<br/>Publisher]
-            PUB_ODOM[/rt/odom<br/>Publisher]
-            PUB_SENS[/rt/sensors/*<br/>Publishers]
+            SUB[/rt/cmd_vel\nSubscriber/]
+            PUB_JS[/rt/joint_states\nPublisher/]
+            PUB_IMU[/rt/imu/data_raw\nPublisher/]
+            PUB_ODOM[/rt/odom\nPublisher/]
+            PUB_SENS[/rt/sensors/*\nPublishers/]
         end
         
         subgraph "Control Layer"
-            DDD_A[DDD Agent<br/>Odometry]
-            MOTOR_A[Motors Agent<br/>PID Control]
+            DDD_A[DDD Agent\nOdometry]
+            MOTOR_A[Motors Agent\nPID Control]
         end
         
         subgraph "Sensor Layer"

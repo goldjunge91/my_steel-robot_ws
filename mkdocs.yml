@@ -1,46 +1,88 @@
 site_name: my_steel Robot Documentation
-site_url: https://goldjunge91.github.io/my_steel-robot_ws/
+site_url: https://goldjunge91.github.io/my_steel-robot_ws
 repo_url: https://github.com/goldjunge91/my_steel-robot_ws
 repo_name: goldjunge91/my_steel-robot_ws
+dev_addr: "127.0.0.1:8080"
+
 docs_dir: docs/doc
 
 theme:
-  name: material
-  language: de
-  palette:
-    - scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-    - scheme: slate
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - navigation.top
-    - navigation.tracking
-    - toc.integrate
-    - search.suggest
-    - search.highlight
-    - content.code.copy
-    - content.code.annotate
+  name: shadcn
+  icon: heroicons:rocket-launch
+  show_title: true
+  show_stargazers: true
+  pygments_style:
+    light: shadcn-light
+    dark: github-dark
+  topbar_sections: false
+  katex_options:
+    macros:
+      "\\RR": "\\mathbb{R}"
+      "\\dx": "\\mathrm{d}x"
+  show_datetime: false
+
+plugins:
+  - excalidraw
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+  # - code-validator:
+  #     enabled: true
+  #     identifiers:
+  #       python: {}
+  #       cpp: {}
+  - awesome-pages:
+      collapse_single_pages: false
+  - search:
+      lang: [de, en]
+  - mermaid2:
+      arguments:
+        theme: dark
+        securityLevel: "loose"
+        startOnLoad: true
+        # flowchart:
+        #   useMaxWidth: false
+        # gantt:
+        #   useMaxWidth: false
+        # sequence:
+        #   useMaxWidth: false
+  - panzoom:
+      hint_location: "top" # default bottom
+      always_show_hint: true
+  - glightbox
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+      enable_git_follow: false
+      locale: "de"
+  - minify:
+      minify_html: true
 
 markdown_extensions:
-  - toc:
-      permalink: true
   - admonition
-  - pymdownx.highlight:
-      anchor_linenums: true
-  - pymdownx.tabbed:
-      alternate_style: true
+  - fenced_code
+  - footnotes
+  - extra
   - attr_list
   - md_in_html
+  - codehilite
+  - shadcn.extensions.codexec
+  - shadcn.extensions.echarts.alpha
+  - toc:
+      permalink: true
+  - pymdownx.blocks.details
+  - pymdownx.blocks.tab:
+      combine_header_slug: true
+      separator: ___
+  - pymdownx.blocks.caption
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.progressbar
+  - pymdownx.snippets
+  - pymdownx.arithmatex:
+      generic: true
+  - shadcn.extensions.iconify
 
 nav:
   - "Home": "README.md"
@@ -54,28 +96,3 @@ nav:
       - "Raspberry Pi Setup": "raspberry_pi_setup_plan.md"
   - "Guides":
       - "tmux Usage": "tmux.md"
-
-plugins:
-  - search:
-      lang: de
-  - awesome-pages:
-      collapse_single_pages: false
-  - mermaid2:
-      arguments:
-        theme: "default"
-  - code-validator:
-      enabled: true
-      identifiers:
-        python: {}
-        cpp: {}
-  - git-revision-date-localized:
-      enable_creation_date: true
-      type: timeago
-      enable_git_follow: false
-      locale: "de"
-  - minify:
-      minify_html: true
-  - redirects:
-      redirect_maps:
-        "old-page.md": "new-page.md"
-  - glightbox
