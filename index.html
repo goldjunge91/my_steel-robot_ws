@@ -1,2176 +1,230 @@
+<!DOCTYPE html><html lang=en><head><script>
+        // for search plugin notably
+        const base_url = "https://goldjunge91.github.io/my_steel-robot_ws/";
+    </script><script>
+    const darkTheme = window.matchMedia("(prefers-color-scheme: dark)");
+    darkTheme.onchange = (e) => {
+        if (e.matches) {
+            document.documentElement.classList.add("dark")
+            localStorage.theme = 'dark';
+        } else {
+            document.documentElement.classList.remove("dark")
+            localStorage.removeItem("theme")
+        }
+    };
 
-<!doctype html>
-<html lang="en" class="no-js">
-  <head>
-    
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      
-      
-      
-        <link rel="canonical" href="https://goldjunge91.github.io/my_steel-robot_ws/">
-      
-      
-      
-        <link rel="next" href="ARCHITECTURE/">
-      
-      
-      <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.28">
-    
-    
-      
-        <title>goldjunge91/my_steel-robot_ws</title>
-      
-    
-    
-      <link rel="stylesheet" href="assets/stylesheets/main.6543a935.min.css">
-      
-      
+    // On page load. Priotiry to lcaolStorage
+    if (localStorage.theme === "dark") {
+        document.documentElement.classList.add("dark")
+    } else if (localStorage.theme === "light") {
+        document.documentElement.classList.remove("dark")
+    } else if (darkTheme.matches) {
+        document.documentElement.classList.add("dark")
+    } else {
+        document.documentElement.classList.remove("dark")
+    }
 
+    // set the layout based on localStorage
+    document.documentElement.classList.add(localStorage.getItem("html-layout") || "layout-fixed");
+</script><meta charset=UTF-8><meta name=viewport content="width=device-width, initial-scale=1"><title>Home - my_steel Robot Documentation</title><title>Home</title><link href=https://goldjunge91.github.io/my_steel-robot_ws/ rel=canonical><!-- Open Graph (Facebook, LinkedIn) --><meta property=og:title content=Home><meta content=https://goldjunge91.github.io/my_steel-robot_ws/ property=og:url><!-- Twitter Card --><meta name=twitter:title content=Home><!-- JSON-LD Structured Data --><link rel=icon href=img/favicon.ico><link href=css/base.css rel=stylesheet><link href=css/geist.css rel=stylesheet><link id=pygments-light rel=stylesheet href=css/pygments/shadcn-light.css><link id=pygments-dark rel=stylesheet href=css/pygments/github-dark.css media="(prefers-color-scheme: dark)"><link href=css/timeago.css rel=stylesheet><link href=assets/_mkdocstrings.css rel=stylesheet><link href=assets/stylesheets/panzoom.css rel=stylesheet><script src=js/callbacks.js></script><!-- katex --><link rel=stylesheet href=css/katex.min.css><!-- The loading of KaTeX is deferred to speed up page rendering --><script defer src=js/katex.min.js></script><!-- To automatically render math in text elements, include the auto-render extension: --><script defer src=js/auto-render.min.js onload='renderMathInElement(document.body, {"macros": {"\\RR": "\\mathbb{R}", "\\dx": "\\mathrm{d}x"}});'></script><script src=https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.js></script><script>
+    const rootStyles = getComputedStyle(document.documentElement);
+    const color = ["#8ec5ff", "#2b7fff", "#1d6ed4", "#155ab6", "#0f4c8a"];
+    const waitForECharts = () => {
+        if (typeof echarts !== 'undefined') {
+            console.log('ECharts is loaded');
+            echarts.registerTheme('shadcn', {
+                "seriesCnt": "5",
+                "backgroundColor": "rgba(0,0,0,0)",
+                "titleColor": "#0a0a0a",
+                "subtitleColor": "#737373",
+                "textColorShow": false,
+                "textColor": "#333",
+                "textStyle": {
+                    "fontFamily": "Geist"
+                },
+                "markTextColor": "#ffffff",
+                "color": color,
+                "borderColor": "#e5e5e5",
+                "borderWidth": 0,
+                "visualMapColor": [
+                    "#09090b",
+                    "#18181b",
+                    "#27272a",
+                    "#3f3f46",
+                    "#52525b",
+                    "#71717a",
+                    "#a1a1aa",
+                    "#d4d4d8",
+                    "#e4e4e7",
+                    "#f4f4f5",
+                    "#fafafa"
+                ],
+                "legendTextColor": "#0a0a0a",
+                "kColor": "#eb5454",
+                "kColor0": "#47b262",
+                "kBorderColor": "#eb5454",
+                "kBorderColor0": "#47b262",
+                "kBorderWidth": 1,
+                "lineWidth": 2,
+                "symbolSize": 4,
+                "symbol": "emptyCircle",
+                "symbolBorderWidth": 1,
+                "lineSmooth": true,
+                "graphLineWidth": 1,
+                "graphLineColor": "#aaaaaa",
+                "mapLabelColor": "#000",
+                "mapLabelColorE": "rgb(100,0,0)",
+                "mapBorderColor": "#444",
+                "mapBorderColorE": "#444",
+                "mapBorderWidth": 0.5,
+                "mapBorderWidthE": 1,
+                "mapAreaColor": "#eee",
+                "mapAreaColorE": "rgba(255,215,0,0.8)",
+                "axes": [
+                    {
+                        "type": "all",
+                        "name": "通用坐标轴",
+                        "axisLineShow": true,
+                        "axisLineColor": "#6E7079",
+                        "axisTickShow": true,
+                        "axisTickColor": "#6E7079",
+                        "axisLabelShow": true,
+                        "axisLabelColor": "#6E7079",
+                        "splitLineShow": true,
+                        "splitLineColor": [
+                            "#E0E6F1"
+                        ],
+                        "splitAreaShow": false,
+                        "splitAreaColor": [
+                            "rgba(250,250,250,0.2)",
+                            "rgba(210,219,238,0.2)"
+                        ]
+                    },
+                    {
+                        "type": "category",
+                        "name": "类目坐标轴",
+                        "axisLineShow": true,
+                        "axisLineColor": "#6e7079",
+                        "axisTickShow": true,
+                        "axisTickColor": "#6e7079",
+                        "axisLabelShow": true,
+                        "axisLabelColor": "#6e7079",
+                        "splitLineShow": false,
+                        "splitLineColor": [
+                            "#E0E6F1"
+                        ],
+                        "splitAreaShow": false,
+                        "splitAreaColor": [
+                            "rgba(250,250,250,0.2)",
+                            "rgba(210,219,238,0.2)"
+                        ]
+                    },
+                    {
+                        "type": "value",
+                        "name": "数值坐标轴",
+                        "axisLineShow": false,
+                        "axisLineColor": "#6e7079",
+                        "axisTickShow": false,
+                        "axisTickColor": "#6e7079",
+                        "axisLabelShow": true,
+                        "axisLabelColor": "#6e7079",
+                        "splitLineShow": true,
+                        "splitLineColor": [
+                            "#E0E6F1"
+                        ],
+                        "splitAreaShow": false,
+                        "splitAreaColor": [
+                            "rgba(250,250,250,0.2)",
+                            "rgba(210,219,238,0.2)"
+                        ]
+                    },
+                    {
+                        "type": "log",
+                        "name": "对数坐标轴",
+                        "axisLineShow": false,
+                        "axisLineColor": "#6e7079",
+                        "axisTickShow": false,
+                        "axisTickColor": "#6e7079",
+                        "axisLabelShow": true,
+                        "axisLabelColor": "#6e7079",
+                        "splitLineShow": true,
+                        "splitLineColor": [
+                            "#E0E6F1"
+                        ],
+                        "splitAreaShow": false,
+                        "splitAreaColor": [
+                            "rgba(250,250,250,0.2)",
+                            "rgba(210,219,238,0.2)"
+                        ]
+                    },
+                    {
+                        "type": "time",
+                        "name": "时间坐标轴",
+                        "axisLineShow": true,
+                        "axisLineColor": "#6e7079",
+                        "axisTickShow": true,
+                        "axisTickColor": "#6e7079",
+                        "axisLabelShow": true,
+                        "axisLabelColor": "#6e7079",
+                        "splitLineShow": false,
+                        "splitLineColor": [
+                            "#E0E6F1"
+                        ],
+                        "splitAreaShow": false,
+                        "splitAreaColor": [
+                            "rgba(250,250,250,0.2)",
+                            "rgba(210,219,238,0.2)"
+                        ]
+                    }
+                ],
+                "axisSeperateSetting": true,
+                "toolboxColor": "#999999",
+                "toolboxEmphasisColor": "#666666",
+                "tooltipAxisColor": "#cccccc",
+                "tooltipAxisWidth": 1,
+                "timelineLineColor": "#e5e5e5",
+                "timelineLineWidth": 2,
+                "timelineItemColor": "#e5e5e5",
+                "timelineItemColorE": "#ffffff",
+                "timelineCheckColor": "#171717",
+                "timelineCheckBorderColor": "#ffffff",
+                "timelineItemBorderWidth": 1,
+                "timelineControlColor": "#737373",
+                "timelineControlBorderColor": "#171717",
+                "timelineControlBorderWidth": "0.0",
+                "timelineLabelColor": "#737373"
+            })
+        } else {
+            setTimeout(waitForECharts, 300);
+        }
+    }
 
-    
-    
-      
-    
-    
-      
-        
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
-      
-    
-    
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
-    
-      
+    waitForECharts();
 
-    
-    
-    
-  </head>
-  
-  
-    <body dir="ltr">
-  
-    
-    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
-    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
-    <div data-md-component="skip">
-      
-        
-        <a href="#my_steel-robot-workspace" class="md-skip">
-          Skip to content
-        </a>
-      
-    </div>
-    <div data-md-component="announce">
-      
-    </div>
-    
-    
-      
+</script><meta name=panzoom-theme content=shadcn><meta name=panzoom-data content='{"selectors": [".mermaid", ".d2"], "initial_zoom_level": 1.0}'><link href=assets/stylesheets/glightbox.min.css rel=stylesheet><script src=assets/javascripts/glightbox.min.js></script><style id=glightbox-style>
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+        </style></head> <body class="text-foreground group/body overscroll-none font-sans antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)] theme-default"> <div id=inner-body class="bg-background relative z-10 flex min-h-svh flex-col"> <header class="bg-background sticky top-0 z-50 w-full" view-transition-name=header> <div class="container-wrapper 3xl:fixed:px-0 px-6"> <div class="3xl:fixed:container flex h-(--header-height) items-center gap-2 **:data-[slot=separator]:!h-4"> <button id=menu-button data-slot=popover-trigger onclick=onMobileMenuButtonClick(event) class="group whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:text-accent-foreground px-4 py-2 has-[>svg]:px-3 extend-touch-target h-8 touch-manipulation items-center justify-start gap-2.5 !p-0 hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 active:bg-transparent dark:hover:bg-transparent flex lg:hidden" type=button aria-haspopup=dialog aria-expanded=false aria-controls=radix-«Rmplb» data-state=closed> <div class="relative flex h-8 w-4 items-center justify-center"> <div class="relative size-4"> <!-- 16px x 16px --> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 16 16" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round> <line x1=0 x2=16 y1=5 y2=5 class="group-data-[state=open]:translate-y-[2.25px] group-data-[state=open]:-translate-x-[2.25px] group-data-[state=open]:rotate-45 transition-all duration-300 origin-center"></line> <line x1=0 x2=16 y1=11 y2=11 class="group-data-[state=open]:-translate-y-[2.25px] group-data-[state=open]:-translate-x-[2.25px] group-data-[state=open]:-rotate-45 transition-all duration-300 origin-center"></line> </svg> </div> <span class=sr-only>Toggle Menu</span> </div> <span class="flex h-8 items-center text-lg leading-none font-medium">Menu</span> </button> <a data-slot=button href=https://goldjunge91.github.io/my_steel-robot_ws/ class="items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-5 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 hidden h-8 lg:flex"> <span class="size-8 flex flex-row justify-center items-center"> <svg xmlns=http://www.w3.org/2000/svg width=20px height=20px viewbox="0 0 24 24"><path fill=none stroke=currentColor stroke-linecap=round stroke-linejoin=round stroke-width=1.5 d="M15.59 14.37q.159.666.16 1.38a6 6 0 0 1-6 6v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.9 14.9 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.9 14.9 0 0 0-2.58 5.84m2.699 2.7q-.155.032-.311.06a15 15 0 0 1-2.448-2.448l.06-.312m-2.24 2.39a4.49 4.49 0 0 0-1.757 4.306q.341.054.696.054a4.5 4.5 0 0 0 3.61-1.812M16.5 9a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0"></path></svg> </span> <h1 class=pr-2>my_steel Robot Documentation</h1> </a> <div class="ml-auto flex items-center gap-2 md:flex-1 md:justify-end"> <div class="hidden w-full flex-1 md:flex md:w-auto md:flex-none"> <button data-slot=dialog-trigger onclick=onSearchBarClick(event) class="inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-secondary/80 px-4 py-2 has-[>svg]:px-3 bg-surface text-surface-foreground/60 dark:bg-card relative h-8 w-full justify-start pl-2.5 font-normal shadow-none sm:pr-12 md:w-40 lg:w-56 xl:w-64" type=button aria-haspopup=dialog aria-expanded=false aria-controls=radix-«R66plb» data-state=closed> <span class="text-muted-foreground hidden lg:inline-flex">Search documentation...</span> <span class="text-muted-foreground inline-flex lg:hidden">Search...</span> <div class="absolute top-1.5 right-1.5 hidden gap-1 sm:flex"> <kbd class="bg-background text-muted-foreground pointer-events-none flex h-5 items-center justify-center gap-1 rounded border px-1 font-sans text-[0.7rem] font-medium select-none [&_svg:not([class*='size-'])]:size-3">Ctrl</kbd><kbd class="bg-background text-muted-foreground pointer-events-none flex h-5 items-center justify-center gap-1 rounded border px-1 font-sans text-[0.7rem] font-medium select-none [&_svg:not([class*='size-'])]:size-3 aspect-square">K</kbd> </div> </button> <dialog id=search-dialog onclick=onSearchDialogClick(event) class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background rounded-lg shadow-lg border overflow-hidden p-0"> <div class="w-lg gap-4"> <div class="flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground"> <div data-slot=command-input-wrapper class="flex h-9 items-center gap-2 border-b px-3"><svg xmlns=http://www.w3.org/2000/svg width=24 height=24 viewbox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round class="lucide lucide-search size-4 shrink-0 opacity-50"> <circle cx=11 cy=11 r=8></circle> <path d="m21 21-4.3-4.3"></path> </svg> <input data-slot=command-input class="placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50" placeholder="Search documentation..." cmdk-input autocomplete=off autocorrect=off spellcheck=false aria-autocomplete=list role=combobox aria-expanded=true aria-controls=radix-«r1t6» aria-labelledby=radix-«r1t7» id=radix-«r1t8» type=text value aria-activedescendant=radix-«r1th» oninput=onInputHandler(event)> </div> </div> <div id=mkdocs-search-results> <!-- search results go there --> </div> </div> </dialog> <script>
+    document.removeEventListener("keydown", searchShortcutHandler);
+    document.addEventListener("keydown", searchShortcutHandler);
+</script> </div> <div data-orientation=vertical role=none data-slot=separator class="bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px ml-2 hidden lg:block"> </div> <a target=_blank rel=noreferrer data-slot=button class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5 h-8 shadow-none" href=https://github.com/goldjunge91/my_steel-robot_ws> <svg viewbox="0 0 438.549 438.549"> <path fill=currentColor d="M409.132 114.573c-19.608-33.596-46.205-60.194-79.798-79.8-33.598-19.607-70.277-29.408-110.063-29.408-39.781 0-76.472 9.804-110.063 29.408-33.596 19.605-60.192 46.204-79.8 79.8C9.803 148.168 0 184.854 0 224.63c0 47.78 13.94 90.745 41.827 128.906 27.884 38.164 63.906 64.572 108.063 79.227 5.14.954 8.945.283 11.419-1.996 2.475-2.282 3.711-5.14 3.711-8.562 0-.571-.049-5.708-.144-15.417a2549.81 2549.81 0 01-.144-25.406l-6.567 1.136c-4.187.767-9.469 1.092-15.846 1-6.374-.089-12.991-.757-19.842-1.999-6.854-1.231-13.229-4.086-19.13-8.559-5.898-4.473-10.085-10.328-12.56-17.556l-2.855-6.57c-1.903-4.374-4.899-9.233-8.992-14.559-4.093-5.331-8.232-8.945-12.419-10.848l-1.999-1.431c-1.332-.951-2.568-2.098-3.711-3.429-1.142-1.331-1.997-2.663-2.568-3.997-.572-1.335-.098-2.43 1.427-3.289 1.525-.859 4.281-1.276 8.28-1.276l5.708.853c3.807.763 8.516 3.042 14.133 6.851 5.614 3.806 10.229 8.754 13.846 14.842 4.38 7.806 9.657 13.754 15.846 17.847 6.184 4.093 12.419 6.136 18.699 6.136 6.28 0 11.704-.476 16.274-1.423 4.565-.952 8.848-2.383 12.847-4.285 1.713-12.758 6.377-22.559 13.988-29.41-10.848-1.14-20.601-2.857-29.264-5.14-8.658-2.286-17.605-5.996-26.835-11.14-9.235-5.137-16.896-11.516-22.985-19.126-6.09-7.614-11.088-17.61-14.987-29.979-3.901-12.374-5.852-26.648-5.852-42.826 0-23.035 7.52-42.637 22.557-58.817-7.044-17.318-6.379-36.732 1.997-58.24 5.52-1.715 13.706-.428 24.554 3.853 10.85 4.283 18.794 7.952 23.84 10.994 5.046 3.041 9.089 5.618 12.135 7.708 17.705-4.947 35.976-7.421 54.818-7.421s37.117 2.474 54.823 7.421l10.849-6.849c7.419-4.57 16.18-8.758 26.262-12.565 10.088-3.805 17.802-4.853 23.134-3.138 8.562 21.509 9.325 40.922 2.279 58.24 15.036 16.18 22.559 35.787 22.559 58.817 0 16.178-1.958 30.497-5.853 42.966-3.9 12.471-8.941 22.457-15.125 29.979-6.191 7.521-13.901 13.85-23.131 18.986-9.232 5.14-18.182 8.85-26.84 11.136-8.662 2.286-18.415 4.004-29.263 5.146 9.894 8.562 14.842 22.077 14.842 40.539v60.237c0 3.422 1.19 6.279 3.572 8.562 2.379 2.279 6.136 2.95 11.276 1.995 44.163-14.653 80.185-41.062 108.068-79.226 27.88-38.161 41.825-81.126 41.825-128.906-.01-39.771-9.818-76.454-29.414-110.049z"> </path> </svg> <span id=stargazers class="text-muted-foreground w-8 text-xs tabular-nums" onload=test()> </span> </a> <div data-orientation=vertical role=none data-slot=separator class="bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px 3xl:flex hidden"> </div> <button data-slot=button class="items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-8 3xl:flex hidden" title="Toggle layout" onclick=toggleLayout(event)> <span class=sr-only>Toggle layout</span> <svg xmlns=http://www.w3.org/2000/svg width=24 height=24 viewbox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round class="lucide lucide-gallery-horizontal"> <path d="M2 3v18"></path> <rect width=12 height=18 x=6 y=3 rx=2></rect> <path d="M22 3v18"></path> </svg> </button> <div data-orientation=vertical role=none data-slot=separator class="bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px"> </div> <button data-slot=button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 group/toggle extend-touch-target size-8" title="Toggle theme" onclick=onThemeSwitch(event)> <svg xmlns=http://www.w3.org/2000/svg width=24 height=24 viewbox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round class=size-4.5> <path stroke=none d="M0 0h24v24H0z" fill=none></path> <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path> <path d="M12 3l0 18"></path> <path d="M12 9l4.65 -4.65"></path> <path d="M12 14.3l7.37 -7.37"></path> <path d="M12 19.6l8.85 -8.85"></path> </svg> <span class=sr-only>Toggle theme</span> </button> </div> </div> </div> </header> <main class="flex flex-1 flex-col"> <div class="container-wrapper flex flex-1 flex-col px-2"> <div data-slot=sidebar-wrapper style="--sidebar-width: 16rem; --sidebar-width-icon: 3rem;" class="group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex w-full 3xl:fixed:container 3xl:fixed:px-3 min-h-min flex-1 items-start px-0 [--sidebar-width:220px] [--top-spacing:0] lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:[--sidebar-width:240px] lg:[--top-spacing:calc(var(--spacing)*4)]"> <div data-slot=sidebar class="text-sidebar-foreground w-(--sidebar-width) flex-col sticky top-[calc(var(--header-height)+1px)] z-30 hidden h-[calc(100svh-var(--header-height)-var(--footer-height))] bg-transparent lg:flex"> <div data-slot=sidebar-content data-sidebar=content class="flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden no-scrollbar px-2 pb-12"> <div class="h-(--top-spacing) shrink-0"></div> <div view-transition-name=sidebar data-slot=sidebar-group data-sidebar=group class="relative flex w-full min-w-0 flex-col p-2 no-scrollbar"> <div data-slot=sidebar-group data-sidebar=group class="relative flex w-full min-w-0 flex-col p-2"> <div data-slot=sidebar-group-content data-sidebar=group-content class="w-full text-sm"> <ul data-slot=sidebar-menu data-sidebar=menu class="flex w-full min-w-0 flex-col gap-0.5"> <li data-slot=sidebar-menu-item data-sidebar=menu-item class="group/menu-item relative"> <a data-slot=sidebar-menu-button data-active=true data-sidebar=menu-button data-size=default href=/my_steel-robot_ws/ class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer/menu-button flex items-center gap-2 rounded-md p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 data-[active=true]:bg-accent data-[active=true]:border-accent 3xl:fixed:w-full 3xl:fixed:max-w-48 relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md"> Home </a> </li> <li data-slot=sidebar-menu-item data-sidebar=menu-item class="group/menu-item relative"> <a data-slot=sidebar-menu-button data-active=false data-sidebar=menu-button data-size=default href=/my_steel-robot_ws/PROJEKT/ class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer/menu-button flex items-center gap-2 rounded-md p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 data-[active=true]:bg-accent data-[active=true]:border-accent 3xl:fixed:w-full 3xl:fixed:max-w-48 relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md"> Projekt </a> </li> </ul> </div> </div> <div data-slot=sidebar-group data-sidebar=group class="relative flex w-full min-w-0 flex-col p-2"> <div data-slot=sidebar-group-label data-sidebar=group-label class="ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0 group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 text-muted-foreground font-medium"> Architecture</div> <div data-slot=sidebar-group-content data-sidebar=group-content class="w-full text-sm"> <ul data-slot=sidebar-menu data-sidebar=menu class="flex w-full min-w-0 flex-col gap-0.5"> <li data-slot=sidebar-menu-item data-sidebar=menu-item class="group/menu-item relative"> <a data-slot=sidebar-menu-button data-active=false data-sidebar=menu-button data-size=default href=/my_steel-robot_ws/ARCHITECTURE/ class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer/menu-button flex items-center gap-2 rounded-md p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 data-[active=true]:bg-accent data-[active=true]:border-accent 3xl:fixed:w-full 3xl:fixed:max-w-48 relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md"> Overview </a> </li> <li data-slot=sidebar-menu-item data-sidebar=menu-item class="group/menu-item relative"> <a data-slot=sidebar-menu-button data-active=false data-sidebar=menu-button data-size=default href=/my_steel-robot_ws/ARCHITECTURE_INDEX/ class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer/menu-button flex items-center gap-2 rounded-md p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 data-[active=true]:bg-accent data-[active=true]:border-accent 3xl:fixed:w-full 3xl:fixed:max-w-48 relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md"> Architecture Index </a> </li> </ul> </div> </div> <div data-slot=sidebar-group data-sidebar=group class="relative flex w-full min-w-0 flex-col p-2"> <div data-slot=sidebar-group-label data-sidebar=group-label class="ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0 group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 text-muted-foreground font-medium"> Hardware</div> <div data-slot=sidebar-group-content data-sidebar=group-content class="w-full text-sm"> <ul data-slot=sidebar-menu data-sidebar=menu class="flex w-full min-w-0 flex-col gap-0.5"> <li data-slot=sidebar-menu-item data-sidebar=menu-item class="group/menu-item relative"> <a data-slot=sidebar-menu-button data-active=false data-sidebar=menu-button data-size=default href=/my_steel-robot_ws/PINMAP/ class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer/menu-button flex items-center gap-2 rounded-md p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 data-[active=true]:bg-accent data-[active=true]:border-accent 3xl:fixed:w-full 3xl:fixed:max-w-48 relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md"> Pin Assignments </a> </li> <li data-slot=sidebar-menu-item data-sidebar=menu-item class="group/menu-item relative"> <a data-slot=sidebar-menu-button data-active=false data-sidebar=menu-button data-size=default href=/my_steel-robot_ws/hardware_setup/ class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer/menu-button flex items-center gap-2 rounded-md p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 data-[active=true]:bg-accent data-[active=true]:border-accent 3xl:fixed:w-full 3xl:fixed:max-w-48 relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md"> Hardware Setup </a> </li> <li data-slot=sidebar-menu-item data-sidebar=menu-item class="group/menu-item relative"> <a data-slot=sidebar-menu-button data-active=false data-sidebar=menu-button data-size=default href=/my_steel-robot_ws/raspberry_pi_setup_plan/ class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer/menu-button flex items-center gap-2 rounded-md p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 data-[active=true]:bg-accent data-[active=true]:border-accent 3xl:fixed:w-full 3xl:fixed:max-w-48 relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md"> Raspberry Pi Setup </a> </li> </ul> </div> </div> <div data-slot=sidebar-group data-sidebar=group class="relative flex w-full min-w-0 flex-col p-2"> <div data-slot=sidebar-group-label data-sidebar=group-label class="ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0 group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 text-muted-foreground font-medium"> Guides</div> <div data-slot=sidebar-group-content data-sidebar=group-content class="w-full text-sm"> <ul data-slot=sidebar-menu data-sidebar=menu class="flex w-full min-w-0 flex-col gap-0.5"> <li data-slot=sidebar-menu-item data-sidebar=menu-item class="group/menu-item relative"> <a data-slot=sidebar-menu-button data-active=false data-sidebar=menu-button data-size=default href=/my_steel-robot_ws/tmux/ class="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer/menu-button flex items-center gap-2 rounded-md p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 data-[active=true]:bg-accent data-[active=true]:border-accent 3xl:fixed:w-full 3xl:fixed:max-w-48 relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md"> tmux Usage </a> </li> </ul> </div> </div> </div> </div> </div> <div class="h-full w-full"> <div data-slot=docs class="flex items-stretch text-[1.05rem] sm:text-[15px] xl:w-full"> <div class="flex min-w-0 flex-1 flex-col"> <div class="h-(--top-spacing) shrink-0"></div> <article class=w-full view-transition-name=page> <div class="flex flex-col gap-2"> <div class="flex flex-col gap-2"> <div id=page-header class="flex items-start justify-between"> <h1 class="scroll-m-20 text-4xl font-semibold tracking-tight sm:text-3xl xl:text-4xl"> Home </h1> <div class="flex items-center gap-2 pt-1.5"> <button onclick="fetch(`https://goldjunge91.github.io/my_steel-robot_ws/README.md`).then((r) => r.blob()).then((blob) => navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })]))" data-slot=button class="cursor-pointer inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-md gap-1.5 px-3 has-[&>svg]:px-2.5 h-8 shadow-none md:h-7 md:text-[0.8rem]"> <svg xmlns=http://www.w3.org/2000/svg width=24 height=24 viewbox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round class="tabler-icon tabler-icon-copy "> <path d="M7 7m0 2.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667z"></path><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1"></path> </svg> <span class=max-md:hidden>Copy Page</span> </button> <a data-slot=button id=next-button href=/my_steel-robot_ws/PROJEKT/ class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-secondary text-secondary-foreground hover:bg-secondary/80 extend-touch-target size-8 shadow-none md:size-7"> <span class=sr-only>Next</span> <svg xmlns=http://www.w3.org/2000/svg width=24 height=24 viewbox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round class="tabler-icon tabler-icon-arrow-right"> <path d="M5 12l14 0"></path> <path d="M13 18l6 -6"></path> <path d="M13 6l6 6"></path> </svg> </a> </div> </div> </div> <div class="flex justify-end items-center"> </div> </div> <div class="typography w-full flex-1 *:data-[slot=alert]:first:mt-0"> <p>ROS2 workspace for the my_steel omnidirectional mobile robot platform with mecanum drive and Nerf launcher.</p> <h2 id=overview>Overview<a class=headerlink href=#overview title="Permanent link">¶</a></h2> <p>The my_steel robot is an educational and research platform built on ROS2 Humble, featuring:</p> <ul> <li><strong>Omnidirectional mobility</strong> via 4-wheel mecanum drive</li> <li><strong>Real-time control</strong> using Raspberry Pi Pico with micro-ROS</li> <li><strong>Autonomous navigation</strong> with RPLiDAR and sensor fusion</li> <li><strong>Computer vision</strong> for face detection and tracking</li> <li><strong>Interactive Nerf launcher</strong> with dedicated controller (Arduino Nano/Pro Micro)</li> <li><strong>Remote operation</strong> via Tailscale VPN over 4G/5G networks</li> <li><strong>Optional manipulator arm</strong> support (Open Manipulator X)</li> </ul> <h2 id=quick-start>Quick Start<a class=headerlink href=#quick-start title="Permanent link">¶</a></h2> <h3 id=prerequisites>Prerequisites<a class=headerlink href=#prerequisites title="Permanent link">¶</a></h3> <ul> <li>Ubuntu 22.04</li> <li>ROS2 Humble</li> <li>Python 3.10+</li> <li>Raspberry Pi Pico SDK (for firmware builds)</li> </ul> <h3 id=installation>Installation<a class=headerlink href=#installation title="Permanent link">¶</a></h3> <ol> <li>Clone the repository:</li> </ol> <p><code>bash git clone https://github.com/goldjunge91/my_steel-robot_ws.git cd my_steel-robot_ws</code></p> <ol> <li>Install VCS tool (for dependency management):</li> </ol> <p><code>bash pip3 install vcstool # Or on macOS with Homebrew: # brew install vcstool</code></p> <ol> <li>Import dependencies:</li> </ol> <p>```bash # Import ROS2 packages (src/) vcs import src &lt; src/ros2.repos</p> <p># Initialize library submodules (lib/) git submodule update --init --recursive lib/ ```</p> <ol> <li>Install ROS dependencies:</li> </ol> <p><code>bash source /opt/ros/humble/setup.bash rosdep install --from-paths src --ignore-src -r -y</code></p> <ol> <li>Build the workspace:</li> </ol> <p><code>bash colcon build --symlink-install source install/setup.bash</code></p> <ol> <li>Flash firmware to Pico (see <a href=#firmware>Firmware</a> section)</li> </ol> <h3 id=docker-deployment-alternative>Docker Deployment (Alternative)<a class=headerlink href=#docker-deployment-alternative title="Permanent link">¶</a></h3> <p>For production deployment on Raspberry Pi, Docker provides a containerized solution with all dependencies pre-installed:</p> <p><strong>Features:</strong></p> <ul> <li>Pre-built ROS2 Humble environment with all dependencies</li> <li>Automatic service orchestration with Docker Compose</li> <li>Integrated Tailscale VPN for secure remote access</li> <li>Persistent logs and configuration</li> <li>Automatic restart on failure</li> </ul> <p><strong>Quick Start:</strong></p> <div class=codehilite><pre><span></span><code><span class=c1># Pull the pre-built image</span>
+docker<span class=w> </span>pull<span class=w> </span>mysteel/robot:humble-arm64
 
-  
+<span class=c1># Copy docker-compose configuration</span>
+cp<span class=w> </span>docker/compose.robot-pi.yaml<span class=w> </span>~/compose.robot-pi.yaml
 
-<header class="md-header md-header--shadow" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="goldjunge91/my_steel-robot_ws" class="md-header__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+<span class=c1># Configure Tailscale (optional)</span>
+cp<span class=w> </span>docker/.env.robot-pi.example<span class=w> </span>~/.env
+<span class=c1># Edit ~/.env and add your TAILSCALE_AUTHKEY</span>
 
-    </a>
-    <label class="md-header__button md-icon" for="__drawer">
-      
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
-    </label>
-    <div class="md-header__title" data-md-component="header-title">
-      <div class="md-header__ellipsis">
-        <div class="md-header__topic">
-          <span class="md-ellipsis">
-            goldjunge91/my_steel-robot_ws
-          </span>
-        </div>
-        <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">
-            
-              my_steel Robot Workspace
-            
-          </span>
-        </div>
-      </div>
-    </div>
-    
-    
-      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
-    
-    
-    
-      <label class="md-header__button md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
-      </label>
-      <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-    
-    
-      <div class="md-header__source">
-        <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
-  </div>
-  <div class="md-source__repository">
-    GitHub
-  </div>
-</a>
-      </div>
-    
-  </nav>
-  
-</header>
-    
-    <div class="md-container" data-md-component="container">
-      
-      
-        
-          
-        
-      
-      <main class="md-main" data-md-component="main">
-        <div class="md-main__inner md-grid">
-          
-            
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
+<span class=c1># Start the robot</span>
+docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>~/compose.robot-pi.yaml<span class=w> </span>up<span class=w> </span>-d
 
-
-
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
-  <label class="md-nav__title" for="__drawer">
-    <a href="." title="goldjunge91/my_steel-robot_ws" class="md-nav__button md-logo" aria-label="goldjunge91/my_steel-robot_ws" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
-
-    </a>
-    goldjunge91/my_steel-robot_ws
-  </label>
-  
-    <div class="md-nav__source">
-      <a href="https://github.com/goldjunge91/my_steel-robot_ws" title="Go to repository" class="md-source" data-md-component="source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
-  </div>
-  <div class="md-source__repository">
-    GitHub
-  </div>
-</a>
-    </div>
-  
-  <ul class="md-nav__list" data-md-scrollfix>
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    my_steel Robot Workspace
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
-        
-  
-  <span class="md-ellipsis">
-    my_steel Robot Workspace
-  </span>
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      Overview
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
-    <span class="md-ellipsis">
-      Quick Start
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Quick Start">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      Prerequisites
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Installation
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#docker-deployment-alternative" class="md-nav__link">
-    <span class="md-ellipsis">
-      Docker Deployment (Alternative)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#running-the-robot" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running the Robot
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ros2-topics" class="md-nav__link">
-    <span class="md-ellipsis">
-      ROS2 Topics
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="ROS2 Topics">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#published-topics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Published Topics
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#subscribed-topics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Subscribed Topics
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#topic-architecture" class="md-nav__link">
-    <span class="md-ellipsis">
-      Topic Architecture
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dependency-management-strategy" class="md-nav__link">
-    <span class="md-ellipsis">
-      Dependency Management Strategy
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Dependency Management Strategy">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#vcs-for-ros2-packages-src" class="md-nav__link">
-    <span class="md-ellipsis">
-      VCS for ROS2 Packages (src/)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#git-submodules-for-libraries-lib" class="md-nav__link">
-    <span class="md-ellipsis">
-      Git Submodules for Libraries (lib/)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#why-this-hybrid-approach" class="md-nav__link">
-    <span class="md-ellipsis">
-      Why This Hybrid Approach?
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#directory-structure" class="md-nav__link">
-    <span class="md-ellipsis">
-      Directory Structure
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#architecture" class="md-nav__link">
-    <span class="md-ellipsis">
-      Architecture
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Architecture">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#hardware-components" class="md-nav__link">
-    <span class="md-ellipsis">
-      Hardware Components
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#software-stack" class="md-nav__link">
-    <span class="md-ellipsis">
-      Software Stack
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#package-structure" class="md-nav__link">
-    <span class="md-ellipsis">
-      Package Structure
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#firmware" class="md-nav__link">
-    <span class="md-ellipsis">
-      Firmware
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Firmware">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#building-firmware" class="md-nav__link">
-    <span class="md-ellipsis">
-      Building Firmware
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#flashing-firmware" class="md-nav__link">
-    <span class="md-ellipsis">
-      Flashing Firmware
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#firmware-topics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Firmware Topics
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#micro-ros-agent-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      micro-ROS Agent Configuration
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="micro-ROS Agent Configuration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#topic-remapping" class="md-nav__link">
-    <span class="md-ellipsis">
-      Topic Remapping
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#starting-the-agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      Starting the Agent
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#using-just-task-runner" class="md-nav__link">
-    <span class="md-ellipsis">
-      Using Just (Task Runner)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configuration
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Configuration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#environment-variables" class="md-nav__link">
-    <span class="md-ellipsis">
-      Environment Variables
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#key-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      Key Parameters
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#development" class="md-nav__link">
-    <span class="md-ellipsis">
-      Development
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Development">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#building-specific-packages" class="md-nav__link">
-    <span class="md-ellipsis">
-      Building Specific Packages
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#testing" class="md-nav__link">
-    <span class="md-ellipsis">
-      Testing
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#code-formatting" class="md-nav__link">
-    <span class="md-ellipsis">
-      Code Formatting
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#simulation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Simulation
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      Troubleshooting
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Troubleshooting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#no-topics-appearing" class="md-nav__link">
-    <span class="md-ellipsis">
-      No topics appearing
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#remote-connection-issues-tailscale" class="md-nav__link">
-    <span class="md-ellipsis">
-      Remote connection issues (Tailscale)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#hardware-interface-fails-to-activate" class="md-nav__link">
-    <span class="md-ellipsis">
-      Hardware interface fails to activate
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#robot-doesnt-respond-to-commands" class="md-nav__link">
-    <span class="md-ellipsis">
-      Robot doesn't respond to commands
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#migration-from-old-topic-names" class="md-nav__link">
-    <span class="md-ellipsis">
-      Migration from Old Topic Names
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Migration from Old Topic Names">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#quick-migration-summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      Quick Migration Summary
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Documentation
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contributing" class="md-nav__link">
-    <span class="md-ellipsis">
-      Contributing
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
-    <span class="md-ellipsis">
-      License
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#maintainer" class="md-nav__link">
-    <span class="md-ellipsis">
-      Maintainer
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#references" class="md-nav__link">
-    <span class="md-ellipsis">
-      References
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#deploy-to-raspberry-pi" class="md-nav__link">
-    <span class="md-ellipsis">
-      Deploy to Raspberry Pi
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#testing-deployment" class="md-nav__link">
-    <span class="md-ellipsis">
-      Testing Deployment
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tailscale-vpn" class="md-nav__link">
-    <span class="md-ellipsis">
-      Tailscale VPN
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Troubleshooting
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Troubleshooting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#container-fails-to-start" class="md-nav__link">
-    <span class="md-ellipsis">
-      Container fails to start
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#micro-ros-agent-connection" class="md-nav__link">
-    <span class="md-ellipsis">
-      micro-ROS agent connection
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#health-checks-failing" class="md-nav__link">
-    <span class="md-ellipsis">
-      Health checks failing
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ros2-topics-not-visible" class="md-nav__link">
-    <span class="md-ellipsis">
-      ROS2 topics not visible
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tailscale-issues" class="md-nav__link">
-    <span class="md-ellipsis">
-      Tailscale issues
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#high-cpumemory" class="md-nav__link">
-    <span class="md-ellipsis">
-      High CPU/memory
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#logs" class="md-nav__link">
-    <span class="md-ellipsis">
-      Logs
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#network" class="md-nav__link">
-    <span class="md-ellipsis">
-      Network
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#diagnostics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Diagnostics
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#systemd-service-optional" class="md-nav__link">
-    <span class="md-ellipsis">
-      Systemd Service (Optional)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#security" class="md-nav__link">
-    <span class="md-ellipsis">
-      Security
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="ARCHITECTURE/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Pico Firmware Architecture
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="ARCHITECTURE_INDEX/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Architecture Documentation Index
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="LICENSE/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    LICENSE
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="PINMAP/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    PINMAP (Template) — my_steel Robot (Digital Board: Raspberry Pi Pico)
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="Projekt/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Projektbeschreibung: ROS2-Roboter
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="architecture_and_packages/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Architecture and packages
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="command%20list/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    command list
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="hardware_setup/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Hardware Preparation and Bringup Guide
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="imu_calibration_guide/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    IMU Calibration Guide - ICM-20948
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="notes/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Notes
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="notes_kommentare/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    ROS 2 Workspace &amp; Roboter-Steuerung: Befehlsreferenz
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="raspberry_pi_setup_plan/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    my_steel Robot - Einfacher Start Guide
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="tmux/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Tmux
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
-        
-          
-          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="0">
-            
-  
-  <span class="md-ellipsis">
-    Github
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_15">
-            <span class="md-nav__icon md-icon"></span>
-            Github
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="github/Workflow%20commands%20for%20GitHub%20Actions/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Workflow commands for GitHub Actions (Workflowbefehle für GitHub Actions)
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
-        
-          
-          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="0">
-            
-  
-  <span class="md-ellipsis">
-    Ros
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_16">
-            <span class="md-nav__icon md-icon"></span>
-            Ros
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="ros/Ros2_docker/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Ros2 docker
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="ros/docker/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Docker
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="ros/orsf_README/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    OSRF Docker Images
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-  </ul>
-</nav>
-                  </div>
-                </div>
-              </div>
-            
-            
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      Overview
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
-    <span class="md-ellipsis">
-      Quick Start
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Quick Start">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      Prerequisites
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Installation
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#docker-deployment-alternative" class="md-nav__link">
-    <span class="md-ellipsis">
-      Docker Deployment (Alternative)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#running-the-robot" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running the Robot
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ros2-topics" class="md-nav__link">
-    <span class="md-ellipsis">
-      ROS2 Topics
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="ROS2 Topics">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#published-topics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Published Topics
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#subscribed-topics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Subscribed Topics
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#topic-architecture" class="md-nav__link">
-    <span class="md-ellipsis">
-      Topic Architecture
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dependency-management-strategy" class="md-nav__link">
-    <span class="md-ellipsis">
-      Dependency Management Strategy
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Dependency Management Strategy">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#vcs-for-ros2-packages-src" class="md-nav__link">
-    <span class="md-ellipsis">
-      VCS for ROS2 Packages (src/)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#git-submodules-for-libraries-lib" class="md-nav__link">
-    <span class="md-ellipsis">
-      Git Submodules for Libraries (lib/)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#why-this-hybrid-approach" class="md-nav__link">
-    <span class="md-ellipsis">
-      Why This Hybrid Approach?
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#directory-structure" class="md-nav__link">
-    <span class="md-ellipsis">
-      Directory Structure
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#architecture" class="md-nav__link">
-    <span class="md-ellipsis">
-      Architecture
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Architecture">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#hardware-components" class="md-nav__link">
-    <span class="md-ellipsis">
-      Hardware Components
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#software-stack" class="md-nav__link">
-    <span class="md-ellipsis">
-      Software Stack
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#package-structure" class="md-nav__link">
-    <span class="md-ellipsis">
-      Package Structure
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#firmware" class="md-nav__link">
-    <span class="md-ellipsis">
-      Firmware
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Firmware">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#building-firmware" class="md-nav__link">
-    <span class="md-ellipsis">
-      Building Firmware
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#flashing-firmware" class="md-nav__link">
-    <span class="md-ellipsis">
-      Flashing Firmware
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#firmware-topics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Firmware Topics
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#micro-ros-agent-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      micro-ROS Agent Configuration
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="micro-ROS Agent Configuration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#topic-remapping" class="md-nav__link">
-    <span class="md-ellipsis">
-      Topic Remapping
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#starting-the-agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      Starting the Agent
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#using-just-task-runner" class="md-nav__link">
-    <span class="md-ellipsis">
-      Using Just (Task Runner)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configuration
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Configuration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#environment-variables" class="md-nav__link">
-    <span class="md-ellipsis">
-      Environment Variables
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#key-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      Key Parameters
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#development" class="md-nav__link">
-    <span class="md-ellipsis">
-      Development
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Development">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#building-specific-packages" class="md-nav__link">
-    <span class="md-ellipsis">
-      Building Specific Packages
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#testing" class="md-nav__link">
-    <span class="md-ellipsis">
-      Testing
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#code-formatting" class="md-nav__link">
-    <span class="md-ellipsis">
-      Code Formatting
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#simulation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Simulation
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      Troubleshooting
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Troubleshooting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#no-topics-appearing" class="md-nav__link">
-    <span class="md-ellipsis">
-      No topics appearing
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#remote-connection-issues-tailscale" class="md-nav__link">
-    <span class="md-ellipsis">
-      Remote connection issues (Tailscale)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#hardware-interface-fails-to-activate" class="md-nav__link">
-    <span class="md-ellipsis">
-      Hardware interface fails to activate
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#robot-doesnt-respond-to-commands" class="md-nav__link">
-    <span class="md-ellipsis">
-      Robot doesn't respond to commands
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#migration-from-old-topic-names" class="md-nav__link">
-    <span class="md-ellipsis">
-      Migration from Old Topic Names
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Migration from Old Topic Names">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#quick-migration-summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      Quick Migration Summary
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Documentation
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contributing" class="md-nav__link">
-    <span class="md-ellipsis">
-      Contributing
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
-    <span class="md-ellipsis">
-      License
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#maintainer" class="md-nav__link">
-    <span class="md-ellipsis">
-      Maintainer
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#references" class="md-nav__link">
-    <span class="md-ellipsis">
-      References
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#deploy-to-raspberry-pi" class="md-nav__link">
-    <span class="md-ellipsis">
-      Deploy to Raspberry Pi
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#testing-deployment" class="md-nav__link">
-    <span class="md-ellipsis">
-      Testing Deployment
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tailscale-vpn" class="md-nav__link">
-    <span class="md-ellipsis">
-      Tailscale VPN
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Troubleshooting
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Troubleshooting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#container-fails-to-start" class="md-nav__link">
-    <span class="md-ellipsis">
-      Container fails to start
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#micro-ros-agent-connection" class="md-nav__link">
-    <span class="md-ellipsis">
-      micro-ROS agent connection
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#health-checks-failing" class="md-nav__link">
-    <span class="md-ellipsis">
-      Health checks failing
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ros2-topics-not-visible" class="md-nav__link">
-    <span class="md-ellipsis">
-      ROS2 topics not visible
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tailscale-issues" class="md-nav__link">
-    <span class="md-ellipsis">
-      Tailscale issues
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#high-cpumemory" class="md-nav__link">
-    <span class="md-ellipsis">
-      High CPU/memory
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#logs" class="md-nav__link">
-    <span class="md-ellipsis">
-      Logs
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#network" class="md-nav__link">
-    <span class="md-ellipsis">
-      Network
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#diagnostics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Diagnostics
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#systemd-service-optional" class="md-nav__link">
-    <span class="md-ellipsis">
-      Systemd Service (Optional)
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#security" class="md-nav__link">
-    <span class="md-ellipsis">
-      Security
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-                  </div>
-                </div>
-              </div>
-            
-          
-          
-            <div class="md-content" data-md-component="content">
-              <article class="md-content__inner md-typeset">
-                
-                  
-
-
-<h1 id="my_steel-robot-workspace">my_steel Robot Workspace</h1>
-<p>ROS2 workspace for the my_steel omnidirectional mobile robot platform with mecanum drive and Nerf launcher.</p>
-<h2 id="overview">Overview</h2>
-<p>The my_steel robot is an educational and research platform built on ROS2 Humble, featuring:</p>
-<ul>
-<li><strong>Omnidirectional mobility</strong> via 4-wheel mecanum drive</li>
-<li><strong>Real-time control</strong> using Raspberry Pi Pico with micro-ROS</li>
-<li><strong>Autonomous navigation</strong> with RPLiDAR and sensor fusion</li>
-<li><strong>Computer vision</strong> for face detection and tracking</li>
-<li><strong>Interactive Nerf launcher</strong> with dedicated controller (Arduino Nano/Pro Micro)</li>
-<li><strong>Remote operation</strong> via Tailscale VPN over 4G/5G networks</li>
-<li><strong>Optional manipulator arm</strong> support (Open Manipulator X)</li>
-</ul>
-<h2 id="quick-start">Quick Start</h2>
-<h3 id="prerequisites">Prerequisites</h3>
-<ul>
-<li>Ubuntu 22.04</li>
-<li>ROS2 Humble</li>
-<li>Python 3.10+</li>
-<li>Raspberry Pi Pico SDK (for firmware builds)</li>
-</ul>
-<h3 id="installation">Installation</h3>
-<ol>
-<li>Clone the repository:</li>
-</ol>
-<p><code>bash
-   git clone https://github.com/goldjunge91/my_steel-robot_ws.git
-   cd my_steel-robot_ws</code></p>
-<ol>
-<li>Install VCS tool (for dependency management):</li>
-</ol>
-<p><code>bash
-   pip3 install vcstool
-   # Or on macOS with Homebrew:
-   # brew install vcstool</code></p>
-<ol>
-<li>Import dependencies:</li>
-</ol>
-<p>```bash
-   # Import ROS2 packages (src/)
-   vcs import src &lt; src/ros2.repos</p>
-<p># Initialize library submodules (lib/)
-   git submodule update --init --recursive lib/
-   ```</p>
-<ol>
-<li>Install ROS dependencies:</li>
-</ol>
-<p><code>bash
-   source /opt/ros/humble/setup.bash
-   rosdep install --from-paths src --ignore-src -r -y</code></p>
-<ol>
-<li>Build the workspace:</li>
-</ol>
-<p><code>bash
-   colcon build --symlink-install
-   source install/setup.bash</code></p>
-<ol>
-<li>Flash firmware to Pico (see <a href="#firmware">Firmware</a> section)</li>
-</ol>
-<h3 id="docker-deployment-alternative">Docker Deployment (Alternative)</h3>
-<p>For production deployment on Raspberry Pi, Docker provides a containerized solution with all dependencies pre-installed:</p>
-<p><strong>Features:</strong></p>
-<ul>
-<li>Pre-built ROS2 Humble environment with all dependencies</li>
-<li>Automatic service orchestration with Docker Compose</li>
-<li>Integrated Tailscale VPN for secure remote access</li>
-<li>Persistent logs and configuration</li>
-<li>Automatic restart on failure</li>
-</ul>
-<p><strong>Quick Start:</strong></p>
-<pre><code class="language-bash"># Pull the pre-built image
-docker pull mysteel/robot:humble-arm64
-
-# Copy docker-compose configuration
-cp docker/compose.robot-pi.yaml ~/compose.robot-pi.yaml
-
-# Configure Tailscale (optional)
-cp docker/.env.robot-pi.example ~/.env
-# Edit ~/.env and add your TAILSCALE_AUTHKEY
-
-# Start the robot
-docker compose -f ~/compose.robot-pi.yaml up -d
-
-# View logs
-docker compose -f ~/compose.robot-pi.yaml logs -f
-</code></pre>
-<p><strong>Documentation:</strong></p>
-<ul>
-<li>See <a href="docker/README.md">docker/README.md</a> for complete deployment guide</li>
-<li>Includes build instructions, configuration options, and troubleshooting</li>
-<li>Supports Tailscale VPN for remote access over 4G/5G networks</li>
-</ul>
-<h3 id="running-the-robot">Running the Robot</h3>
-<ol>
-<li>Start micro-ROS agent:</li>
-</ol>
-<p><code>bash
-   ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200
-   # Or use auto-detection:
-   python3 scripts/launch_microros_agent.py</code></p>
-<ol>
-<li>Launch robot bringup:</li>
-</ol>
-<p><code>bash
-   ros2 launch robot_bringup bringup.launch.py robot_model:=robot_xl</code></p>
-<ol>
-<li>Control with keyboard:</li>
-</ol>
-<p><code>bash
-   ros2 run teleop_twist_keyboard teleop_twist_keyboard</code></p>
-<h2 id="ros2-topics">ROS2 Topics</h2>
-<p>The robot uses standard ROS2 topic names following REP-105:</p>
-<h3 id="published-topics">Published Topics</h3>
-<table>
-<thead>
-<tr>
-<th>Topic</th>
-<th>Message Type</th>
-<th>Rate</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>/joint_states</code></td>
-<td>sensor_msgs/JointState</td>
-<td>100 Hz</td>
-<td>Wheel encoder feedback</td>
-</tr>
-<tr>
-<td><code>/imu/data_raw</code></td>
-<td>sensor_msgs/Imu</td>
-<td>50 Hz</td>
-<td>IMU data (ICM20948)</td>
-</tr>
-<tr>
-<td><code>/odom</code></td>
-<td>nav_msgs/Odometry</td>
-<td>50 Hz</td>
-<td>Wheel odometry</td>
-</tr>
-<tr>
-<td><code>/sensors/range_tof</code></td>
-<td>sensor_msgs/Range</td>
-<td>Variable</td>
-<td>Time-of-Flight distance (VL6180X)</td>
-</tr>
-<tr>
-<td><code>/sensors/range_ultrasonic</code></td>
-<td>sensor_msgs/Range</td>
-<td>Variable</td>
-<td>Ultrasonic distance (HC-SR04)</td>
-</tr>
-<tr>
-<td><code>/sensors/illuminance</code></td>
-<td>sensor_msgs/Illuminance</td>
-<td>Variable</td>
-<td>Ambient light (VL6180X)</td>
-</tr>
-<tr>
-<td><code>/odometry/wheels</code></td>
-<td>nav_msgs/Odometry</td>
-<td>50 Hz</td>
-<td>Controller odometry output</td>
-</tr>
-</tbody>
-</table>
-<h3 id="subscribed-topics">Subscribed Topics</h3>
-<table>
-<thead>
-<tr>
-<th>Topic</th>
-<th>Message Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>/cmd_vel</code></td>
-<td>geometry_msgs/Twist</td>
-<td>Velocity commands for robot motion</td>
-</tr>
-</tbody>
-</table>
-<h3 id="topic-architecture">Topic Architecture</h3>
-<pre><code>┌─────────────────────┐
+<span class=c1># View logs</span>
+docker<span class=w> </span>compose<span class=w> </span>-f<span class=w> </span>~/compose.robot-pi.yaml<span class=w> </span>logs<span class=w> </span>-f
+</code></pre></div> <p><strong>Documentation:</strong></p> <ul> <li>Includes build instructions, configuration options, and troubleshooting</li> <li>Supports Tailscale VPN for remote access over 4G/5G networks</li> </ul> <h3 id=running-the-robot>Running the Robot<a class=headerlink href=#running-the-robot title="Permanent link">¶</a></h3> <ol> <li>Start micro-ROS agent:</li> </ol> <p><code>bash ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200 # Or use auto-detection: python3 scripts/launch_microros_agent.py</code></p> <ol> <li>Launch robot bringup:</li> </ol> <p><code>bash ros2 launch robot_bringup bringup.launch.py robot_model:=robot_xl</code></p> <ol> <li>Control with keyboard:</li> </ol> <p><code>bash ros2 run teleop_twist_keyboard teleop_twist_keyboard</code></p> <h2 id=ros2-topics>ROS2 Topics<a class=headerlink href=#ros2-topics title="Permanent link">¶</a></h2> <p>The robot uses standard ROS2 topic names following REP-105:</p> <h3 id=published-topics>Published Topics<a class=headerlink href=#published-topics title="Permanent link">¶</a></h3> <div class=table-wrapper><table> <thead> <tr> <th>Topic</th> <th>Message Type</th> <th>Rate</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>/joint_states</code></td> <td>sensor_msgs/JointState</td> <td>100 Hz</td> <td>Wheel encoder feedback</td> </tr> <tr> <td><code>/imu/data_raw</code></td> <td>sensor_msgs/Imu</td> <td>50 Hz</td> <td>IMU data (ICM20948)</td> </tr> <tr> <td><code>/odom</code></td> <td>nav_msgs/Odometry</td> <td>50 Hz</td> <td>Wheel odometry</td> </tr> <tr> <td><code>/sensors/range_tof</code></td> <td>sensor_msgs/Range</td> <td>Variable</td> <td>Time-of-Flight distance (VL6180X)</td> </tr> <tr> <td><code>/sensors/range_ultrasonic</code></td> <td>sensor_msgs/Range</td> <td>Variable</td> <td>Ultrasonic distance (HC-SR04)</td> </tr> <tr> <td><code>/sensors/illuminance</code></td> <td>sensor_msgs/Illuminance</td> <td>Variable</td> <td>Ambient light (VL6180X)</td> </tr> <tr> <td><code>/odometry/wheels</code></td> <td>nav_msgs/Odometry</td> <td>50 Hz</td> <td>Controller odometry output</td> </tr> </tbody> </table></div> <h3 id=subscribed-topics>Subscribed Topics<a class=headerlink href=#subscribed-topics title="Permanent link">¶</a></h3> <div class=table-wrapper><table> <thead> <tr> <th>Topic</th> <th>Message Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>/cmd_vel</code></td> <td>geometry_msgs/Twist</td> <td>Velocity commands for robot motion</td> </tr> </tbody> </table></div> <h3 id=topic-architecture>Topic Architecture<a class=headerlink href=#topic-architecture title="Permanent link">¶</a></h3> <div class=codehilite><pre><span></span><code>┌─────────────────────┐
 │ Navigation / Teleop │
 └──────────┬──────────┘
            │ /cmd_vel (Twist)
@@ -2196,810 +250,231 @@ docker compose -f ~/compose.robot-pi.yaml logs -f
 │  Pico Firmware      │
 │  (micro-ROS)        │
 └─────────────────────┘
-</code></pre>
-<p><strong>Note</strong>: The micro-ROS agent automatically adds <code>/rt/</code> prefix to firmware topics and remaps them to standard names. See <a href="#micro-ros-agent-configuration">micro-ROS Agent Configuration</a> for details.</p>
-<h2 id="dependency-management-strategy">Dependency Management Strategy</h2>
-<p>This project uses a <strong>hybrid approach</strong> for managing dependencies:</p>
-<h3 id="vcs-for-ros2-packages-src">VCS for ROS2 Packages (src/)</h3>
-<ul>
-<li><strong>What</strong>: Your robot packages that change frequently</li>
-<li><strong>Why</strong>: Easy for contributors, standard ROS2 workflow</li>
-<li><strong>How</strong>: Uses <code>src/ros2.repos</code> file with <code>vcs import</code></li>
-</ul>
-<pre><code class="language-yaml"># src/ros2.repos example
-repositories:
-  robot:
-    type: git
-    url: https://github.com/goldjunge91/robot.git
-    version: humble  # Always latest from humble branch
-</code></pre>
-<p><strong>Commands:</strong></p>
-<pre><code class="language-bash"># Import all packages
-vcs import src &lt; src/ros2.repos
+</code></pre></div> <p><strong>Note</strong>: The micro-ROS agent automatically adds <code>/rt/</code> prefix to firmware topics and remaps them to standard names. See <a href=#micro-ros-agent-configuration>micro-ROS Agent Configuration</a> for details.</p> <h2 id=dependency-management-strategy>Dependency Management Strategy<a class=headerlink href=#dependency-management-strategy title="Permanent link">¶</a></h2> <p>This project uses a <strong>hybrid approach</strong> for managing dependencies:</p> <h3 id=vcs-for-ros2-packages-src>VCS for ROS2 Packages (src/)<a class=headerlink href=#vcs-for-ros2-packages-src title="Permanent link">¶</a></h3> <ul> <li><strong>What</strong>: Your robot packages that change frequently</li> <li><strong>Why</strong>: Easy for contributors, standard ROS2 workflow</li> <li><strong>How</strong>: Uses <code>src/ros2.repos</code> file with <code>vcs import</code></li> </ul> <div class=codehilite><pre><span></span><code><span class=c1># src/ros2.repos example</span>
+<span class=nt>repositories</span><span class=p>:</span>
+<span class=w>  </span><span class=nt>robot</span><span class=p>:</span>
+<span class=w>    </span><span class=nt>type</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">git</span>
+<span class=w>    </span><span class=nt>url</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/goldjunge91/robot.git</span>
+<span class=w>    </span><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">humble</span><span class=w>  </span><span class=c1># Always latest from humble branch</span>
+</code></pre></div> <p><strong>Commands:</strong></p> <div class=codehilite><pre><span></span><code><span class=c1># Import all packages</span>
+vcs<span class=w> </span>import<span class=w> </span>src<span class=w> </span>&lt;<span class=w> </span>src/ros2.repos
 
-# Check status
-vcs status src
+<span class=c1># Check status</span>
+vcs<span class=w> </span>status<span class=w> </span>src
 
-# Update all packages
-vcs pull src
+<span class=c1># Update all packages</span>
+vcs<span class=w> </span>pull<span class=w> </span>src
 
-# Switch branches
-vcs custom src --args checkout humble
-</code></pre>
-<h3 id="git-submodules-for-libraries-lib">Git Submodules for Libraries (lib/)</h3>
-<ul>
-<li><strong>What</strong>: External libraries that need exact versions</li>
-<li><strong>Why</strong>: Precise version control, important for firmware builds</li>
-<li><strong>How</strong>: Traditional git submodules with <code>lib/lib_repos.repos</code> as reference</li>
-</ul>
-<pre><code class="language-yaml"># lib/lib_repos.repos example
-repositories:
-  FreeRTOS-Kernel:
-    type: git
-    url: https://github.com/FreeRTOS/FreeRTOS-Kernel
-    version: V10.6.2  # Exact tag version
-</code></pre>
-<p><strong>Commands:</strong></p>
-<pre><code class="language-bash"># Initialize submodules
-git submodule update --init --recursive lib/
+<span class=c1># Switch branches</span>
+vcs<span class=w> </span>custom<span class=w> </span>src<span class=w> </span>--args<span class=w> </span>checkout<span class=w> </span>humble
+</code></pre></div> <h3 id=git-submodules-for-libraries-lib>Git Submodules for Libraries (lib/)<a class=headerlink href=#git-submodules-for-libraries-lib title="Permanent link">¶</a></h3> <ul> <li><strong>What</strong>: External libraries that need exact versions</li> <li><strong>Why</strong>: Precise version control, important for firmware builds</li> <li><strong>How</strong>: Traditional git submodules with <code>lib/lib_repos.repos</code> as reference</li> </ul> <div class=codehilite><pre><span></span><code><span class=c1># lib/lib_repos.repos example</span>
+<span class=nt>repositories</span><span class=p>:</span>
+<span class=w>  </span><span class=nt>FreeRTOS-Kernel</span><span class=p>:</span>
+<span class=w>    </span><span class=nt>type</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">git</span>
+<span class=w>    </span><span class=nt>url</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/FreeRTOS/FreeRTOS-Kernel</span>
+<span class=w>    </span><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">V10.6.2</span><span class=w>  </span><span class=c1># Exact tag version</span>
+</code></pre></div> <p><strong>Commands:</strong></p> <div class=codehilite><pre><span></span><code><span class=c1># Initialize submodules</span>
+git<span class=w> </span>submodule<span class=w> </span>update<span class=w> </span>--init<span class=w> </span>--recursive<span class=w> </span>lib/
 
-# Update to latest
-git submodule update --remote lib/
+<span class=c1># Update to latest</span>
+git<span class=w> </span>submodule<span class=w> </span>update<span class=w> </span>--remote<span class=w> </span>lib/
 
-# Set specific version
-cd lib/FreeRTOS-Kernel &amp;&amp; git checkout V10.6.2
-</code></pre>
-<h3 id="why-this-hybrid-approach">Why This Hybrid Approach?</h3>
-<table>
-<thead>
-<tr>
-<th>Aspect</th>
-<th>VCS (src/)</th>
-<th>Submodules (lib/)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Use Case</strong></td>
-<td>Your ROS2 packages</td>
-<td>External libraries</td>
-</tr>
-<tr>
-<td><strong>Updates</strong></td>
-<td>Frequent, latest from branch</td>
-<td>Rare, specific versions</td>
-</tr>
-<tr>
-<td><strong>Complexity</strong></td>
-<td>Simple <code>vcs pull</code></td>
-<td>More complex git commands</td>
-</tr>
-<tr>
-<td><strong>Contributors</strong></td>
-<td>Easy <code>vcs import</code></td>
-<td>Automatic with git clone</td>
-</tr>
-<tr>
-<td><strong>Version Control</strong></td>
-<td>Branch-based</td>
-<td>Commit/tag-based</td>
-</tr>
-<tr>
-<td><strong>Offline Work</strong></td>
-<td>Requires internet</td>
-<td>Available offline</td>
-</tr>
-</tbody>
-</table>
-<h3 id="directory-structure">Directory Structure</h3>
-<pre><code>my_steel-robot_ws/
-├── src/                    # ROS2 Packages → VCS managed
-│   ├── robot/             # Your packages, frequent updates
-│   ├── robot_bringup/     # Development branches (humble/main)
-│   └── ros2.repos         # VCS configuration
-├── lib/                   # External Libraries → Git Submodules  
-│   ├── FreeRTOS-Kernel/  # Stable versions, exact tags
-│   ├── eigen/             # Precise version for firmware
-│   └── lib_repos.repos    # Reference (not used by git)
-└── firmware/              # Pico firmware (separate build)
-</code></pre>
-<h2 id="architecture">Architecture</h2>
-<h3 id="hardware-components">Hardware Components</h3>
-<ul>
-<li><strong>Raspberry Pi 4B</strong>: Main SBC running ROS2 Humble with Tailscale VPN</li>
-<li><strong>Raspberry Pi Pico</strong>: Real-time motor control and sensor interfacing (base platform)</li>
-<li><strong>Arduino Nano / Pro Micro</strong>: Dedicated Nerf launcher controller</li>
-<li><strong>ICM20948</strong>: 9-DOF IMU (SPI)</li>
-<li><strong>VL6180X</strong>: Time-of-Flight distance sensor (I2C)</li>
-<li><strong>YDLIDAR LDS01RR</strong>: 2D LiDAR scanner (360°, 8m range)</li>
-<li><strong>4x DC Motors (GM3865-520)</strong>: Mecanum wheels with Hall encoders</li>
-<li><strong>USB Camera</strong>: Computer vision (1080p)</li>
-<li><strong>Nerf Launcher</strong>: 2x RS2205 brushless motors (flywheel), 2x servos (pan/tilt), trigger mechanism</li>
-</ul>
-<h3 id="software-stack">Software Stack</h3>
-<ul>
-<li><strong>ROS2 Humble</strong>: Primary robotics middleware</li>
-<li><strong>ros2_control</strong>: Hardware abstraction framework</li>
-<li><strong>mecanum_drive_controller</strong>: Custom mecanum drive controller</li>
-<li><strong>micro-ROS</strong>: ROS2 client library for microcontrollers (Pico, Arduino)</li>
-<li><strong>FreeRTOS</strong>: Real-time OS on Pico</li>
-<li><strong>Tailscale</strong>: Zero-config VPN for secure remote access over 4G/5G</li>
-<li><strong>Nav2</strong>: Navigation stack (optional)</li>
-<li><strong>SLAM Toolbox</strong>: Karto-based SLAM implementation</li>
-<li><strong>Gazebo</strong>: Simulation environment</li>
-</ul>
-<h3 id="package-structure">Package Structure</h3>
-<pre><code>src/
-├── robot_description/          # URDF, meshes, component configs
-├── robot_bringup/             # Launch files and configurations
-├── robot_controller/          # Controller configurations
-├── robot_hardware_interfaces/ # ros2_control hardware interface
-├── robot_controllers/         # Custom controller implementations
-├── robot_gazebo/              # Gazebo simulation assets
-├── robot_localization_tool/   # Sensor fusion (EKF)
-├── robot_vision/              # Computer vision nodes
-├── robot_utils/               # Utility scripts and tools
-└── micro-ROS-Agent/           # micro-ROS bridge
-</code></pre>
-<h2 id="firmware">Firmware</h2>
-<p>The Pico firmware is located in the <code>firmware/</code> directory and uses micro-ROS for ROS2 communication.</p>
-<h3 id="building-firmware">Building Firmware</h3>
-<pre><code class="language-bash">cd firmware
+<span class=c1># Set specific version</span>
+<span class=nb>cd</span><span class=w> </span>lib/FreeRTOS-Kernel<span class=w> </span><span class=o>&amp;&amp;</span><span class=w> </span>git<span class=w> </span>checkout<span class=w> </span>V10.6.2
+</code></pre></div> <h3 id=why-this-hybrid-approach>Why This Hybrid Approach?<a class=headerlink href=#why-this-hybrid-approach title="Permanent link">¶</a></h3> <div class=table-wrapper><table> <thead> <tr> <th>Aspect</th> <th>VCS (src/)</th> <th>Submodules (lib/)</th> </tr> </thead> <tbody> <tr> <td><strong>Use Case</strong></td> <td>Your ROS2 packages</td> <td>External libraries</td> </tr> <tr> <td><strong>Updates</strong></td> <td>Frequent, latest from branch</td> <td>Rare, specific versions</td> </tr> <tr> <td><strong>Complexity</strong></td> <td>Simple <code>vcs pull</code></td> <td>More complex git commands</td> </tr> <tr> <td><strong>Contributors</strong></td> <td>Easy <code>vcs import</code></td> <td>Automatic with git clone</td> </tr> <tr> <td><strong>Version Control</strong></td> <td>Branch-based</td> <td>Commit/tag-based</td> </tr> <tr> <td><strong>Offline Work</strong></td> <td>Requires internet</td> <td>Available offline</td> </tr> </tbody> </table></div> <h3 id=directory-structure>Directory Structure<a class=headerlink href=#directory-structure title="Permanent link">¶</a></h3> <div class=codehilite><pre><span></span><code><span class=nx>my_steel</span><span class=o>-</span><span class=nx>robot_ws</span><span class=o>/</span>
+<span class=err>├──</span><span class=w> </span><span class=nx>src</span><span class=o>/</span><span class=w>                    </span><span class=err>#</span><span class=w> </span><span class=nx>ROS2</span><span class=w> </span><span class=nx>Packages</span><span class=w> </span><span class=err>→</span><span class=w> </span><span class=nx>VCS</span><span class=w> </span><span class=nx>managed</span>
+<span class=err>│</span><span class=w>   </span><span class=err>├──</span><span class=w> </span><span class=nx>robot</span><span class=o>/</span><span class=w>             </span><span class=err>#</span><span class=w> </span><span class=nx>Your</span><span class=w> </span><span class=nx>packages</span><span class=p>,</span><span class=w> </span><span class=nx>frequent</span><span class=w> </span><span class=nx>updates</span>
+<span class=err>│</span><span class=w>   </span><span class=err>├──</span><span class=w> </span><span class=nx>robot_bringup</span><span class=o>/</span><span class=w>     </span><span class=err>#</span><span class=w> </span><span class=nx>Development</span><span class=w> </span><span class=nx>branches</span><span class=w> </span><span class=p>(</span><span class=nx>humble</span><span class=o>/</span><span class=nx>main</span><span class=p>)</span>
+<span class=err>│</span><span class=w>   </span><span class=err>└──</span><span class=w> </span><span class=nx>ros2</span><span class=p>.</span><span class=nx>repos</span><span class=w>         </span><span class=err>#</span><span class=w> </span><span class=nx>VCS</span><span class=w> </span><span class=nx>configuration</span>
+<span class=err>├──</span><span class=w> </span><span class=nx>lib</span><span class=o>/</span><span class=w>                   </span><span class=err>#</span><span class=w> </span><span class=nx>External</span><span class=w> </span><span class=nx>Libraries</span><span class=w> </span><span class=err>→</span><span class=w> </span><span class=nx>Git</span><span class=w> </span><span class=nx>Submodules</span><span class=w>  </span>
+<span class=err>│</span><span class=w>   </span><span class=err>├──</span><span class=w> </span><span class=nx>FreeRTOS</span><span class=o>-</span><span class=nx>Kernel</span><span class=o>/</span><span class=w>  </span><span class=err>#</span><span class=w> </span><span class=nx>Stable</span><span class=w> </span><span class=nx>versions</span><span class=p>,</span><span class=w> </span><span class=nx>exact</span><span class=w> </span><span class=nx>tags</span>
+<span class=err>│</span><span class=w>   </span><span class=err>├──</span><span class=w> </span><span class=nx>eigen</span><span class=o>/</span><span class=w>             </span><span class=err>#</span><span class=w> </span><span class=nx>Precise</span><span class=w> </span><span class=nx>version</span><span class=w> </span><span class=k>for</span><span class=w> </span><span class=nx>firmware</span>
+<span class=err>│</span><span class=w>   </span><span class=err>└──</span><span class=w> </span><span class=nx>lib_repos</span><span class=p>.</span><span class=nx>repos</span><span class=w>    </span><span class=err>#</span><span class=w> </span><span class=nx>Reference</span><span class=w> </span><span class=p>(</span><span class=k>not</span><span class=w> </span><span class=nx>used</span><span class=w> </span><span class=nx>by</span><span class=w> </span><span class=nx>git</span><span class=p>)</span>
+<span class=err>└──</span><span class=w> </span><span class=nx>firmware</span><span class=o>/</span><span class=w>              </span><span class=err>#</span><span class=w> </span><span class=nx>Pico</span><span class=w> </span><span class=nx>firmware</span><span class=w> </span><span class=p>(</span><span class=nx>separate</span><span class=w> </span><span class=nx>build</span><span class=p>)</span>
+</code></pre></div> <h2 id=architecture>Architecture<a class=headerlink href=#architecture title="Permanent link">¶</a></h2> <h3 id=hardware-components>Hardware Components<a class=headerlink href=#hardware-components title="Permanent link">¶</a></h3> <ul> <li><strong>Raspberry Pi 4B</strong>: Main SBC running ROS2 Humble with Tailscale VPN</li> <li><strong>Raspberry Pi Pico</strong>: Real-time motor control and sensor interfacing (base platform)</li> <li><strong>Arduino Nano / Pro Micro</strong>: Dedicated Nerf launcher controller</li> <li><strong>ICM20948</strong>: 9-DOF IMU (SPI)</li> <li><strong>VL6180X</strong>: Time-of-Flight distance sensor (I2C)</li> <li><strong>YDLIDAR LDS01RR</strong>: 2D LiDAR scanner (360°, 8m range)</li> <li><strong>4x DC Motors (GM3865-520)</strong>: Mecanum wheels with Hall encoders</li> <li><strong>USB Camera</strong>: Computer vision (1080p)</li> <li><strong>Nerf Launcher</strong>: 2x RS2205 brushless motors (flywheel), 2x servos (pan/tilt), trigger mechanism</li> </ul> <h3 id=software-stack>Software Stack<a class=headerlink href=#software-stack title="Permanent link">¶</a></h3> <ul> <li><strong>ROS2 Humble</strong>: Primary robotics middleware</li> <li><strong>ros2_control</strong>: Hardware abstraction framework</li> <li><strong>mecanum_drive_controller</strong>: Custom mecanum drive controller</li> <li><strong>micro-ROS</strong>: ROS2 client library for microcontrollers (Pico, Arduino)</li> <li><strong>FreeRTOS</strong>: Real-time OS on Pico</li> <li><strong>Tailscale</strong>: Zero-config VPN for secure remote access over 4G/5G</li> <li><strong>Nav2</strong>: Navigation stack (optional)</li> <li><strong>SLAM Toolbox</strong>: Karto-based SLAM implementation</li> <li><strong>Gazebo</strong>: Simulation environment</li> </ul> <h3 id=package-structure>Package Structure<a class=headerlink href=#package-structure title="Permanent link">¶</a></h3> <div class=codehilite><pre><span></span><code><span class=n>src</span><span class=o>/</span>
+<span class=err>├──</span><span class=w> </span><span class=n>robot_description</span><span class=o>/</span><span class=w>          </span><span class=c1># URDF, meshes, component configs</span>
+<span class=err>├──</span><span class=w> </span><span class=n>robot_bringup</span><span class=o>/</span><span class=w>             </span><span class=c1># Launch files and configurations</span>
+<span class=err>├──</span><span class=w> </span><span class=n>robot_controller</span><span class=o>/</span><span class=w>          </span><span class=c1># Controller configurations</span>
+<span class=err>├──</span><span class=w> </span><span class=n>robot_hardware_interfaces</span><span class=o>/</span><span class=w> </span><span class=c1># ros2_control hardware interface</span>
+<span class=err>├──</span><span class=w> </span><span class=n>robot_controllers</span><span class=o>/</span><span class=w>         </span><span class=c1># Custom controller implementations</span>
+<span class=err>├──</span><span class=w> </span><span class=n>robot_gazebo</span><span class=o>/</span><span class=w>              </span><span class=c1># Gazebo simulation assets</span>
+<span class=err>├──</span><span class=w> </span><span class=n>robot_localization_tool</span><span class=o>/</span><span class=w>   </span><span class=c1># Sensor fusion (EKF)</span>
+<span class=err>├──</span><span class=w> </span><span class=n>robot_vision</span><span class=o>/</span><span class=w>              </span><span class=c1># Computer vision nodes</span>
+<span class=err>├──</span><span class=w> </span><span class=n>robot_utils</span><span class=o>/</span><span class=w>               </span><span class=c1># Utility scripts and tools</span>
+<span class=err>└──</span><span class=w> </span><span class=n>micro</span><span class=o>-</span><span class=n>ROS</span><span class=o>-</span><span class=n>Agent</span><span class=o>/</span><span class=w>           </span><span class=c1># micro-ROS bridge</span>
+</code></pre></div> <h2 id=firmware>Firmware<a class=headerlink href=#firmware title="Permanent link">¶</a></h2> <p>The Pico firmware is located in the <code>firmware/</code> directory and uses micro-ROS for ROS2 communication.</p> <h3 id=building-firmware>Building Firmware<a class=headerlink href=#building-firmware title="Permanent link">¶</a></h3> <div class=codehilite><pre><span></span><code><span class=nb>cd</span><span class=w> </span>firmware
 
-# Debug build
-make build
+<span class=c1># Debug build</span>
+make<span class=w> </span>build
 
-# Release build
-make build_release
-</code></pre>
-<h3 id="flashing-firmware">Flashing Firmware</h3>
-<ol>
-<li>Put Pico in BOOTSEL mode (hold BOOTSEL button while connecting USB)</li>
-<li>Flash the firmware:</li>
-</ol>
-<p><code>bash
-   make flash          # Debug
-   make flash-release  # Release</code></p>
-<ol>
-<li>Monitor firmware output:</li>
-</ol>
-<p><code>bash
-   ./monitor_firmware.sh</code></p>
-<h3 id="firmware-topics">Firmware Topics</h3>
-<p>The firmware publishes and subscribes to the following topics (with <code>/rt/</code> prefix added by micro-ROS):</p>
-<ul>
-<li>Publishes: <code>/joint_states</code>, <code>/imu/data_raw</code>, <code>/odom</code>, <code>/sensors/*</code></li>
-<li>Subscribes: <code>/cmd_vel</code></li>
-</ul>
-<p>See <code>firmware/README.md</code> for detailed firmware documentation.</p>
-<h2 id="micro-ros-agent-configuration">micro-ROS Agent Configuration</h2>
-<p>The micro-ROS agent bridges communication between the Pico firmware and ROS2. It automatically adds <code>/rt/</code> prefix to firmware topics and uses remapping to convert them to standard ROS2 names.</p>
-<h3 id="topic-remapping">Topic Remapping</h3>
-<table>
-<thead>
-<tr>
-<th>Firmware Topic</th>
-<th>ROS2 Topic</th>
-<th>Direction</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>/rt/joint_states</code></td>
-<td><code>/joint_states</code></td>
-<td>Firmware → ROS2</td>
-</tr>
-<tr>
-<td><code>/rt/imu/data_raw</code></td>
-<td><code>/imu/data_raw</code></td>
-<td>Firmware → ROS2</td>
-</tr>
-<tr>
-<td><code>/rt/odom</code></td>
-<td><code>/odom</code></td>
-<td>Firmware → ROS2</td>
-</tr>
-<tr>
-<td><code>/rt/sensors/*</code></td>
-<td><code>/sensors/*</code></td>
-<td>Firmware → ROS2</td>
-</tr>
-<tr>
-<td><code>/cmd_vel</code></td>
-<td><code>/rt/cmd_vel</code></td>
-<td>ROS2 → Firmware</td>
-</tr>
-</tbody>
-</table>
-<h3 id="starting-the-agent">Starting the Agent</h3>
-<pre><code class="language-bash"># Auto-detect Pico device
-python3 scripts/launch_microros_agent.py
+<span class=c1># Release build</span>
+make<span class=w> </span>build_release
+</code></pre></div> <h3 id=flashing-firmware>Flashing Firmware<a class=headerlink href=#flashing-firmware title="Permanent link">¶</a></h3> <ol> <li>Put Pico in BOOTSEL mode (hold BOOTSEL button while connecting USB)</li> <li>Flash the firmware:</li> </ol> <p><code>bash make flash # Debug make flash-release # Release</code></p> <ol> <li>Monitor firmware output:</li> </ol> <p><code>bash ./monitor_firmware.sh</code></p> <h3 id=firmware-topics>Firmware Topics<a class=headerlink href=#firmware-topics title="Permanent link">¶</a></h3> <p>The firmware publishes and subscribes to the following topics (with <code>/rt/</code> prefix added by micro-ROS):</p> <ul> <li>Publishes: <code>/joint_states</code>, <code>/imu/data_raw</code>, <code>/odom</code>, <code>/sensors/*</code></li> <li>Subscribes: <code>/cmd_vel</code></li> </ul> <p>See <code>firmware/README.md</code> for detailed firmware documentation.</p> <h2 id=micro-ros-agent-configuration>micro-ROS Agent Configuration<a class=headerlink href=#micro-ros-agent-configuration title="Permanent link">¶</a></h2> <p>The micro-ROS agent bridges communication between the Pico firmware and ROS2. It automatically adds <code>/rt/</code> prefix to firmware topics and uses remapping to convert them to standard ROS2 names.</p> <h3 id=topic-remapping>Topic Remapping<a class=headerlink href=#topic-remapping title="Permanent link">¶</a></h3> <div class=table-wrapper><table> <thead> <tr> <th>Firmware Topic</th> <th>ROS2 Topic</th> <th>Direction</th> </tr> </thead> <tbody> <tr> <td><code>/rt/joint_states</code></td> <td><code>/joint_states</code></td> <td>Firmware → ROS2</td> </tr> <tr> <td><code>/rt/imu/data_raw</code></td> <td><code>/imu/data_raw</code></td> <td>Firmware → ROS2</td> </tr> <tr> <td><code>/rt/odom</code></td> <td><code>/odom</code></td> <td>Firmware → ROS2</td> </tr> <tr> <td><code>/rt/sensors/*</code></td> <td><code>/sensors/*</code></td> <td>Firmware → ROS2</td> </tr> <tr> <td><code>/cmd_vel</code></td> <td><code>/rt/cmd_vel</code></td> <td>ROS2 → Firmware</td> </tr> </tbody> </table></div> <h3 id=starting-the-agent>Starting the Agent<a class=headerlink href=#starting-the-agent title="Permanent link">¶</a></h3> <div class=codehilite><pre><span></span><code><span class=c1># Auto-detect Pico device</span>
+python3<span class=w> </span>scripts/launch_microros_agent.py
 
-# Manual device specification
-ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200
+<span class=c1># Manual device specification</span>
+ros2<span class=w> </span>run<span class=w> </span>micro_ros_agent<span class=w> </span>micro_ros_agent<span class=w> </span>serial<span class=w> </span>--dev<span class=w> </span>/dev/ttyACM0<span class=w> </span>-b<span class=w> </span><span class=m>115200</span>
 
-# Using launch file (includes remapping)
-ros2 launch robot_bringup microros_agent.launch.py
-</code></pre>
-<h2 id="using-just-task-runner">Using Just (Task Runner)</h2>
-<p>The workspace includes a <code>Justfile</code> for common tasks:</p>
-<pre><code class="language-bash"># List all available commands
+<span class=c1># Using launch file (includes remapping)</span>
+ros2<span class=w> </span>launch<span class=w> </span>robot_bringup<span class=w> </span>microros_agent.launch.py
+</code></pre></div> <h2 id=using-just-task-runner>Using Just (Task Runner)<a class=headerlink href=#using-just-task-runner title="Permanent link">¶</a></h2> <p>The workspace includes a <code>Justfile</code> for common tasks:</p> <div class=codehilite><pre><span></span><code><span class=c1># List all available commands</span>
 just
 
-# Build workspace
-just build
+<span class=c1># Build workspace</span>
+just<span class=w> </span>build
 
-# Build only hardware packages
-just build-hardware
+<span class=c1># Build only hardware packages</span>
+just<span class=w> </span>build-hardware
 
-# Run tests
-just run-tests
+<span class=c1># Run tests</span>
+just<span class=w> </span>run-tests
 
-# Clean build artifacts
-just clean
+<span class=c1># Clean build artifacts</span>
+just<span class=w> </span>clean
 
-# Firmware commands
-just build-firmware          # Build debug firmware
-just build-firmware-release  # Build release firmware
-just flash-firmware          # Flash debug firmware
-just flash-firmware-release  # Flash release firmware
-just monitor-firmware        # Monitor firmware output
-just test-firmware           # Test firmware connection
+<span class=c1># Firmware commands</span>
+just<span class=w> </span>build-firmware<span class=w>          </span><span class=c1># Build debug firmware</span>
+just<span class=w> </span>build-firmware-release<span class=w>  </span><span class=c1># Build release firmware</span>
+just<span class=w> </span>flash-firmware<span class=w>          </span><span class=c1># Flash debug firmware</span>
+just<span class=w> </span>flash-firmware-release<span class=w>  </span><span class=c1># Flash release firmware</span>
+just<span class=w> </span>monitor-firmware<span class=w>        </span><span class=c1># Monitor firmware output</span>
+just<span class=w> </span>test-firmware<span class=w>           </span><span class=c1># Test firmware connection</span>
 
-# Simulation
-just start-gazebo-sim        # Start Gazebo simulation
-just start-sim-tmux          # Start simulation in tmux
+<span class=c1># Simulation</span>
+just<span class=w> </span>start-gazebo-sim<span class=w>        </span><span class=c1># Start Gazebo simulation</span>
+just<span class=w> </span>start-sim-tmux<span class=w>          </span><span class=c1># Start simulation in tmux</span>
 
-# Runtime
-just run-teleop              # Start keyboard teleoperation
-just start-microros          # Start micro-ROS agent (auto-detect)
-just start-microros-dev /dev/ttyACM0  # Start with specific device
+<span class=c1># Runtime</span>
+just<span class=w> </span>run-teleop<span class=w>              </span><span class=c1># Start keyboard teleoperation</span>
+just<span class=w> </span>start-microros<span class=w>          </span><span class=c1># Start micro-ROS agent (auto-detect)</span>
+just<span class=w> </span>start-microros-dev<span class=w> </span>/dev/ttyACM0<span class=w>  </span><span class=c1># Start with specific device</span>
 
-# Utilities
-just shell                   # Open shell with ROS sourced
-just check-target            # Check target configuration
-</code></pre>
-<h2 id="configuration">Configuration</h2>
-<h3 id="environment-variables">Environment Variables</h3>
-<p>Configure your target platform in <code>.env</code>:</p>
-<pre><code class="language-bash"># Copy from example
-cp .env.example .env
+<span class=c1># Utilities</span>
+just<span class=w> </span>shell<span class=w>                   </span><span class=c1># Open shell with ROS sourced</span>
+just<span class=w> </span>check-target<span class=w>            </span><span class=c1># Check target configuration</span>
+</code></pre></div> <h2 id=configuration>Configuration<a class=headerlink href=#configuration title="Permanent link">¶</a></h2> <h3 id=environment-variables>Environment Variables<a class=headerlink href=#environment-variables title="Permanent link">¶</a></h3> <p>Configure your target platform in <code>.env</code>:</p> <div class=codehilite><pre><span></span><code><span class=c1># Copy from example</span>
+cp<span class=w> </span>.env.example<span class=w> </span>.env
 
-# Edit .env
-TARGET=robot      # For Raspberry Pi deployment
-# TARGET=remote_pc  # For development PC with simulation
-</code></pre>
-<h3 id="key-parameters">Key Parameters</h3>
-<ul>
-<li><code>ROBOT_MODEL_NAME</code>: robot_xl (only supported model)</li>
-<li><code>DRIVE_TYPE</code>: mecanum (primary) or diff (legacy)</li>
-<li><code>SERIAL_PORT</code>: /dev/ttyACM0 (Pico serial port)</li>
-<li><code>SERIAL_BAUDRATE</code>: 115200</li>
-<li><code>MICROROS</code>: true (enable micro-ROS agent)</li>
-</ul>
-<h2 id="development">Development</h2>
-<h3 id="building-specific-packages">Building Specific Packages</h3>
-<pre><code class="language-bash"># Build single package
-colcon build --packages-select robot_hardware_interfaces
+<span class=c1># Edit .env</span>
+<span class=nv>TARGET</span><span class=o>=</span>robot<span class=w>      </span><span class=c1># For Raspberry Pi deployment</span>
+<span class=c1># TARGET=remote_pc  # For development PC with simulation</span>
+</code></pre></div> <h3 id=key-parameters>Key Parameters<a class=headerlink href=#key-parameters title="Permanent link">¶</a></h3> <ul> <li><code>ROBOT_MODEL_NAME</code>: robot_xl (only supported model)</li> <li><code>DRIVE_TYPE</code>: mecanum (primary) or diff (legacy)</li> <li><code>SERIAL_PORT</code>: /dev/ttyACM0 (Pico serial port)</li> <li><code>SERIAL_BAUDRATE</code>: 115200</li> <li><code>MICROROS</code>: true (enable micro-ROS agent)</li> </ul> <h2 id=development>Development<a class=headerlink href=#development title="Permanent link">¶</a></h2> <h3 id=building-specific-packages>Building Specific Packages<a class=headerlink href=#building-specific-packages title="Permanent link">¶</a></h3> <div class=codehilite><pre><span></span><code><span class=c1># Build single package</span>
+colcon<span class=w> </span>build<span class=w> </span>--packages-select<span class=w> </span>robot_hardware_interfaces
 
-# Build with dependencies
-colcon build --packages-up-to robot_bringup
+<span class=c1># Build with dependencies</span>
+colcon<span class=w> </span>build<span class=w> </span>--packages-up-to<span class=w> </span>robot_bringup
 
-# Build with symlink install (faster for Python)
-colcon build --symlink-install
-</code></pre>
-<h3 id="testing">Testing</h3>
-<pre><code class="language-bash"># Run all tests
-colcon test
+<span class=c1># Build with symlink install (faster for Python)</span>
+colcon<span class=w> </span>build<span class=w> </span>--symlink-install
+</code></pre></div> <h3 id=testing>Testing<a class=headerlink href=#testing title="Permanent link">¶</a></h3> <div class=codehilite><pre><span></span><code><span class=c1># Run all tests</span>
+colcon<span class=w> </span><span class=nb>test</span>
 
-# Run tests for specific package
-colcon test --packages-select robot_hardware_interfaces
+<span class=c1># Run tests for specific package</span>
+colcon<span class=w> </span><span class=nb>test</span><span class=w> </span>--packages-select<span class=w> </span>robot_hardware_interfaces
 
-# Show test results
-colcon test-result --all --verbose
-</code></pre>
-<h3 id="code-formatting">Code Formatting</h3>
-<pre><code class="language-bash"># Format C++ code
+<span class=c1># Show test results</span>
+colcon<span class=w> </span>test-result<span class=w> </span>--all<span class=w> </span>--verbose
+</code></pre></div> <h3 id=code-formatting>Code Formatting<a class=headerlink href=#code-formatting title="Permanent link">¶</a></h3> <div class=codehilite><pre><span></span><code><span class=c1># Format C++ code</span>
 ./format.sh
 
-# Check Python style
-flake8 .
-</code></pre>
-<h2 id="simulation">Simulation</h2>
-<p>Launch Gazebo simulation:</p>
-<pre><code class="language-bash">ros2 launch robot_gazebo launch_sim.launch.py use_sim_time:=true
-</code></pre>
-<p>The simulation includes:</p>
-<ul>
-<li>Robot model with mecanum wheels</li>
-<li>Gazebo physics</li>
-<li>ros2_control integration</li>
-<li>Sensor simulation (IMU, LiDAR)</li>
-</ul>
-<h2 id="troubleshooting">Troubleshooting</h2>
-<h3 id="no-topics-appearing">No topics appearing</h3>
-<ol>
-<li>Check micro-ROS agent is running:</li>
-</ol>
-<p><code>bash
-   ps aux | grep micro_ros_agent</code></p>
-<ol>
-<li>Verify Pico connection:</li>
-</ol>
-<p><code>bash
-   ls -l /dev/ttyACM*
-   ./scripts/check_pico.sh</code></p>
-<ol>
-<li>Monitor firmware:</li>
-</ol>
-<p><code>bash
-   cd firmware &amp;&amp; ./monitor_firmware.sh</code></p>
-<h3 id="remote-connection-issues-tailscale">Remote connection issues (Tailscale)</h3>
-<ol>
-<li>Check Tailscale status:</li>
-</ol>
-<p><code>bash
-   sudo tailscale status</code></p>
-<ol>
-<li>Verify connectivity:</li>
-</ol>
-<p><code>bash
-   ping &lt;robot-tailscale-ip&gt;</code></p>
-<ol>
-<li>Check ROS2 domain over Tailscale:</li>
-</ol>
-<p><code>bash
-   export ROS_DOMAIN_ID=0
-   ros2 topic list</code></p>
-<h3 id="hardware-interface-fails-to-activate">Hardware interface fails to activate</h3>
-<ol>
-<li>Verify firmware is publishing:</li>
-</ol>
-<p><code>bash
-   ros2 topic echo /joint_states --once</code></p>
-<ol>
-<li>Check controller status:</li>
-</ol>
-<p><code>bash
-   ros2 control list_controllers</code></p>
-<ol>
-<li>Review logs:</li>
-</ol>
-<p><code>bash
-   ros2 launch robot_bringup bringup.launch.py --log-level debug</code></p>
-<h3 id="robot-doesnt-respond-to-commands">Robot doesn't respond to commands</h3>
-<ol>
-<li>Test velocity commands:</li>
-</ol>
-<p><code>bash
-   ros2 topic pub /cmd_vel geometry_msgs/msg/Twist \
-     "{linear: {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}" --once</code></p>
-<ol>
-<li>Verify controller is active:</li>
-</ol>
-<p><code>bash
-   ros2 control list_controllers
-   # mecanum_drive_controller should be "active"</code></p>
-<ol>
-<li>Check firmware is receiving commands:</li>
-</ol>
-<p><code>bash
-   ros2 topic echo /rt/cmd_vel</code></p>
-<h2 id="migration-from-old-topic-names">Migration from Old Topic Names</h2>
-<p>If you're upgrading from a previous version that used <code>/ddd/*</code> topic prefixes, see the <a href="docs/ROS2_TOPIC_MIGRATION_GUIDE.md">Migration Guide</a> for detailed instructions.</p>
-<h3 id="quick-migration-summary">Quick Migration Summary</h3>
-<ul>
-<li><code>/ddd/imu</code> → <code>/imu/data_raw</code></li>
-<li><code>/ddd/odom</code> → <code>/odom</code></li>
-<li><code>/ddd/range_tof</code> → <code>/sensors/range_tof</code></li>
-<li><code>/ddd/range</code> → <code>/sensors/range_ultrasonic</code></li>
-<li><code>/ddd/cmd_vel</code> → <code>/cmd_vel</code> (alternative removed)</li>
-</ul>
-<p><strong>Important</strong>: Firmware must be updated to work with new topic names. See migration guide for step-by-step instructions.</p>
-<h2 id="documentation">Documentation</h2>
-<ul>
-<li><a href="docs/PINMAP.md">PINMAP.md</a> - Pin assignments and hardware connections</li>
-<li><a href="Projekt/">Projekt.md</a> - Comprehensive project description (German)</li>
-<li><a href="docs/SYSTEM_ARCHITECTURE.md">SYSTEM_ARCHITECTURE.md</a> - Detailed system architecture</li>
-<li><a href="docs/ROS2_TOPIC_MIGRATION_GUIDE.md">ROS2_TOPIC_MIGRATION_GUIDE.md</a> - Migration guide for topic standardization</li>
-<li><a href="docs/architecture_and_packages.md">architecture_and_packages.md</a> - Package responsibilities</li>
-<li><a href="docs/hardware_setup.md">hardware_setup.md</a> - Hardware assembly guide</li>
-<li><a href="docs/firmware.README.md">firmware.README.md</a> - Firmware documentation</li>
-</ul>
-<h2 id="contributing">Contributing</h2>
-<ol>
-<li>Follow ROS2 coding standards</li>
-<li>Use <code>clang-format</code> for C++ code</li>
-<li>Use <code>flake8</code> for Python code</li>
-<li>Add tests for new features</li>
-<li>Update documentation</li>
-</ol>
-<h2 id="license">License</h2>
-<p>See <a href="LICENSE">LICENSE</a> file for details.</p>
-<h2 id="maintainer">Maintainer</h2>
-<ul>
-<li><strong>Owner</strong>: @goldjunge91</li>
-<li><strong>Repository</strong>: goldjunge91/my_steel-robot_ws</li>
-</ul>
-<h2 id="references">References</h2>
-<ul>
-<li><a href="https://docs.ros.org/en/humble/">ROS2 Humble Documentation</a></li>
-<li><a href="https://control.ros.org/">ros2_control Documentation</a></li>
-<li><a href="https://micro.ros.org/">micro-ROS Documentation</a></li>
-<li><a href="https://www.ros.org/reps/rep-0105.html">REP-105: Coordinate Frames for Mobile Platforms</a></li>
-<li><a href="https://www.ros.org/reps/rep-0103.html">REP-103: Standard Units of Measure</a></li>
-</ul>
-<h2 id="deploy-to-raspberry-pi">Deploy to Raspberry Pi</h2>
-<pre><code class="language-bash">sudo mkdir -p /var/log/robot /etc/robot /var/lib/tailscale
-sudo chown -R $USER:$USER /var/log/robot /etc/robot /var/lib/tailscale
-echo 'SUBSYSTEM==&quot;tty&quot;, ATTRS{idVendor}==&quot;2e8a&quot;, ATTRS{idProduct}==&quot;0005&quot;, MODE=&quot;0666&quot;' | sudo tee /etc/udev/rules.d/99-pico.rules
-sudo udevadm control --reload-rules &amp;&amp; sudo udevadm trigger
-scp docker/compose.robot-pi.yaml pi@&lt;raspberry-pi-ip&gt;:~/
-cat &gt; ~/.env &lt;&lt; 'EOF'
-ROS_DOMAIN_ID=0
-TAILSCALE_AUTHKEY=
-TAILSCALE_HOSTNAME=robot-xl
-EOF
-docker pull mysteel/robot:humble-arm64
-docker compose -f compose.robot-pi.yaml up -d
-docker ps
-docker logs microros-agent
-docker logs robot-bringup
-docker exec robot-bringup ros2 topic list
-docker exec robot-bringup ros2 control list_controllers
-</code></pre>
-<h2 id="testing-deployment">Testing Deployment</h2>
-<p>Run automated test script on Raspberry Pi:</p>
-<pre><code class="language-bash">./docker/test-deployment.sh
-</code></pre>
-<p>This script verifies:</p>
-<ul>
-<li>Containers start successfully</li>
-<li>microros-agent health check passes</li>
-<li>robot-bringup health check passes</li>
-<li>Controllers are active</li>
-<li>Essential topics are publishing data</li>
-</ul>
-<pre><code>## Manage Deployment
-```bash
-docker compose -f compose.robot-pi.yaml down
-docker compose -f compose.robot-pi.yaml restart robot-bringup
-docker compose -f compose.robot-pi.yaml logs -f
-docker stats
-docker compose -f compose.robot-pi.yaml pull &amp;&amp; docker compose -f compose.robot-pi.yaml up -d
-</code></pre>
-<h2 id="tailscale-vpn">Tailscale VPN</h2>
-<pre><code class="language-bash"># On remote PC
-curl -fsSL https://tailscale.com/install.sh | sh
-sudo tailscale up
-# Get auth key from https://login.tailscale.com/admin/settings/keys
-# On Raspberry Pi .env file
-TAILSCALE_AUTHKEY=tskey-auth-xxxxxxxxxxxxx
-TAILSCALE_HOSTNAME=robot-xl
-docker compose -f compose.robot-pi.yaml down &amp;&amp; docker compose -f compose.robot-pi.yaml up -d
-docker exec robot-bringup tailscale status
-docker exec robot-bringup tailscale ip
-# On remote PC
-tailscale status | grep robot-xl
-ping robot-xl
-export ROS_DOMAIN_ID=0 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_LOCALHOST_ONLY=0
-ros2 topic list
-</code></pre>
-<h2 id="troubleshooting_1">Troubleshooting</h2>
-<h3 id="container-fails-to-start">Container fails to start</h3>
-<pre><code class="language-bash">docker logs microros-agent
-docker logs robot-bringup
-docker ps -a
-ls -l /dev/ttyACM0 /dev/video0
-groups $USER
-sudo netstat -tulpn | grep -E ':(8765|9090)'
-</code></pre>
-<h3 id="micro-ros-agent-connection">micro-ROS agent connection</h3>
-<pre><code class="language-bash">ls -l /dev/ttyACM*
-dmesg | tail -20
-docker exec microros-agent ls -l /dev/ttyACM0
-sudo udevadm control --reload-rules &amp;&amp; sudo udevadm trigger
-docker compose -f compose.robot-pi.yaml restart microros-agent
-</code></pre>
-<h3 id="health-checks-failing">Health checks failing</h3>
-<pre><code class="language-bash">docker inspect microros-agent | grep -A 10 Health
-docker exec microros-agent ros2 topic list
-docker exec robot-bringup ros2 node list
-docker exec robot-bringup ros2 control list_controllers
-docker logs robot-bringup --tail 100
-</code></pre>
-<h3 id="ros2-topics-not-visible">ROS2 topics not visible</h3>
-<pre><code class="language-bash">docker exec robot-bringup env | grep ROS_DOMAIN_ID
-docker exec robot-bringup ros2 topic hz /joint_states
-docker compose -f compose.robot-pi.yaml restart
-export ROS_DOMAIN_ID=0 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_LOCALHOST_ONLY=0
-</code></pre>
-<h3 id="tailscale-issues">Tailscale issues</h3>
-<pre><code class="language-bash">docker exec robot-bringup tailscale status
-docker logs robot-bringup | grep -i tailscale
-docker compose -f compose.robot-pi.yaml down
-sudo rm -rf /var/lib/tailscale/*
-docker compose -f compose.robot-pi.yaml up -d
-tailscale ping robot-xl
-</code></pre>
-<h3 id="high-cpumemory">High CPU/memory</h3>
-<pre><code class="language-bash">docker stats
-htop
-docker exec robot-bringup ps aux --sort=-%mem | head
-</code></pre>
-<h3 id="logs">Logs</h3>
-<pre><code class="language-bash">docker compose -f compose.robot-pi.yaml logs -f
-docker logs microros-agent --tail 100
-docker logs --timestamps robot-bringup
-ls -lh /var/log/robot/
-tail -f /var/log/robot/*.log
-sudo journalctl -u docker -f
-sudo journalctl -k | grep -i usb
-</code></pre>
-<h3 id="network">Network</h3>
-<pre><code class="language-bash">docker exec robot-bringup ip addr show
-docker exec robot-bringup ping -c 3 8.8.8.8
-docker exec robot-bringup ros2 multicast receive
-ros2 daemon stop &amp;&amp; ros2 daemon start
-ros2 topic list
-</code></pre>
-<h3 id="diagnostics">Diagnostics</h3>
-<pre><code class="language-bash">uname -a
-docker version
-docker ps -a
-docker inspect robot-bringup
-ip addr show
-ss -tulpn
-lsusb
-ls -l /dev/tty*
-</code></pre>
-<h2 id="systemd-service-optional">Systemd Service (Optional)</h2>
-<pre><code class="language-bash">scp docker/robot-docker.service pi@&lt;raspberry-pi-ip&gt;:~/
-sudo cp robot-docker.service /etc/systemd/system/
-sudo chmod 644 /etc/systemd/system/robot-docker.service
-sudo systemctl daemon-reload
-sudo systemctl enable robot-docker.service
-sudo systemctl start robot-docker.service
-sudo systemctl status robot-docker.service
-sudo systemctl stop robot-docker.service
-sudo systemctl restart robot-docker.service
-sudo journalctl -u robot-docker.service -f
-sudo systemctl disable robot-docker.service
-sudo rm /etc/systemd/system/robot-docker.service
-sudo systemctl daemon-reload
-</code></pre>
-<h2 id="security">Security</h2>
-<pre><code class="language-bash">chmod 600 ~/.env
-docker scan mysteel/robot:humble-arm64
-</code></pre>
-<p>Docker Image Build Matrix</p>
-<table>
-<thead>
-<tr>
-<th>Dockerfile</th>
-<th>Branch</th>
-<th>Repository</th>
-<th>Tag</th>
-<th>Version</th>
-<th>Typ</th>
-<th>Ausstattung</th>
-<th>Release</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Dockerfile.robot-pi</td>
-<td>main, humble, 001-feature-hal-mit</td>
-<td>Docker Hub: {username}/my-steel-robot</td>
-<td>humble-arm64</td>
-<td>YYYYMMDD-{sha}</td>
-<td>Production</td>
-<td>Full Robot Stack</td>
-<td>Stable</td>
-</tr>
-<tr>
-<td>Dockerfile.robot-pi</td>
-<td>main, humble, 001-feature-hal-mit</td>
-<td>Docker Hub: {username}/my-steel-robot</td>
-<td>humble-arm64-{version}</td>
-<td>YYYYMMDD-{sha}[-suffix]</td>
-<td>Production</td>
-<td>Full Robot Stack</td>
-<td>Versioned</td>
-</tr>
-<tr>
-<td>Dockerfile.robot-pi</td>
-<td>main only</td>
-<td>Docker Hub: {username}/my-steel-robot</td>
-<td>latest-arm64</td>
-<td>Latest from main</td>
-<td>Production</td>
-<td>Full Robot Stack</td>
-<td>Latest</td>
-</tr>
-<tr>
-<td>Dockerfile.robot-pi</td>
-<td>main, humble, 001-feature-hal-mit</td>
-<td>GHCR: ghcr.io/{repo}</td>
-<td>humble-arm64</td>
-<td>YYYYMMDD-{sha}</td>
-<td>Production</td>
-<td>Full Robot Stack</td>
-<td>Stable</td>
-</tr>
-<tr>
-<td>Dockerfile.robot-pi</td>
-<td>main, humble, 001-feature-hal-mit</td>
-<td>GHCR: ghcr.io/{repo}</td>
-<td>humble-arm64-{version}</td>
-<td>YYYYMMDD-{sha}[-suffix]</td>
-<td>Production</td>
-<td>Full Robot Stack</td>
-<td>Versioned</td>
-</tr>
-<tr>
-<td>Dockerfile.robot-pi</td>
-<td>main only</td>
-<td>GHCR: ghcr.io/{repo}</td>
-<td>latest-arm64</td>
-<td>Latest from main</td>
-<td>Production</td>
-<td>Full Robot Stack</td>
-<td>Latest</td>
-</tr>
-<tr>
-<td>Dockerfile.robot-pi.v2</td>
-<td>PR to humble, non-humble branches</td>
-<td>Docker Hub: {username}/my-steel-robot</td>
-<td>pi-test-ci-amd64</td>
-<td>Git SHA</td>
-<td>Test/CI</td>
-<td>Full Robot Stack</td>
-<td>Test Build</td>
-</tr>
-<tr>
-<td>Dockerfile.robot-pi.v2</td>
-<td>PR to humble, non-humble branches</td>
-<td>Docker Hub: {username}/my-steel-robot</td>
-<td>pi-test-ci-arm64</td>
-<td>Git SHA</td>
-<td>Test/CI</td>
-<td>Full Robot Stack</td>
-<td>Test Build</td>
-</tr>
-<tr>
-<td>Dockerfile.robot-pi.v2</td>
-<td>Local with act</td>
-<td>Local only</td>
-<td>pi-test-local-amd64</td>
-<td>Git SHA</td>
-<td>Development</td>
-<td>Full Robot Stack</td>
-<td>Local Test</td>
-</tr>
-<tr>
-<td>Dockerfile.robot-pi.v2</td>
-<td>Local with act</td>
-<td>Local only</td>
-<td>pi-test-local-arm64</td>
-<td>Git SHA</td>
-<td>Development</td>
-<td>Full Robot Stack</td>
-<td>Local Test</td>
-</tr>
-<tr>
-<td>Dockerfile.hardware</td>
-<td>Workflow dispatch</td>
-<td>GHCR: ghcr.io/{owner}/robot-xl-hardware</td>
-<td>development-humble</td>
-<td>Manual trigger</td>
-<td>Development</td>
-<td>Hardware only</td>
-<td>Development</td>
-</tr>
-<tr>
-<td>Dockerfile.hardware</td>
-<td>Workflow dispatch</td>
-<td>GHCR: ghcr.io/{owner}/robot-xl-hardware</td>
-<td>stable-humble</td>
-<td>Manual trigger</td>
-<td>Stable</td>
-<td>Hardware only</td>
-<td>Stable</td>
-</tr>
-<tr>
-<td>Dockerfile.hardware</td>
-<td>Workflow dispatch</td>
-<td>GHCR: ghcr.io/{owner}/robot-xl-hardware</td>
-<td>{TARGET_RELEASE}</td>
-<td>User-defined</td>
-<td>Stable</td>
-<td>Hardware only</td>
-<td>Release</td>
-</tr>
-<tr>
-<td>Dockerfile.simulation</td>
-<td>Workflow dispatch</td>
-<td>GHCR: ghcr.io/{owner}/robot-xl-gazebo</td>
-<td>development-humble</td>
-<td>Manual trigger</td>
-<td>Development</td>
-<td>Simulation only</td>
-<td>Development</td>
-</tr>
-<tr>
-<td>Dockerfile.simulation</td>
-<td>Workflow dispatch</td>
-<td>GHCR: ghcr.io/{owner}/robot-xl-gazebo</td>
-<td>stable-humble</td>
-<td>Manual trigger</td>
-<td>Stable</td>
-<td>Simulation only</td>
-<td>Stable</td>
-</tr>
-<tr>
-<td>Dockerfile.simulation</td>
-<td>Workflow dispatch</td>
-<td>GHCR: ghcr.io/{owner}/robot-xl-gazebo</td>
-<td>{TARGET_RELEASE}</td>
-<td>User-defined</td>
-<td>Stable</td>
-<td>Simulation only</td>
-<td>Release</td>
-</tr>
-</tbody>
-</table>
+<span class=c1># Check Python style</span>
+flake8<span class=w> </span>.
+</code></pre></div> <h2 id=simulation>Simulation<a class=headerlink href=#simulation title="Permanent link">¶</a></h2> <p>Launch Gazebo simulation:</p> <div class=codehilite><pre><span></span><code>ros2<span class=w> </span>launch<span class=w> </span>robot_gazebo<span class=w> </span>launch_sim.launch.py<span class=w> </span>use_sim_time:<span class=o>=</span><span class=nb>true</span>
+</code></pre></div> <p>The simulation includes:</p> <ul> <li>Robot model with mecanum wheels</li> <li>Gazebo physics</li> <li>ros2_control integration</li> <li>Sensor simulation (IMU, LiDAR)</li> </ul> <h2 id=troubleshooting>Troubleshooting<a class=headerlink href=#troubleshooting title="Permanent link">¶</a></h2> <h3 id=no-topics-appearing>No topics appearing<a class=headerlink href=#no-topics-appearing title="Permanent link">¶</a></h3> <ol> <li>Check micro-ROS agent is running:</li> </ol> <p><code>bash ps aux | grep micro_ros_agent</code></p> <ol> <li>Verify Pico connection:</li> </ol> <p><code>bash ls -l /dev/ttyACM* ./scripts/check_pico.sh</code></p> <ol> <li>Monitor firmware:</li> </ol> <p><code>bash cd firmware &amp;&amp; ./monitor_firmware.sh</code></p> <h3 id=remote-connection-issues-tailscale>Remote connection issues (Tailscale)<a class=headerlink href=#remote-connection-issues-tailscale title="Permanent link">¶</a></h3> <ol> <li>Check Tailscale status:</li> </ol> <p><code>bash sudo tailscale status</code></p> <ol> <li>Verify connectivity:</li> </ol> <p><code>bash ping &lt;robot-tailscale-ip&gt;</code></p> <ol> <li>Check ROS2 domain over Tailscale:</li> </ol> <p><code>bash export ROS_DOMAIN_ID=0 ros2 topic list</code></p> <h3 id=hardware-interface-fails-to-activate>Hardware interface fails to activate<a class=headerlink href=#hardware-interface-fails-to-activate title="Permanent link">¶</a></h3> <ol> <li>Verify firmware is publishing:</li> </ol> <p><code>bash ros2 topic echo /joint_states --once</code></p> <ol> <li>Check controller status:</li> </ol> <p><code>bash ros2 control list_controllers</code></p> <ol> <li>Review logs:</li> </ol> <p><code>bash ros2 launch robot_bringup bringup.launch.py --log-level debug</code></p> <h3 id=robot-doesnt-respond-to-commands>Robot doesn't respond to commands<a class=headerlink href=#robot-doesnt-respond-to-commands title="Permanent link">¶</a></h3> <ol> <li>Test velocity commands:</li> </ol> <p><code>bash ros2 topic pub /cmd_vel geometry_msgs/msg/Twist \ "{linear: {x: 0.1, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}" --once</code></p> <ol> <li>Verify controller is active:</li> </ol> <p><code>bash ros2 control list_controllers # mecanum_drive_controller should be "active"</code></p> <ol> <li>Check firmware is receiving commands:</li> </ol> <p><code>bash ros2 topic echo /rt/cmd_vel</code></p> <h2 id=documentation>Documentation<a class=headerlink href=#documentation title="Permanent link">¶</a></h2> <ul> <li><a href=PINMAP/ >PINMAP.md</a> - Pin assignments and hardware connections</li> <li><a href=PROJEKT/ >Projekt.md</a> - Comprehensive project description (German)</li> <li><a href=ARCHITECTURE/ >ARCHITECTURE.md</a> - Detailed system architecture</li> <li><a href=hardware_setup/ >hardware_setup.md</a> - Hardware assembly guide</li> <li><a href=https://github.com/goldjunge91/my_steel-robot_ws/blob/main/src/robot_firmware/README.md>Firmware Documentation</a> - Raspberry Pi Pico firmware</li> </ul> <h2 id=references>References<a class=headerlink href=#references title="Permanent link">¶</a></h2> <ul> <li><a href=https://docs.ros.org/en/humble/ >ROS2 Humble Documentation</a></li> <li><a href=https://control.ros.org/ >ros2_control Documentation</a></li> <li><a href=https://micro.ros.org/ >micro-ROS Documentation</a></li> <li><a href=https://www.ros.org/reps/rep-0105.html>REP-105: Coordinate Frames for Mobile Platforms</a></li> <li><a href=https://www.ros.org/reps/rep-0103.html>REP-103: Standard Units of Measure</a></li> </ul> </div> </article> <div class="mx-auto flex flex-wrap h-16 w-full max-w-2xl items-center gap-2 px-4 md:px-0"> <a data-slot=button href=/my_steel-robot_ws/PROJEKT/ class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-secondary text-secondary-foreground hover:bg-secondary/80 h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5 ml-auto shadow-none"> <span class=max-[500px]:hidden>Projekt</span> <svg xmlns=http://www.w3.org/2000/svg width=24 height=24 viewbox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round class="tabler-icon tabler-icon-arrow-right "> <path d="M5 12l14 0"></path> <path d="M13 18l6 -6"></path> <path d="M13 6l6 6"></path> </svg> </a> </div> <dialog id=bottom-sidebar onclick=onBottomSidebarDialogClick(event) class=bg-transparent style="position: fixed; left: 0px; top: 0px; transform: translate(0px, 58px); min-width: max-content; --radix-popper-transform-origin: 0% 0px; will-change: transform; z-index: 50; --radix-popper-available-width: 504px; --radix-popper-available-height: 857px; --radix-popper-anchor-width: 72.94999694824219px; --radix-popper-anchor-height: 32px;"> <div data-side=bottom data-align=start data-state=open role=dialog data-slot=popover-content class="text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 origin-(--radix-popover-content-transform-origin) border outline-hidden bg-background/90 no-scrollbar h-(--radix-popper-available-height) w-(--radix-popper-available-width) overflow-y-auto rounded-none border-none p-0 shadow-none backdrop-blur duration-100" style="--radix-popover-content-transform-origin: var(--radix-popper-transform-origin); --radix-popover-content-available-width: var(--radix-popper-available-width); --radix-popover-content-available-height: var(--radix-popper-available-height); --radix-popover-trigger-width: var(--radix-popper-anchor-width); --radix-popover-trigger-height: var(--radix-popper-anchor-height);" tabindex=-1> <div class="flex flex-col gap-12 overflow-auto px-6 py-6"> <div class="flex flex-col gap-4"> <div class="text-muted-foreground text-sm font-medium">Menu</div> <div class="flex flex-col gap-3"> <a class="text-2xl font-medium" href=.> Home </a> <a href=PROJEKT/ class="text-2xl font-medium"> Projekt </a> </div> </div> <div class="flex flex-col gap-8"> <div class="flex flex-col gap-4"> <div class="text-muted-foreground text-sm font-medium">Architecture</div> <div class="flex flex-col gap-3"> <a href=ARCHITECTURE/ class="text-2xl font-medium"> Overview </a> <a href=ARCHITECTURE_INDEX/ class="text-2xl font-medium"> Architecture Index </a> </div> </div> <div class="flex flex-col gap-4"> <div class="text-muted-foreground text-sm font-medium">Hardware</div> <div class="flex flex-col gap-3"> <a href=PINMAP/ class="text-2xl font-medium"> Pin Assignments </a> <a href=hardware_setup/ class="text-2xl font-medium"> Hardware Setup </a> <a href=raspberry_pi_setup_plan/ class="text-2xl font-medium"> Raspberry Pi Setup </a> </div> </div> <div class="flex flex-col gap-4"> <div class="text-muted-foreground text-sm font-medium">Guides</div> <div class="flex flex-col gap-3"> <a href=tmux/ class="text-2xl font-medium"> tmux Usage </a> </div> </div> </div> </div> </div> </dialog> </div> <div class="sticky top-[calc(var(--header-height)+1px)] z-30 ml-auto hidden h-[calc(100svh-var(--header-height)-var(--footer-height))] w-72 flex-col gap-4 overflow-hidden overscroll-none pb-8 xl:flex"> <div class="h-(--top-spacing) shrink-0"></div> <div view-transition-name=toc class="no-scrollbar overflow-y-auto px-8"> <div class="flex flex-col gap-2 p-4 pt-0 text-sm"> <p class="text-muted-foreground bg-background sticky top-0 h-6 text-xs">On This Page</p> <a href=#overview class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> Overview </a> <a href=#quick-start class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> Quick Start </a> <a href=#prerequisites class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Prerequisites </a> <a href=#installation class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Installation </a> <a href=#docker-deployment-alternative class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Docker Deployment (Alternative) </a> <a href=#running-the-robot class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Running the Robot </a> <a href=#ros2-topics class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> ROS2 Topics </a> <a href=#published-topics class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Published Topics </a> <a href=#subscribed-topics class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Subscribed Topics </a> <a href=#topic-architecture class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Topic Architecture </a> <a href=#dependency-management-strategy class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> Dependency Management Strategy </a> <a href=#vcs-for-ros2-packages-src class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> VCS for ROS2 Packages (src/) </a> <a href=#git-submodules-for-libraries-lib class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Git Submodules for Libraries (lib/) </a> <a href=#why-this-hybrid-approach class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Why This Hybrid Approach? </a> <a href=#directory-structure class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Directory Structure </a> <a href=#architecture class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> Architecture </a> <a href=#hardware-components class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Hardware Components </a> <a href=#software-stack class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Software Stack </a> <a href=#package-structure class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Package Structure </a> <a href=#firmware class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> Firmware </a> <a href=#building-firmware class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Building Firmware </a> <a href=#flashing-firmware class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Flashing Firmware </a> <a href=#firmware-topics class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Firmware Topics </a> <a href=#micro-ros-agent-configuration class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> micro-ROS Agent Configuration </a> <a href=#topic-remapping class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Topic Remapping </a> <a href=#starting-the-agent class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Starting the Agent </a> <a href=#using-just-task-runner class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> Using Just (Task Runner) </a> <a href=#configuration class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> Configuration </a> <a href=#environment-variables class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Environment Variables </a> <a href=#key-parameters class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Key Parameters </a> <a href=#development class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> Development </a> <a href=#building-specific-packages class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Building Specific Packages </a> <a href=#testing class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Testing </a> <a href=#code-formatting class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Code Formatting </a> <a href=#simulation class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> Simulation </a> <a href=#troubleshooting class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> Troubleshooting </a> <a href=#no-topics-appearing class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> No topics appearing </a> <a href=#remote-connection-issues-tailscale class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Remote connection issues (Tailscale) </a> <a href=#hardware-interface-fails-to-activate class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Hardware interface fails to activate </a> <a href=#robot-doesnt-respond-to-commands class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=3> Robot doesn't respond to commands </a> <a href=#documentation class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> Documentation </a> <a href=#references class="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6" data-active=false data-depth=2> References </a> </div> <div class=h-12></div> </div> </div> </div> </div> </div> </div> </main> <footer view-transition-name=footer class="group-has-[.section-soft]/body:bg-surface/40 3xl:fixed:bg-transparent dark:bg-transparent"> <div class="container-wrapper px-4 xl:px-6"> <div class="flex h-(--footer-height) items-center justify-between"> <div class="text-muted-foreground w-full text-center text-xs leading-loose sm:text-sm"> <a href=https://github.com/asiffer/mkdocs-shadcn>shadcn theme</a> provided by <a href=https://github.com/asiffer>@asiffer</a> </div> </div> </div> </footer> </div> <script src=js/timeago.min.js></script> <script src=js/timeago_mkdocs_material.js></script> <script src=search/main.js></script> <script src=assets/javascripts/panzoom.min.js></script> <script src=assets/javascripts/zoompan.js></script> <script src=js/copy-button.js></script> <script>updatePygmentsStylesheet();</script> <script>fetchStargazers("https://github.com/goldjunge91/my_steel-robot_ws");</script> <script>
+    for (const el of document.querySelectorAll(
+        ".typography .doc code.language-python",
+    )) {
+        el.classList.add("codehilite");
+    }
+
+    for (const el of document.querySelectorAll("article .doc .doc-contents")) {
+        el.innerHTML = el.innerHTML.trim();
+    }
+</script> <script src=js/socket.io.min.js></script> <script>
+    function randomString(length = 10) {
+        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const array = new Uint32Array(length);
+        crypto.getRandomValues(array);
+        return Array.from(array, x => chars[x % chars.length]).join('');
+    }
+
+    /**
+     * Executes code using Programiz REPL via socket.io
+     * @param {string} lang - Programming language (e.g., "python", "cpp", "javascript")
+     * @param {string} code - Code to execute
+     * @returns {Promise<{output:string,ok:boolean}>} Promise resolving to the output
+     */
+    function runCodexec(code, lang) {
+        console.log(`Running code in ${lang}:`, code);
+        if (!["r", "c", "cpp", "csharp", "java", "python", "javascript", "typescript", "scala", "dart", "ruby", "golang", "php", "swift", "rust"].includes(lang)) {
+            return Promise.reject(new Error(`Unsupported language: ${lang}`));
+        }
+        const sessionId = randomString();
+        const socket = io(`wss://${lang}.repl-web.programiz.com`, {
+            path: "/socket.io",
+            transports: ["websocket"],
+            query: {
+                sessionId,
+                lang,
+                EIO: "3",
+            },
+        });
+
+        const id = `${lang}/${sessionId}`;
 
 
+        return new Promise((resolve, reject) => {
+            let timeout;
+            let result = ""
+            let ok = true;
 
+            socket.on("connect_error", (err) => {
+                console.error(`[${id}] Connection error:`, err);
+                reject(err);
+            });
 
+            socket.on("connect", () => {
+                console.log(`[${id}] Connected`);
+                console.log(`[${id}] Code:\n${code}`);
+                socket.emit("run", { code });
+            });
 
+            socket.on("disconnect", () => {
+                clearTimeout(timeout);
+                // remove bottom marker and trim
+                result = result.replace("=== Code Execution Successful ===", "").trim(); // trim trailing newlines
+                resolve({ output: result, ok });
+                console.log(`[${id}] Disconnected`);
+            });
 
+            socket.on("output", ({ output }) => {
+                console.log(`[${id}] Output received:`, output);
+                if (output.slice(0, 6) === "ERROR!") {
+                    ok = false;
+                    // we try to retrieve the error message in the next message
+                    return
+                }
+                // append output
+                result += output;
+            });
 
+            // safety timeout
+            timeout = setTimeout(() => {
+                reject(new Error(`[${id}] Timeout while waiting for output`));
+                socket.disconnect();
+            }, 10000);
+        });
+    }
 
-
-
-
-
-                
-              </article>
-            </div>
-          
-          
-<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
-        </div>
-        
-      </main>
-      
-        <footer class="md-footer">
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright">
-  
-  
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
-    </a>
-  
-</div>
-      
-    </div>
-  </div>
-</footer>
-      
-    </div>
-    <div class="md-dialog" data-md-component="dialog">
-      <div class="md-dialog__inner md-typeset"></div>
-    </div>
-    
-    
-    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
-    
-    
-      <script src="assets/javascripts/bundle.fe8b6f2b.min.js"></script>
-      
-    
-  </body>
-</html>
+</script> <script type=speculationrules>
+{
+  "prerender": [
+    {
+      "where": {
+          "selector_matches": ["#next-button", "#previous-button"],
+      }
+    }
+  ]
+}
+</script> <script id=init-glightbox>const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+</script></body></html>
