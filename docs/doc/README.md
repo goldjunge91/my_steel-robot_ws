@@ -583,13 +583,13 @@ The simulation includes:
    ros2 topic echo /rt/cmd_vel
    ```
 
-
 ## Documentation
 
-- [PINMAP.md](docs/doc/PINMAP.md) - Pin assignments and hardware connections
-- [Projekt.md](docs/doc/PROJEKT.md) - Comprehensive project description (German)
-- [hardware_setup.md](docs/doc/hardware_setup.md) - Hardware assembly guide
-- [firmware.README.md](src/robot_firmware/README.md) - Firmware documentation
+- [PINMAP.md](PINMAP.md) - Pin assignments and hardware connections
+- [Projekt.md](PROJEKT.md) - Comprehensive project description (German)
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed system architecture
+- [hardware_setup.md](hardware_setup.md) - Hardware assembly guide
+- [Firmware Documentation](https://github.com/goldjunge91/my_steel-robot_ws/blob/main/src/robot_firmware/README.md) - Raspberry Pi Pico firmware 
 
 ## References
 

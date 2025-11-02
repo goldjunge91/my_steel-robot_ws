@@ -10,19 +10,18 @@ Dies ist eine strukturierte Übersicht der Befehle und Notizen aus der bereitges
   - [1. ROS 2 Workspace \& Roboter-Steuerung](#1-ros-2-workspace--roboter-steuerung)
   - [2. GitHub Actions (Lokales Testen mit 'act')](#2-github-actions-lokales-testen-mit-act)
   - [3. Micro-ROS \& Visualisierung](#3-micro-ros--visualisierung)
-  - [4. ROS 2 Diagnose-Befehle](#4-ros-2-diagnose-befehle)
-  - [5. Docker: Schneller "Smoke Test" im Container](#5-docker-schneller-smoke-test-im-container)
-  - [6. Docker: Workspace-Build in sauberer Umgebung](#6-docker-workspace-build-in-sauberer-umgebung)
-  - [7. Python Testing](#7-python-testing)
-  - [8. Docker Build \& Push (Verschiedene Varianten)](#8-docker-build--push-verschiedene-varianten)
+  - [4. Docker lokale Builds](#4-docker-lokale-builds)
+  - [Container starten](#container-starten)
+  - [5. ROS 2 Diagnose-Befehle](#5-ros-2-diagnose-befehle)
+  - [6. Docker Build \& Push (Verschiedene Varianten)](#6-docker-build--push-verschiedene-varianten)
     - [Lokale Builds](#lokale-builds)
     - [Interaktive Tests](#interaktive-tests)
     - [Multi-Arch-Build (ARM64) für lokales Testen](#multi-arch-build-arm64-für-lokales-testen)
-  - [9. Docker Compose (Für lokale Testumgebungen)](#9-docker-compose-für-lokale-testumgebungen)
+  - [7. Docker Compose (Für lokale Testumgebungen)](#7-docker-compose-für-lokale-testumgebungen)
     - [Interaktion mit Compose-Containern](#interaktion-mit-compose-containern)
-  - [10. Docker Exec (Umfassende Referenz)](#10-docker-exec-umfassende-referenz)
-  - [11. Finale Production-Builds (mit Logging)](#11-finale-production-builds-mit-logging)
-  - [12. Hilfsbefehle für den Build \& Push](#12-hilfsbefehle-für-den-build--push)
+  - [8. Docker Exec (Umfassende Referenz)](#8-docker-exec-umfassende-referenz)
+  - [9. Finale Production-Builds (mit Logging)](#9-finale-production-builds-mit-logging)
+  - [10. Hilfsbefehle für den Build \& Push](#10-hilfsbefehle-für-den-build--push)
 
 -----
 
@@ -92,25 +91,31 @@ ros2 run foxglove_bridge foxglove_bridge --port 8765
 ```
 
 -----
+
 ## 4\. Docker lokale Builds
 
 Test-Image lokal
+
 ```bash
 docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi.test -t goldjunge491/my-steel-robot:test-local --load .
 ```
 
 Production-Image lokal  
+
 ```bash
 docker buildx build --platform linux/arm64 -f docker/Dockerfile.robot-pi -t goldjunge491/my-steel-robot:prod-local --load .
 ```
-## Container starten:
+
+## Container starten
 
 Als robot user
+
 ```bash
 docker run -it --rm goldjunge491/my-steel-robot:pi-test-local /bin/bash
 ```
 
 root user
+
 ```bash
 docker run -it --rm --entrypoint /bin/bash --user root goldjunge491/my-steel-robot:pi-test-local
 ```
@@ -379,31 +384,37 @@ docker run --rm -it goldjunge491/my-steel-robot:humble-arm64 bash -c "source /op
 ```
 
 Alle unbenutzte Images löschen
+
 ```bash
 docker image prune -a
 ```
 
 Alle gestoppten Container löschen
+
 ```bash
 docker container prune
 ```
 
 Alle Container stoppen und löschen
+
 ```bash
 docker stop $(docker ps -aq) && docker rm $(docker ps -aq)
 ```
 
 Unbenutzte Volumes löschen
+
 ```bash
 docker volume prune
 ```
 
 Unbenutzte Networks löschen
+
 ```bash
 docker network prune
 ```
 
 Kompletten Build Cache löschen
+
 ```bash
 docker builder prune -a
 ```

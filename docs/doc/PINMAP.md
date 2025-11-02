@@ -4,12 +4,14 @@ Dieses Dokument ist die single source of truth für MCU‑Pinout mappings zwisch
 Pflege diese Datei im Firmware‑Repo (robot_firmware/docs/PINMAP.md) und halte sie synchron mit Firmware‑Konstanten (board_config.h / pinmap.h).
 
 ## Version / Metadaten
+
 - Board name: robot_digital_v1
 - Firmware tag: v0.1
 - Author: @goldjunge91
 - Date: 2025-09-21
 
 ## Legende
+
 - MCU_PIN: MCU pin name (z. B. GP0)
 - SIGNAL: Funktion (Encoder A/B, PWM, DIR, SERVO_PWM, I2C_SDA)
 - CONNECTOR: Connector oder Header (J1, JST1, PWR)
@@ -98,12 +100,14 @@ All firmware topics follow ROS2 best practices (REP-105):
 **Migration**: Previous topic names using `/ddd/` prefix (e.g., `/ddd/imu`, `/ddd/odom`) have been replaced with standard names. See `docs/ROS2_TOPIC_MIGRATION_GUIDE.md` for details.
 
 ## Version / Change
+
 - Board name: robot_digital_v1
 - Firmware tag: v0.1
 - Author: @goldjunge91
 - Date: 2025-09-22 (updated to match config.h)
 
 ## Hinweise zur Implementierung
+
 - Motor‑Power muss getrennt von MCU‑Power versorgt werden; gemeinsame GND verwenden.
 - MCU läuft 3.3V; Level‑Shifter verwenden, wenn peripherie 5V erwartet.
 - Encodertreiber: Prefer interrupts or PIO for high frequency.
@@ -111,15 +115,18 @@ All firmware topics follow ROS2 best practices (REP-105):
 - Serial Baud für micro-ROS: 115200 / 230400 / 460800 / 921600 — dokumentiere in firmware & bringup.
 
 ## Wie aktualisieren
+
 - Ändere die Firmware‑Konstanten (board_config.h / pinmap.h) zuerst.
 - Aktualisiere Version in dieser Datei und erstelle ein Firmware‑Release-Tag.
 - Exportiere eine CSV für schnelle Referenz: docs/pinmap.csv
 
 ## Safety Notes
+
 - Verwende Flyback‑Diodes und ausreichende Decoupling‑Kondensatoren an Motor‑Power Rails.
 - Schütze MCU‑Pins vor Induktiven Lasten.
 - Implementiere Watchdog in Firmware: sichere Motorabschaltung bei fehlender Host‑Kommunikation.
 
 ## Changelog
+
 - 2025-10-09: Added ROS2 topic naming documentation, updated sensor topic names to follow REP-105
 - 2025-09-21: Template erstellt / initial pinmap

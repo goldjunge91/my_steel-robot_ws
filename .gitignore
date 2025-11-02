@@ -125,3 +125,4 @@ _obsolet/# pixi environments
 .pixi/*
 !.pixi/config.toml
 .ros
+uv.lock

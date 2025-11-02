@@ -17,6 +17,7 @@ Es gibt zwei Möglichkeiten, den Roboter auf dem Raspberry Pi zu betreiben:
 - Persistente Logs und Konfiguration
 
 **Schnellstart:**
+
 ```bash
 # Docker und Docker Compose installieren (falls nicht vorhanden)
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -50,6 +51,7 @@ docker compose -f ~/compose.robot-pi.yaml logs -f
 ```
 
 **Systemd Integration (Autostart):**
+
 ```bash
 # Service-Datei kopieren
 sudo cp docker/robot-docker.service /etc/systemd/system/
@@ -64,7 +66,6 @@ sudo systemctl status robot-docker.service
 ```
 
 **Weitere Informationen:**
-- Siehe [docker/README.md](../docker/README.md) für vollständige Dokumentation
 - Build-Anleitung, Konfigurationsoptionen und erweiterte Troubleshooting
 
 ### Option 2: Manuelle Installation
@@ -163,7 +164,7 @@ ros2 run teleop_twist_joy teleop_node --ros-args -p joy_config:=xbox
 ### 5. Foxglove Studio verbinden
 
 1. Foxglove Studio öffnen
-2. "Open connection" → "Foxglove WebSocket" 
+2. "Open connection" → "Foxglove WebSocket"
 3. URL: `ws://[RASPBERRY_PI_IP]:8765`
 4. Connect
 
@@ -201,9 +202,10 @@ journalctl -u foxglove-bridge -f
 
 ## Troubleshooting
 
-### Docker-spezifische Probleme:
+### Docker-spezifische Probleme
 
 #### Container startet nicht
+
 ```bash
 # Container-Status prüfen
 docker compose -f ~/compose.robot-pi.yaml ps
@@ -217,6 +219,7 @@ docker compose -f ~/compose.robot-pi.yaml logs robot-bringup
 ```
 
 #### USB-Gerät nicht gefunden (/dev/ttyACM0)
+
 ```bash
 # Pico-Verbindung prüfen
 ls -l /dev/ttyACM*
@@ -230,6 +233,7 @@ sudo usermod -aG dialout $USER
 ```
 
 #### Health Checks schlagen fehl
+
 ```bash
 # Health Check Status prüfen
 docker inspect microros-agent | grep -A 10 Health
@@ -246,6 +250,7 @@ ros2 control list_controllers
 ```
 
 #### Tailscale verbindet nicht
+
 ```bash
 # Tailscale-Status im Container prüfen
 docker exec robot-bringup tailscale status
@@ -262,6 +267,7 @@ docker compose -f ~/compose.robot-pi.yaml restart robot-bringup
 ```
 
 #### Container-Updates
+
 ```bash
 # Neues Image herunterladen
 docker pull mysteel/robot:humble-arm64
@@ -274,6 +280,7 @@ docker image prune -a
 ```
 
 #### Logs und Debugging
+
 ```bash
 # Alle Logs anzeigen
 docker compose -f ~/compose.robot-pi.yaml logs -f
@@ -288,7 +295,8 @@ tail -f /var/log/robot/*.log
 docker stats
 ```
 
-### Manuelle Installation - Häufige Probleme:
+### Manuelle Installation - Häufige Probleme
+
 - **CycloneDDS Fehler**: `export RMW_IMPLEMENTATION=rmw_fastrtps_cpp` verwenden
 - **micro_ros_agent not found**: `sudo apt install ros-humble-micro-ros-agent`
 - **Socket buffer size**: CycloneDDS Config deaktivieren
@@ -296,7 +304,8 @@ docker stats
 - **Keine Topics sichtbar**: ROS_DOMAIN_ID=0 setzen
 - **Foxglove verbindet nicht**: IP-Adresse und Port 8765 prüfen
 
-### Debug-Befehle:
+### Debug-Befehle
+
 ```bash
 ros2 topic list
 ros2 node list  
@@ -304,7 +313,6 @@ ros2 topic echo /joy
 ros2 topic echo /cmd_vel
 ```
 
-### Weitere Dokumentation:
-- **Docker Deployment**: Siehe [docker/README.md](../docker/README.md)
-- **Allgemeine Architektur**: Siehe [SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md)
+### Weitere Dokumentation
+
 - **Hardware Setup**: Siehe [hardware_setup.md](hardware_setup.md)
