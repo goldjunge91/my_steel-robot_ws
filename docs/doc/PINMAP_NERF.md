@@ -1,72 +1,50 @@
 ---
-title: Nerf Launcher Pin Assignments (Pro Micro)
-summary: MCU pinout mapping for Arduino Pro Micro nerf launcher controller
-description: Single source of truth for nerf launcher MCU pin mappings
-keywords: pinmap, arduino pro micro, nerf launcher, pin assignments, brushless motors, servos
+title: Pinmap · Nerf Launcher (Pro Micro)
+summary: Referenz für alle Pins des Launcher-Controllers
+description: Tabellarische Pinbelegung des Arduino Pro Micro inklusive Sicherheitsfunktionen
+keywords: pinmap, arduino pro micro, nerf launcher, esc, servos
 author: goldjunge91
-order: 6
+order: 7
 ---
+# Pro Micro Pinmap – Launcher
 
-## Hardware Info
+| Board | MCU | Firmware |
+| --- | --- | --- |
+| `Arduino Pro Micro` | ATmega32U4 | Arduino Framework + micro-ROS |
 
-- **Board**: nerf_launcher_v1
-- **MCU**: Arduino Pro Micro (ATmega32U4)
-- **Firmware**: Arduino + micro-ROS v0.1
-- **Author**: @goldjunge91
-- **Date**: 2025-11-03
+## Aktoren
 
-## Pin Assignment Table
-
-| Pin | Signal | Function | Notes |
-|-----|--------|----------|-------|
-| D2 | ESC_MOTOR_1 | Brushless Motor 1 | PWM 1000-2000μs |
-| D3 | ESC_MOTOR_2 | Brushless Motor 2 | PWM 1000-2000μs |
-| D4 | TRIGGER_SERVO | Trigger Mechanism | 22kg digital servo |
+| Pin | Signal | Funktion | Hinweise |
+| --- | --- | --- | --- |
+| D2 | ESC_MOTOR_1 | Brushless Motor 1 | PWM 1000‑2000 µs |
+| D3 | ESC_MOTOR_2 | Brushless Motor 2 | PWM 1000‑2000 µs |
 | D5 | SERVO_TILT | Tilt Servo | 9g servo (up/down) |
-| D6 | UNUSED | - | Available for future use |
-| D7 | SAFETY_SWITCH | Hardware Interlock | ⚠️ **MANDATORY** |
-| D8 | FIRE_BUTTON | Manual Override | Digital input |
-| D9 | LED_STATUS | Status LED | System status |
-| D10 | COMM_TX | Serial TX | To main robot |
-| D16 | COMM_RX | Serial RX | From main robot |
-| A0 | BATTERY_VOLTAGE | Battery Monitor | Analog input |
-| A1 | MOTOR_CURRENT | Current Sensor | Analog input |
+| D4 | SHOT_SERVO | Nerf-Dart Schieber | 360°  |
 
-## Fixed Assignments
+## Sicherheit & Monitoring
 
-!!! danger "DO NOT CHANGE"
-    These pins are **safety-critical**:
-    
-    - **Safety Switch (D7)**: Hardware interlock required
-    - **Emergency Stop**: Immediate motor shutdown capability
-
-## System Overview
-
-### Hardware Components
-- **2x Brushless Motors**: RS2205 with 40A ESCs (flywheel system)
-- **1x Tilt Servo**: 9g servo for vertical aiming (up/down)
-- **1x Trigger Servo**: 22kg digital servo for firing mechanism
-- **Safety Systems**: Hardware interlock, emergency stop
-- **Communication**: Serial UART to main robot, monitoring
+| Pin | Signal | Funktion | Hinweise |
+| --- | --- | --- | --- |
+| A0 | BATTERY_VOLTAGE | Akkuüberwachung | Spannungsteiler 1:5 |
+| A1 | MOTOR_CURRENT | Stromsensor | 0–30 A |
+<!-- | D8 | FIRE_BUTTON | Manueller Auslöser | Pull-up aktiv | -->
+<!-- | D9 | LED_STATUS | Status LED | 2 Hz Aktivitätsanzeige | -->
+<!-- | D7 | SAFETY_SWITCH | Hardware Not-Aus | muss geschlossen sein | -->
 
 
+## Kommunikation
 
-## Safety & Implementation
+| Pin | Signal | Funktion | Hinweise |
+| --- | --- | --- | --- |
+| USB | USB CDC | Firmware Flash / Kommunikation | / |
+<!-- | D10 | COMM_TX | UART TX → Pico | 115200 baud |
+| D16 | COMM_RX | UART RX ← Pico | 115200 baud | -->
 
-- **Logic Power**: 5V from USB or main robot
-- **Motor Power**: 11.1V (3S LiPo from main robot)
-- **Safety Timeout**: Auto-shutdown after 30s inactivity
-- **Range Limits**: Servo angles and speed restricted
+```mermaid
+graph LR
+    ProMicro -->|USB| Pico
+    ProMicro --> ESC1[ESCs]
+    ProMicro --> Servos
+```
 
-## Firmware Sync
-
-!!! warning "Update Process"
-    1. Update this document first
-    2. Update `firmware/src/config.h`
-    3. Update `firmware/src/pins.h`
-    4. Test and tag release
-
-## Version History
-
-- **v0.1** (2025-11-03): Initial nerf launcher pinmap
-- **v0.2** (2025-11-03): Cleaned up, removed duplicates
+Letztes Review: 2025‑03.

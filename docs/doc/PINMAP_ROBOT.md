@@ -1,86 +1,72 @@
 ---
-title: Robot Pin Assignments (Pico)
-summary: MCU pinout mapping for Raspberry Pi Pico main controller
-description: Single source of truth for main robot MCU pin mappings
-keywords: pinmap, raspberry pi pico, pin assignments, hardware connections, robot
+title: Pinmap · Fahrplattform (Pico)
+summary: Referenz für alle Pico-Pins des Fahrroboters
+description: Tabellarische Pinbelegung des Raspberry Pi Pico inklusive Kategorien und Firmware-Hinweisen
+keywords: pinmap, raspberry pi pico, motor control, sensors
 author: goldjunge91
-order: 5
+order: 6
 ---
 
+# Pico Pinmap – Fahrroboter
 
+| Board | MCU | Firmware |
+| --- | --- | --- |
+| `Raspberry Pi Pico` | RP2040 | FreeRTOS + micro-ROS |
 
-## Hardware Info
+## Pin-Kategorien
 
-- **Board**: robot_digital_v1
-- **MCU**: Raspberry Pi Pico (RP2040)
-- **Firmware**: FreeRTOS + micro-ROS v0.1
-- **Author**: @goldjunge91
-- **Date**: 2025-11-03
+### Antrieb & Encoder
 
-## Pin Assignment Table
+| Pin | Signal | Funktion | Hinweise |
+| --- | --- | --- | --- |
+| GP4  | MOTOR_FR_PWM_CW  | Motor vorn rechts (CW) | PWM |
+| GP5  | MOTOR_FR_PWM_CCW | Motor vorn rechts (CCW) | PWM |
+| GP20 | MOTOR_FL_PWM_CW  | Motor vorn links (CW) | PWM |
+| GP21 | MOTOR_FL_PWM_CCW | Motor vorn links (CCW) | PWM |
+| GP14 | MOTOR_RL_PWM_CW  | Motor hinten links (CW) | PWM |
+| GP15 | MOTOR_RL_PWM_CCW | Motor hinten links (CCW) | PWM |
+| GP22 | MOTOR_RR_PWM_CW  | Motor hinten rechts (CW) | PWM |
+| GP28 | MOTOR_RR_PWM_CCW | Motor hinten rechts (CCW) | PWM |
+| GP6/7 | MOTOR_FL_ENCODER_A/B | Encoder vorn links | Interrupt |
+| GP8/9 | MOTOR_FR_ENCODER_A/B | Encoder vorn rechts | Interrupt |
+| GP10/11 | MOTOR_RL_ENCODER_A/B | Encoder hinten links | Interrupt |
+| GP12/13 | MOTOR_RR_ENCODER_A/B | Encoder hinten rechts | Interrupt |
 
-| Pin | Signal | Function | Notes |
-|-----|--------|----------|-------|
-| GP0 | UART0_TX | Debug UART | Reserved |
-| GP1 | UART0_RX | Debug UART | Reserved |
-| GP2 | VL6180X_SDA | ToF Sensor | ⚠️ **FIXED** |
-| GP3 | VL6180X_SCL | ToF Sensor | ⚠️ **FIXED** |
-| GP4 | MOTOR_FR_PWM_CW | Front Right Motor | PWM CW |
-| GP5 | MOTOR_FR_PWM_CCW | Front Right Motor | PWM CCW |
-| GP6 | MOTOR_FL_ENCODER_A | Front Left Encoder | Interrupt |
-| GP7 | MOTOR_FL_ENCODER_B | Front Left Encoder | - |
-| GP8 | MOTOR_FR_ENCODER_A | Front Right Encoder | - |
-| GP9 | MOTOR_FR_ENCODER_B | Front Right Encoder | - |
-| GP10 | MOTOR_RL_ENCODER_A | Rear Left Encoder | - |
-| GP11 | MOTOR_RL_ENCODER_B | Rear Left Encoder | - |
-| GP12 | MOTOR_RR_ENCODER_A | Rear Right Encoder | - |
-| GP13 | MOTOR_RR_ENCODER_B | Rear Right Encoder | - |
-| GP14 | MOTOR_RL_PWM_CW | Rear Left Motor | PWM CW |
-| GP15 | MOTOR_RL_PWM_CCW | Rear Left Motor | PWM CCW |
-| GP16 | IMU_MISO | IMU Sensor | ⚠️ **FIXED** |
-| GP17 | IMU_CS | IMU Sensor | ⚠️ **FIXED** |
-| GP18 | IMU_SCK | IMU Sensor | ⚠️ **FIXED** |
-| GP19 | IMU_MOSI | IMU Sensor | ⚠️ **FIXED** |
-| GP20 | MOTOR_FL_PWM_CW | Front Left Motor | PWM CW |
-| GP21 | MOTOR_FL_PWM_CCW | Front Left Motor | PWM CCW |
-| GP22 | MOTOR_RR_PWM_CW | Rear Right Motor | PWM CW |
-| GP26 | LED_STATUS | Status LED | Blink |
-| GP28 | MOTOR_RR_PWM_CCW | Rear Right Motor | PWM CCW |
+### Sensorik
 
-## Fixed Assignments
+| Pin | Signal | Funktion | Hinweise |
+| --- | --- | --- | --- |
+| GP2  | VL6180X_SDA | ToF I²C SDA | **fest** (I²C1) |
+| GP3  | VL6180X_SCL | ToF I²C SCL | **fest** |
+| GP16 | IMU_MISO | SPI0 MISO | **fest** |
+| GP17 | IMU_CS   | SPI0 CS | **fest** |
+| GP18 | IMU_SCK  | SPI0 SCK | **fest** |
+| GP19 | IMU_MOSI | SPI0 MOSI | **fest** |
+| GP26 | LED_STATUS | Status LED | 1 Hz Heartbeat |
 
-!!! danger "DO NOT CHANGE"
-    These pins are **hardware-constrained**:
-    
-    - **IMU (ICM20948)**: SPI0 → GP16/17/18/19
-    - **VL6180X ToF**: I2C1 → GP2/3
+### Kommunikation
 
-## System Overview
+| Pin | Signal | Funktion | Hinweise |
+| --- | --- | --- | --- |
+| USB | USB CDC | micro-ROS Agent ↔ ROS 2 | Haupt |
+| GP0 | UART0_TX | Debug UART TX | Debugging |
+| GP1 | UART0_RX | Debug UART RX | Debugging |
 
-### Hardware Components
-- **4x Mecanum Motors**: PWM control + Hall encoders
-- **IMU Sensor**: ICM20948 9-DOF via SPI0
-- **ToF Sensor**: VL6180X distance + light via I2C1
-- **Communication**: USB CDC to ROS2 host, UART debug
+```mermaid
+graph TD
+    subgraph "Pico"
+        PWM1[Motor PWM]
+        ENC1[Encoder Inputs]
+        SPI1[IMU SPI]
+        I2C1[ToF I²C]
+        LED[Status LED]
+    end
+    PWM1 --> Motoren
+    ENC1 --> Motoren
+    SPI1 --> IMU
+    I2C1 --> ToF
+    LED --> Service
+    Pico -->|USB| ROSHost
+```
 
-
-
-## Safety & Implementation
-
-- **Motor Power**: Separate 12V rail, common GND
-- **Flyback Diodes**: Required on all motor connections
-- **Watchdog**: Firmware must implement safety shutdown
-- **PWM Frequency**: 20 kHz for motors
-
-## Firmware Sync
-
-!!! warning "Update Process"
-    1. Update this document first
-    2. Update `firmware/src/board_config.h`
-    3. Update `firmware/src/pinmap.h`
-    4. Test and tag release
-
-## Version History
-
-- **v0.1** (2025-09-21): Initial pinmap
-- **v0.2** (2025-11-03): Cleaned up, removed duplicates
+Letztes Review: 2025‑03.

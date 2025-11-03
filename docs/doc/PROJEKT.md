@@ -13,9 +13,8 @@ order: 2
 ## 1. Motivation & Projektidee
 
 !!! info "Zwei Leidenschaften vereint"
-    Dieses Projekt vereint zwei Leidenschaften: die Begeisterung für Robotik aus dem Mechatronik-Studium und die Freude am Programmieren, die ich bei der Entwicklung von Fullstack-Webanwendungen für meinen Arbeitgeber entdeckt habe. Nach zwei erfolgreichen Web-Projekten wollte ich endlich etwas schaffen, das beide Welten verbindet – komplexe Software und anspruchsvolle Hardware.
-
-Da fertige Roboter-Kits nicht nur teuer sind, sondern ich auch langjährige Erfahrung im 3D-Druck mitbringe, fiel die Entscheidung schnell: ein komplett "self-sourced" entwickeltes Projekt.
+    Dieses Projekt vereint zwei Leidenschaften: die Begeisterung für Robotik aus dem Mechatronik-Studium und die Freude am Programmieren, die ich für mich entdeckt habe.
+    Da fertige Roboter-Kits nicht nur teuer sind, sondern ich auch langjährige Erfahrung im 3D-Druck mitbringe, fiel die Entscheidung schnell: ein komplett "self-sourced" entwickeltes Projekt.
 
 ### Die Vision
 
@@ -26,12 +25,10 @@ Da fertige Roboter-Kits nicht nur teuer sind, sondern ich auch langjährige Erfa
 - +heroicons:camera+ Objekte und Personen erkennen
 - +lucide:gamepad-2+ Sich präzise fernsteuern lassen
 
-!!! info "Inspiration: 5G-Forschungsprojekt"
-    Die Idee der Fernsteuerung wurde stark durch meine Erfahrungen aus einem **5G-Forschungsprojekt** geprägt, in dem ich die Testleitung für automatisiertes und teleoperiertes Fahren begleiten durfte. Der Austausch mit Entwicklern straßenzugelassener autonomer Fahrzeuge und die Inspiration durch Flottensteuerungs- und Luftfahrt-Kontrollzentralen zeigten mir, was in diesem Bereich möglich ist.
+!!! info "Inspiration:
+    Die Idee der Fernsteuerung wurde stark durch meine Erfahrungen aus einem **5G-Forschungsprojekt** geprägt, automatisiertes und teleoperiertes Fahren begleiten durfte. Der Austausch mit Entwicklern straßenzugelassener autonomer Fahrzeuge und die Inspiration durch Flottensteuerungs- und Luftfahrt-Kontrollzentralen prägten meine Vorstellung von einem "Roboter-Cockpit.
 
 Und um dem Ganzen eine persönliche und humorvolle Note zu geben, kam die Idee mit dem **Nerf-Dart-Launcher** – inspiriert von [diesem super lustigen Video](https://www.youtube.com/watch?v=8RKy_i2h_j8&t=789s). Es ging mir darum, tief in die Programmierung einzutauchen und zu lernen, wie man Hardware und Software zu einem intelligenten System kombiniert.
-
----
 
 ## 2. Von der Idee zum Konzept
 
@@ -41,12 +38,12 @@ Am Anfang stand keine detaillierte Planung, sondern nur eine Sammlung von Ideen 
 
 Die unsortierte Wunschliste:
 
-- **Vier angetriebene Räder** – nicht die Standard-Zwei-Rad-Lösung, sondern mehr Traktion, Stabilität und eine solidere Basis
-- **Autonome Intelligenz** – keine stumpfe Befehlsausführung, sondern Umgebungswahrnehmung und Selbstorientierung
-- **Interaktion** – ein greifbares, sichtbares Feature statt nur Herumfahren
-- **Persönlichkeit** – keine tiefgründigen KI-Gespräche, sondern lustige Sprüche und einfache Sprachbefehle
+- **Motorisierter Antrieb** – nicht die Standard-Zwei-Rad-Lösung (differential Drive) wie in jedem Online Course zu finden.
+- **Autonome Intelligenz** – keine stumpfe Befehlsausführung, sondern Navigation mit Ziel setzung.
+- **Interaktion** – ein greifbares, sichtbares Feature statt nur Herumfahren.
+- **Persönlichkeit** – Kein AI/KI- Bullshit, sondern lustige Sprüche und einfache Sprachbefehle.
 - **Volle Kontrolle** – kompletter Zugriff auf Sensordaten und Systemzustand wie in einer Kontrollzentrale
-- **Industriestandard** – keine 10.000-Zeilen-Arduino-Datei, sondern eine professionelle Robotik-Architektur
+- **Industriestandard** – keine 10.000-Zeilen-Arduino-Code, sondern eine professionelle Robotik-Architektur
 
 ### 2.2. Konkretisierung der Funktionen
 
@@ -76,95 +73,20 @@ Nachdem klar war, *was* der Roboter können soll, begann die eigentliche Arbeit:
 ### 3.1. Antriebskonzept
 
 Die Entscheidung für vier Räder eröffnete verschiedene Antriebskonzepte. Aus meiner KFZ-Ausbildung kannte ich klassische Lenkungen, doch welche Optionen bietet die Robotik?
-<!--     style End1 fill:#cde4ff,stroke:#333,stroke-width:2px  -->
-```mermaid
-graph TD
-    subgraph "Anforderung: Antrieb mit 4 Rädern"
-        A{Welche Bewegungsart wird angestrebt?}
-        A -- "Maximale Manövrierfähigkeit (holonom)" --> B[Omnidirektionale Antriebe]
-        A -- "Fahrzeugähnliche Bewegung (nicht-holonom)" --> C[Gelenkte / Starre Antriebe]
-    end
 
-    subgraph "Technologie-Optionen"
-        B -- "Für glatte Böden" --> B1["Mecanum-Räder"]
-        B -- "Für unebene Böden" --> B2["Omni-Räder"]
-        C -- "Panzerlenkung" --> C1["Skid-Steer"]
-        C -- "Autolenkung" --> C2["Ackermann-Lenkung"]
-    end
 
-    subgraph "Meine Entscheidung"
-        B1 --> End1[Ergebnis: Mecanum-Antrieb für Indoor-Agilität]
-    end
-```
-
-**Entscheidung:** Mecanum-Räder bieten holonome Bewegung (seitliches Fahren, Rotation auf der Stelle) und sind ideal für Indoor-Umgebungen mit glatten Böden.
+**Entscheidung:** Mecanum-Räder aus dem 3D-Drucker.
 
 ### 3.2. Sensorik für SLAM
 
-Für die autonome Navigation muss der Roboter seine Umgebung erfassen. Die Optionen:
-
-```mermaid
-mindmap
-  root("(Sensor für SLAM?)")
-    LiDAR
-      ::icon(fa fa-satellite-dish)
-      + Hohe Präzision 2D
-      + 360° Abdeckung
-      + Unempfindlich gegen Licht
-      - Kostenfaktor
-    Tiefenkamera (Stereo/ToF)
-      ::icon(fa fa-camera-retro)
-      + Günstiger
-      + Echte 3D-Daten
-      - Begrenztes Sichtfeld
-      - Anfällig für Lichtverhältnisse
-    Ultraschall
-      ::icon(fa fa-assistive-listening-systems)
-      + Sehr günstig
-      - Zu ungenau für SLAM
-      - Nur simple Hinderniserkennung
-    Entscheidung
-      ::icon(fa fa-check-circle)
-      **LiDAR** für robustes 2D-Mapping als Basis
-```
-
-**Entscheidung:** LiDAR bietet die beste Balance aus Präzision, Zuverlässigkeit und 360°-Abdeckung für robustes Indoor-SLAM.
+**Entscheidung:** LiDAR bietet die beste Präzision, Zuverlässigkeit und 360°-Abdeckung für robustes Indoor-SLAM.
 
 ### 3.3. Steuerungsarchitektur
 
 Die Kombination aus rechenintensivem ROS2 und präziser Motoransteuerung stellte eine zentrale Herausforderung dar.
 
-```mermaid
-flowchart LR
-    subgraph "Option A: Monolithisch"
-        A1[Raspberry Pi 4]
-        A1 --> A2{"ROS2 (High-Level)"}
-        A1 --> A3{"Motor-PWM (Low-Level)"}
-        style A3 fill:#f8d7da,stroke:#721c24
-    end
-    
-    subgraph "Option B: Verteilte Architektur"
-        B1[Raspberry Pi 4] --> B2{"ROS2 (High-Level)"}
-        B1 -- "Befehle (z.B. 0.5 m/s)" --> B3[Raspberry Pi Pico]
-        B3 --> B4{"Motor-PWM (Echtzeit)"}
-        style B4 fill:#d4edda,stroke:#155724
-    end
 
-    subgraph "Entscheidung"
-        C1{"Problem bei A:\nLinux ist kein Echtzeit-OS.\nPWM-Jitter führt zu unsauberer Bewegung."}
-        C2{"Vorteil von B:\nPico übernimmt Echtzeit-kritische Tasks.\nSaubere, zuverlässige Motoransteuerung."}
-        C3[**Option B gewählt**]
-    end
-
-    A1 --> C1
-    B1 --> C2
-    C1 --> C3
-    C2 --> C3
-```
-
-**Entscheidung:** Getrennte Architektur mit Raspberry Pi 4 für High-Level-Logik und Raspberry Pi Pico für echtzeitkritische Motorsteuerung.
-
----
+**Entscheidung:** Getrennte Architektur mit Raspberry Pi 4 / Nvidia Jetson für High-Level-Logik und Raspberry Pi Pico  sowie Arduino Micro Pro für echtzeitkritische Motorsteuerung und Nerf Launcher.
 
 ## 4. Systemarchitektur
 
@@ -186,9 +108,10 @@ Die finale Architektur ist modular aufgebaut und nutzt die Stärken verschiedene
 
 ### 4.2. Low-Level Echtzeit-Steuerung (Das Rückgrat)
 
+### Pi Pico Motorsteuerung
+
 **Hardware:** Raspberry Pi Pico  
 **Software:** FreeRTOS, micro-ROS Client  
-
 **Verantwortlichkeiten:**
 
 - Ansteuerung der 4 DC-Motoren mit PWM
@@ -198,17 +121,20 @@ Die finale Architektur ist modular aufgebaut und nutzt die Stärken verschiedene
 - Veröffentlichung von Sensordaten und Odometrie auf ROS2-Topics
 - Verarbeitung von `geometry_msgs/Twist`-Bewegungsbefehlen
 
-### 4.3. Aktor-Steuerung (Der Schütze)
+### Aktor-Steuerung Nerf-Launcher
 
-**Hardware:** Arduino Nano oder Pro Micro  
-**Software:** micro-ROS Client  
-
+**Hardware:** Arduino Pro Micro
+**Software:**  
 **Verantwortlichkeiten:**
 
-- Steuerung der Pan/Tilt-Servos für Zielausrichtung
+- Ansteuerung der 2 ESC mit PWM
+- Steuerung der Pan/Tilt-Servos
+- Verarbeitung von `geometry_msgs/Twist`-Bewegungsbefehlen
+- Steuerung der Tilt-Servos für Zielausrichtung
 - Ansteuerung der Brushless-Motoren (Flywheel) zum Dart-Beschleunigen
 - Auslösen des Abzugsmechanismus
 - Verarbeitung von Ziel- und Feuerbefehlen über dedizierte ROS2-Topics
+
 
 **Design-Prinzip:** Vollständige Entkopplung von der kritischen Bewegungssteuerung für Modularität und Ausfallsicherheit.
 
@@ -218,7 +144,7 @@ Die finale Architektur ist modular aufgebaut und nutzt die Stärken verschiedene
 
 **Funktionen:**
 
-- **Manuelle Steuerung:** Xbox-Controller am PC verbunden, ROS2-Node wandelt Eingaben in `Twist`-Nachrichten um
+- **Manuelle Steuerung:** Xbox-Controller am PC verbunden, ROS2-Node wandelt Eingaben in `Twist`-Nachrichten um.
 - **Telemetrie & Monitoring:** Web-Dashboard im Browser mit Echtzeit-Visualisierung über ROS2-Web-Bridge
 - **Kommandosteuerung:** Senden von autonomen Navigationsbefehlen und Launcher-Kommandos
 
@@ -247,12 +173,6 @@ Die finale Architektur ist modular aufgebaut und nutzt die Stärken verschiedene
 |                           | INA3221 Sensor                                     | Echtzeit-Monitoring von Spannung, Strom und Leistung     |
 | **Bedienung & Interface** | Xbox Controller (Remote-PC)                        | Präzise, intuitive manuelle Fernsteuerung                |
 |                           | Web-Dashboard (Remote-PC)                          | Telemetrie-Visualisierung und Systemsteuerung            |
-
-### 5.2. Systemarchitektur
-
-Siehe [FIRMWARE_ARCHITECTURE.md](FIRMWARE_ARCHITECTURE.md) für detaillierte Architekturdiagramme und technische Spezifikationen.
-
----
 
 ## 6. Software-Stack & ROS2-Integration
 
@@ -338,8 +258,7 @@ Das System basiert vollständig auf **ROS2 Humble** und nutzt dessen modulare, v
 - Echtzeit-Karte mit Roboter-Position
 - Sensordaten-Visualisierung (Batterie, IMU, ToF)
 - Diagnose-Tools und Log-Anzeige
-
----
+<!-- 
 
 ## 8. Lessons Learned & Ausblick
 
@@ -356,7 +275,7 @@ Das System basiert vollständig auf **ROS2 Humble** und nutzt dessen modulare, v
 - **Sprachsteuerung:** Wake-Word-Detection + Sprachbefehle
 - **Objektmanipulation:** Greifarm für Pick-and-Place-Aufgaben
 - **Schwarm-Verhalten:** Multi-Robot-System mit kooperativer Navigation
-- **ML-basiertes Tracking:** YOLOv8 für robustere Objekterkennung
+- **ML-basiertes Tracking:** YOLOv8 für robustere Objekterkennung -->
 
 ### FAQ
 
@@ -365,7 +284,7 @@ Fertige Roboter-Kits sind nicht nur teuer, sondern bieten auch weniger Lernpoten
 ///
 
 /// details | Warum gerade ein Nerf-Launcher?
-Die Idee kam von [diesem super lustigen Video](https://www.youtube.com/watch?v=8RKy_i2h_j8&t=789s). Es ging mir darum, ein greifbares, spaßiges Feature zu haben, das zeigt, wie Hardware und Software zu einem intelligenten System kombiniert werden können.
+Die Idee kam von [diesem Video](https://www.youtube.com/watch?v=8RKy_i2h_j8&t=789s). Es ging mir darum, ein greifbares, spaßiges Feature zu haben, das zeigt, wie Hardware und Software zu einem intelligenten System kombiniert werden können.
 ///
 
 /// details | Warum ROS2 und nicht Arduino?

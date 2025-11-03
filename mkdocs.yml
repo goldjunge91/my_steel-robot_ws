@@ -33,7 +33,9 @@ plugins:
   - excalidraw:
       directory: docs/doc/excalidraw      
   - mkdocstrings
-  - mermaid2
+  - mermaid2:
+        arguments:
+          theme: dark
   - panzoom:
       hint_location: "top"
       always_show_hint: true
@@ -99,9 +101,9 @@ markdown_extensions:
           #       lang: en
           #   - mkdocstrings
           #   - excalidraw
-          #   - mermaid2:
-          #       arguments:
-          #         theme: dark
+            # - mermaid2:
+            #     arguments:
+            #       theme: dark
           # - panzoom:
           #     hint_location: "top"
           #     always_show_hint: true
