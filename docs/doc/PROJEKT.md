@@ -1,31 +1,33 @@
+---
+title: Projektbeschreibung
+summary: ROS2-Roboter - Von der Vision zur Realität
+description: Komplette Projektdokumentation des my_steel Roboters - Von der initialen Idee über Konzeptentscheidungen bis zur finalen Systemarchitektur
+keywords: robotik, ros2, mecanum drive, slam, computer vision, nerf launcher
+author: goldjunge91
+omega: true
+order: 2
+---
+
 # **Projektbeschreibung: ROS2-Roboter**
 
 ## 1. Motivation & Projektidee
 
-Dieses Projekt vereint zwei Leidenschaften: die Begeisterung für Robotik aus dem Mechatronik-Studium und die Freude am Programmieren, die ich bei der Entwicklung von Fullstack-Webanwendungen für meinen Arbeitgeber entdeckt habe. Nach zwei erfolgreichen Web-Projekten wollte ich endlich etwas schaffen, das beide Welten verbindet – komplexe Software und anspruchsvolle Hardware.
+!!! info "Zwei Leidenschaften vereint"
+    Dieses Projekt vereint zwei Leidenschaften: die Begeisterung für Robotik aus dem Mechatronik-Studium und die Freude am Programmieren, die ich bei der Entwicklung von Fullstack-Webanwendungen für meinen Arbeitgeber entdeckt habe. Nach zwei erfolgreichen Web-Projekten wollte ich endlich etwas schaffen, das beide Welten verbindet – komplexe Software und anspruchsvolle Hardware.
 
 Da fertige Roboter-Kits nicht nur teuer sind, sondern ich auch langjährige Erfahrung im 3D-Druck mitbringe, fiel die Entscheidung schnell: ein komplett "self-sourced" entwickeltes Projekt.
 
 ### Die Vision
 
-```python
-def fibonacci(n):
-    a, b = 0, 1
-    for _ in range(n):
-        yield a
-        a, b = b, a + b
+!!! note "Mehr als nur Vor- und Zurück"
+    Die Idee war klar: Ein Roboter, der mehr kann als nur vor und zurück zu fahren. Er sollte:
 
-for num in fibonacci(10):
-    print(num)
-```
+- +heroicons:map+ Autonom navigieren und Hindernissen ausweichen
+- +heroicons:camera+ Objekte und Personen erkennen
+- +lucide:gamepad-2+ Sich präzise fernsteuern lassen
 
-Die Idee war klar: Ein Roboter, der mehr kann als nur vor und zurück zu fahren. Er sollte:
-
-- Autonom navigieren und Hindernissen ausweichen
-- Objekte und Personen erkennen
-- Sich präzise fernsteuern lassen
-
-Die Idee der Fernsteuerung wurde stark durch meine Erfahrungen aus einem **5G-Forschungsprojekt** geprägt, in dem ich die Testleitung für automatisiertes und teleoperiertes Fahren begleiten durfte. Der Austausch mit Entwicklern straßenzugelassener autonomer Fahrzeuge und die Inspiration durch Flottensteuerungs- und Luftfahrt-Kontrollzentralen zeigten mir, was in diesem Bereich möglich ist.
+!!! info "Inspiration: 5G-Forschungsprojekt"
+    Die Idee der Fernsteuerung wurde stark durch meine Erfahrungen aus einem **5G-Forschungsprojekt** geprägt, in dem ich die Testleitung für automatisiertes und teleoperiertes Fahren begleiten durfte. Der Austausch mit Entwicklern straßenzugelassener autonomer Fahrzeuge und die Inspiration durch Flottensteuerungs- und Luftfahrt-Kontrollzentralen zeigten mir, was in diesem Bereich möglich ist.
 
 Und um dem Ganzen eine persönliche und humorvolle Note zu geben, kam die Idee mit dem **Nerf-Dart-Launcher** – inspiriert von [diesem super lustigen Video](https://www.youtube.com/watch?v=8RKy_i2h_j8&t=789s). Es ging mir darum, tief in die Programmierung einzutauchen und zu lernen, wie man Hardware und Software zu einem intelligenten System kombiniert.
 
@@ -246,19 +248,9 @@ Die finale Architektur ist modular aufgebaut und nutzt die Stärken verschiedene
 | **Bedienung & Interface** | Xbox Controller (Remote-PC)                        | Präzise, intuitive manuelle Fernsteuerung                |
 |                           | Web-Dashboard (Remote-PC)                          | Telemetrie-Visualisierung und Systemsteuerung            |
 
-### 5.2. Systemübersicht-Diagramme
+### 5.2. Systemarchitektur
 
-#### Komponenten-Architektur
-
-[![Komponenten-Diagramm](https://img.plantuml.biz/plantuml/dsvg/RP9DRi9038NtSmgBLQ8gBAgkmg842RMgG20YbKqsWPZ4Ol2W6GVQ7g07w1bwazwa9-aa_5RjSlIU_VpPqtUIMwatMWc9HaW5QxGrbowtoue4rr9R26QJz1PshWlJ-HY6oqhUa2HKggrMj8AWarpy-xpIzvqGf4BsocGhP1YIEED4QtIGroj0Ojp0mEIsw8GA89xbRhj0QrzXId2NSHiPF59PHIFSeGuple6n4MEZPeXWPFP7eUVBsGY2zMRn3u2fDGkDcnX6nFKBa1DO-yJpwD4axHwCyt7qH29euVlz0sfsUUsdG1ZW7ak_XyQ6NBG12hN32z300psWM6JsuLVy1w06estwXwINyPIMfXMlYCvx_GVesLX1ql6PO6r9QDskikbrf6aYaKNdJb2wa1vX4dQdk_xcuO9MIiL35hUia0fly50dFYXn__LPQUdvGvkjwdk__oe_)](https://editor.plantuml.com/uml/RP9DRi9038NtSmgBLQ8gBAgkmg842RMgG20YbKqsWPZ4Ol2W6GVQ7g07w1bwazwa9-aa_5RjSlIU_VpPqtUIMwatMWc9HaW5QxGrbowtoue4rr9R26QJz1PshWlJ-HY6oqhUa2HKggrMj8AWarpy-xpIzvqGf4BsocGhP1YIEED4QtIGroj0Ojp0mEIsw8GA89xbRhj0QrzXId2NSHiPF59PHIFSeGuple6n4MEZPeXWPFP7eUVBsGY2zMRn3u2fDGkDcnX6nFKBa1DO-yJpwD4axHwCyt7qH29euVlz0sfsUUsdG1ZW7ak_XyQ6NBG12hN32z300psWM6JsuLVy1w06estwXwINyPIMfXMlYCvx_GVesLX1ql6PO6r9QDskikbrf6aYaKNdJb2wa1vX4dQdk_xcuO9MIiL35hUia0fly50dFYXn__LPQUdvGvkjwdk__oe_)
-
-#### Datenfluss & Kommunikation
-
-[![Datenfluss-Diagramm](https://img.plantuml.biz/plantuml/dsvg/RPBFQW8n4CRlUOh1NboAj2Zqe8UghAtGjPIkNaelqPtD3iQ99DcBp-C3z04yrHThzWyenLlc-y9ylqncxBoqljnfuSbhX1JP6KjRoCyd2saoMGXHNn6KGxVJs1VpkHE1Bv23bL0y-Un40c1O7qTmbv0g_5IN64Gs7i5MGYW0xc5k2eGFUpuUo9497Vfnr5g3fyVV7vYiCzniIrQjkcBSxNFYJDEc08Kgn2RXs3JimPjn7ZaKo5aT9r0xhB6NX3doLkxGoWRnMe5kwj6YULYQbsXqY_NrV6BdIQ5jXLc8HHZ4lLWscHN059L5FdXqa5PSEUgijMfEoVdvg3Mf_uo1SAMzbMvJIAqRm2lX9bAAXGNLShKfNoM4SI7Bykhx6kkzj30FiqFBvD1kaRcPx0M4Cyg56CxOXrYaBFZ3Rwx_4gHsC9MENDFOcdNfgdVsuzv2xlV4QXJMnEp5EBIfjkaF)](https://editor.plantuml.com/uml/RPBFQW8n4CRlUOh1NboAj2Zqe8UghAtGjPIkNaelqPtD3iQ99DcBp-C3z04yrHThzWyenLlc-y9ylqncxBoqljnfuSbhX1JP6KjRoCyd2saoMGXHNn6KGxVJs1VpkHE1Bv23bL0y-Un40c1O7qTmbv0g_5IN64Gs7i5MGYW0xc5k2eGFUpuUo9497Vfnr5g3fyVV7vYiCzniIrQjkcBSxNFYJDEc08Kgn2RXs3JimPjn7ZaKo5aT9r0xhB6NX3doLkxGoWRnMe5kwj6YULYQbsXqY_NrV6BdIQ5jXLc8HHZ4lLWscHN059L5FdXqa5PSEUgijMfEoVdvg3Mf_uo1SAMzbMvJIAqRm2lX9bAAXGNLShKfNoM4SI7Bykhx6kkzj30FiqFBvD1kaRcPx0M4Cyg56CxOXrYaBFZ3Rwx_4gHsC9MENDFOcdNfgdVsuzv2xlV4QXJMnEp5EBIfjkaF)
-
-#### Deployment-Architektur
-
-[![Deployment-Diagramm](https://img.plantuml.biz/plantuml/dsvg/LP6nJiCm48PtFuNLgHb25wPse4L228aAYOgjYualpidEkN8kWFeyVGOcjhmObpfLORt_z_z_lbjtR1BtRL2C741lY1F2U-SZ7U70UdwhNuUJXLGeTROghFLyTW-Vu7fodKpkPeNc1aZ6JGoHOhkdUMk-RlJMqF3z8Ncf7auDEW_8nQnGMYzVMaAB2JnZ97CjXfMevuetOaWkzMJ_5BXWc1TFP6DCvo29sa9bg6_Bp3c-Xz21c7kIFBhOniQ_7h9Ogyb9M3LSNkbhqwGZz4weAOWsGJz20F8CUg77NQJ_r7LCFbVjFDfonv2RnhaspY1bTLDvIAqXAfybJPOuuUI0pAMM3yHTrG1QCIptTFdaLAZhuIVfl8Toup0W3oTUoOdYGQqbOxpeBm00)](https://editor.plantuml.com/uml/LP6nJiCm48PtFuNLgHb25wPse4L228aAYOgjYualpidEkN8kWFeyVGOcjhmObpfLORt_z_z_lbjtR1BtRL2C741lY1F2U-SZ7U70UdwhNuUJXLGeTROghFLyTW-Vu7fodKpkPeNc1aZ6JGoHOhkdUMk-RlJMqF3z8Ncf7auDEW_8nQnGMYzVMaAB2JnZ97CjXfMevuetOaWkzMJ_5BXWc1TFP6DCvo29sa9bg6_Bp3c-Xz21c7kIFBhOniQ_7h9Ogyb9M3LSNkbhqwGZz4weAOWsGJz20F8CUg77NQJ_r7LCFbVjFDfonv2RnhaspY1bTLDvIAqXAfybJPOuuUI0pAMM3yHTrG1QCIptTFdaLAZhuIVfl8Toup0W3oTUoOdYGQqbOxpeBm00)
+Siehe [FIRMWARE_ARCHITECTURE.md](FIRMWARE_ARCHITECTURE.md) für detaillierte Architekturdiagramme und technische Spezifikationen.
 
 ---
 
@@ -368,26 +360,18 @@ Das System basiert vollständig auf **ROS2 Humble** und nutzt dessen modulare, v
 
 ### FAQ
 
-/// details | Is this theme an official shadcn port?
-No. But you can still [star it +heroicons:star+](hhttps://github.com/asiffer/mkdocs-shadcn)
+/// details | Warum nicht ein fertiges Kit kaufen?
+Fertige Roboter-Kits sind nicht nur teuer, sondern bieten auch weniger Lernpotenzial. Mit meiner 3D-Druck-Erfahrung und dem Wunsch, tief in die Materie einzutauchen, war ein "self-sourced" Projekt die bessere Wahl.
 ///
 
-
-/// details | Why a new mkdocs theme while `material` exists?
-First the [shadcn/ui](https://ui.shadcn.com/) theme is just incredible.
-
-Actually, nothing can compete with the [material](https://squidfunk.github.io/mkdocs-material/) theme which is very mature and feature rich.
-
-In addition to sticking to the shadcn theme, the idea is to remain a simple theme, providing some special built-in features that we may not find in other themes.
+/// details | Warum gerade ein Nerf-Launcher?
+Die Idee kam von [diesem super lustigen Video](https://www.youtube.com/watch?v=8RKy_i2h_j8&t=789s). Es ging mir darum, ein greifbares, spaßiges Feature zu haben, das zeigt, wie Hardware und Software zu einem intelligenten System kombiniert werden können.
 ///
 
-
-/// details | Is it open to contributions?
-Yes, yes and yes! On its own, the theme tries to provide more and more relevant extensions/plugins. But anyone can define what could be relevant!
-
-[Open an issue](https://github.com/goldjunge491/my_steel_robot_ws/issues) and let us discuss about it +heroicons:face-smile+
+/// details | Warum ROS2 und nicht Arduino?
+ROS2 bietet eine professionelle Robotik-Architektur mit modularen Komponenten, standardisierten Schnittstellen und einer riesigen Community. Das ist weit entfernt von einer 10.000-Zeilen-Arduino-Datei und ermöglicht echte Industriestandards.
 ///
 
-/// details | Is `mkdocs-rube-goldberg-plugin-extension` supported?
-In general no.
+/// details | Warum Mecanum-Räder statt Differentialantrieb?
+Aus Trotz gegenüber den zahlreichen TurtleBot-Kopien! +heroicons:face-smile+ Aber ernsthaft: Mecanum-Räder bieten holonome Bewegung (seitliches Fahren, Rotation auf der Stelle) und sind ideal für Indoor-Umgebungen. Das macht den Roboter viel agiler und interessanter.
 ///

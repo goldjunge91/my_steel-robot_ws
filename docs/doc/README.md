@@ -1,3 +1,12 @@
+---
+title: my_steel Robot Workspace
+summary: ROS2 workspace for omnidirectional mobile robot with mecanum drive
+description: Complete ROS2 Humble workspace for the my_steel educational robot platform featuring mecanum drive, autonomous navigation, and computer vision
+keywords: ros2, mecanum drive, autonomous robot, raspberry pi pico, micro-ros
+author: goldjunge91
+order: 1
+---
+
 # my_steel Robot Workspace
 
 ROS2 workspace for the my_steel omnidirectional mobile robot platform with mecanum drive and Nerf launcher.
@@ -6,22 +15,21 @@ ROS2 workspace for the my_steel omnidirectional mobile robot platform with mecan
 
 The my_steel robot is an educational and research platform built on ROS2 Humble, featuring:
 
-- **Omnidirectional mobility** via 4-wheel mecanum drive
-- **Real-time control** using Raspberry Pi Pico with micro-ROS
-- **Autonomous navigation** with RPLiDAR and sensor fusion
-- **Computer vision** for face detection and tracking
-- **Interactive Nerf launcher** with dedicated controller (Arduino Nano/Pro Micro)
-- **Remote operation** via Tailscale VPN over 4G/5G networks
-- **Optional manipulator arm** support (Open Manipulator X)
+- +lucide:move-diagonal+ **Omnidirectional mobility** via 4-wheel mecanum drive
+- +heroicons:cpu-chip+ **Real-time control** using Raspberry Pi Pico with micro-ROS
+- +heroicons:map+ **Autonomous navigation** with RPLiDAR and sensor fusion
+- +heroicons:camera+ **Computer vision** for face detection and tracking
+- +lucide:rocket+ **Interactive Nerf launcher** with dedicated controller (Arduino Nano/Pro Micro)
+- +heroicons:globe-alt+ **Remote operation** via Tailscale VPN over 4G/5G networks
+- +lucide:bot+ **Optional manipulator arm** support (Open Manipulator X)
 
 ## Quick Start
 
-### Prerequisites
-
-- Ubuntu 22.04
-- ROS2 Humble
-- Python 3.10+
-- Raspberry Pi Pico SDK (for firmware builds)
+!!! info "Prerequisites"
+    - Ubuntu 22.04
+    - ROS2 Humble
+    - Python 3.10+
+    - Raspberry Pi Pico SDK (for firmware builds)
 
 ### Installation
 
@@ -68,15 +76,16 @@ The my_steel robot is an educational and research platform built on ROS2 Humble,
 
 ### Docker Deployment (Alternative)
 
-For production deployment on Raspberry Pi, Docker provides a containerized solution with all dependencies pre-installed:
+!!! note "Production Deployment"
+    For production deployment on Raspberry Pi, Docker provides a containerized solution with all dependencies pre-installed.
 
 **Features:**
 
-- Pre-built ROS2 Humble environment with all dependencies
-- Automatic service orchestration with Docker Compose
-- Integrated Tailscale VPN for secure remote access
-- Persistent logs and configuration
-- Automatic restart on failure
+- +heroicons:check-circle+ Pre-built ROS2 Humble environment with all dependencies
+- +lucide:container+ Automatic service orchestration with Docker Compose
+- +heroicons:lock-closed+ Integrated Tailscale VPN for secure remote access
+- +lucide:hard-drive+ Persistent logs and configuration
+- +heroicons:arrow-path+ Automatic restart on failure
 
 **Quick Start:**
 
@@ -104,6 +113,9 @@ docker compose -f ~/compose.robot-pi.yaml logs -f
 - Supports Tailscale VPN for remote access over 4G/5G networks
 
 ### Running the Robot
+
+!!! warning "Important"
+    Start micro-ROS agent **before** launching the robot bringup!
 
 1. Start micro-ROS agent:
 
@@ -178,98 +190,34 @@ The robot uses standard ROS2 topic names following REP-105:
 └─────────────────────┘
 ```
 
-**Note**: The micro-ROS agent automatically adds `/rt/` prefix to firmware topics and remaps them to standard names. See [micro-ROS Agent Configuration](#micro-ros-agent-configuration) for details.
+<!-- **Note**: The micro-ROS agent automatically adds `/rt/` prefix to firmware topics and remaps them to standard names. See [micro-ROS Agent Configuration](#micro-ros-agent-configuration) for details. -->
 
-## Dependency Management Strategy
+## Dependency Management
 
-This project uses a **hybrid approach** for managing dependencies:
+!!! info "Hybrid Approach"
+    This project uses VCS for ROS2 packages (src/) and Git submodules for external libraries (lib/).
 
-### VCS for ROS2 Packages (src/)
-
-- **What**: Your robot packages that change frequently
-- **Why**: Easy for contributors, standard ROS2 workflow
-- **How**: Uses `src/ros2.repos` file with `vcs import`
-
-```yaml
-# src/ros2.repos example
-repositories:
-  robot:
-    type: git
-    url: https://github.com/goldjunge91/robot.git
-    version: humble  # Always latest from humble branch
-```
-
-**Commands:**
-
+**Quick Commands:**
 ```bash
-# Import all packages
+# Import ROS2 packages
 vcs import src < src/ros2.repos
 
-# Check status
-vcs status src
-
-# Update all packages
-vcs pull src
-
-# Switch branches
-vcs custom src --args checkout humble
-```
-
-### Git Submodules for Libraries (lib/)
-
-- **What**: External libraries that need exact versions
-- **Why**: Precise version control, important for firmware builds
-- **How**: Traditional git submodules with `lib/lib_repos.repos` as reference
-
-```yaml
-# lib/lib_repos.repos example
-repositories:
-  FreeRTOS-Kernel:
-    type: git
-    url: https://github.com/FreeRTOS/FreeRTOS-Kernel
-    version: V10.6.2  # Exact tag version
-```
-
-**Commands:**
-
-```bash
-# Initialize submodules
+# Initialize library submodules  
 git submodule update --init --recursive lib/
-
-# Update to latest
-git submodule update --remote lib/
-
-# Set specific version
-cd lib/FreeRTOS-Kernel && git checkout V10.6.2
 ```
 
-### Why This Hybrid Approach?
-
-| Aspect              | VCS (src/)                   | Submodules (lib/)         |
-| ------------------- | ---------------------------- | ------------------------- |
-| **Use Case**        | Your ROS2 packages           | External libraries        |
-| **Updates**         | Frequent, latest from branch | Rare, specific versions   |
-| **Complexity**      | Simple `vcs pull`            | More complex git commands |
-| **Contributors**    | Easy `vcs import`            | Automatic with git clone  |
-| **Version Control** | Branch-based                 | Commit/tag-based          |
-| **Offline Work**    | Requires internet            | Available offline         |
-
-### Directory Structure
-
-```
+**Directory Structure:**
+```txt
 my_steel-robot_ws/
-├── src/                    # ROS2 Packages → VCS managed
-│   ├── robot/             # Your packages, frequent updates
-│   ├── robot_bringup/     # Development branches (humble/main)
-│   └── ros2.repos         # VCS configuration
-├── lib/                   # External Libraries → Git Submodules  
-│   ├── FreeRTOS-Kernel/  # Stable versions, exact tags
-│   ├── eigen/             # Precise version for firmware
-│   └── lib_repos.repos    # Reference (not used by git)
-└── firmware/              # Pico firmware (separate build)
+├── src/          # ROS2 Packages (VCS managed)
+├── lib/          # External Libraries (Git Submodules)
+└── firmware/     # Pico firmware
 ```
 
 ## Architecture
+
+!!! note "Two-Tier Architecture"
+    The robot uses a distributed architecture with Raspberry Pi 4B for high-level control and Raspberry Pi Pico for real-time motor control.
 
 ### Hardware Components
 
@@ -313,70 +261,29 @@ src/
 
 ## Firmware
 
-The Pico firmware is located in the `firmware/` directory and uses micro-ROS for ROS2 communication.
+!!! info "Firmware Documentation"
+    For detailed firmware architecture and build instructions, see [FIRMWARE_ARCHITECTURE.md](FIRMWARE_ARCHITECTURE.md).
 
-### Building Firmware
-
+**Quick Commands:**
 ```bash
 cd firmware
-
-# Debug build
-make build
-
-# Release build
-make build_release
+make build_release  # Build release firmware
+make flash-release  # Flash to Pico
+./monitor_firmware.sh  # Monitor output
 ```
 
-### Flashing Firmware
+## micro-ROS Agent
 
-1. Put Pico in BOOTSEL mode (hold BOOTSEL button while connecting USB)
-2. Flash the firmware:
+!!! info "Agent Configuration"
+    For detailed micro-ROS agent configuration and topic remapping, see [hardware_setup.md](hardware_setup.md#micro-ros-agent-configuration).
 
-   ```bash
-   make flash          # Debug
-   make flash-release  # Release
-   ```
-
-3. Monitor firmware output:
-
-   ```bash
-   ./monitor_firmware.sh
-   ```
-
-### Firmware Topics
-
-The firmware publishes and subscribes to the following topics (with `/rt/` prefix added by micro-ROS):
-
-- Publishes: `/joint_states`, `/imu/data_raw`, `/odom`, `/sensors/*`
-- Subscribes: `/cmd_vel`
-
-See `firmware/README.md` for detailed firmware documentation.
-
-## micro-ROS Agent Configuration
-
-The micro-ROS agent bridges communication between the Pico firmware and ROS2. It automatically adds `/rt/` prefix to firmware topics and uses remapping to convert them to standard ROS2 names.
-
-### Topic Remapping
-
-| Firmware Topic     | ROS2 Topic      | Direction       |
-| ------------------ | --------------- | --------------- |
-| `/rt/joint_states` | `/joint_states` | Firmware → ROS2 |
-| `/rt/imu/data_raw` | `/imu/data_raw` | Firmware → ROS2 |
-| `/rt/odom`         | `/odom`         | Firmware → ROS2 |
-| `/rt/sensors/*`    | `/sensors/*`    | Firmware → ROS2 |
-| `/cmd_vel`         | `/rt/cmd_vel`   | ROS2 → Firmware |
-
-### Starting the Agent
-
+**Quick Start:**
 ```bash
 # Auto-detect Pico device
 python3 scripts/launch_microros_agent.py
 
-# Manual device specification
+# Manual specification
 ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200
-
-# Using launch file (includes remapping)
-ros2 launch robot_bringup microros_agent.launch.py
 ```
 
 ## Using Just (Task Runner)
@@ -499,8 +406,7 @@ The simulation includes:
 
 ## Troubleshooting
 
-### No topics appearing
-
+/// details | No topics appearing
 1. Check micro-ROS agent is running:
 
    ```bash
@@ -520,8 +426,9 @@ The simulation includes:
    cd firmware && ./monitor_firmware.sh
    ```
 
-### Remote connection issues (Tailscale)
+///
 
+/// details | Remote connection issues (Tailscale)
 1. Check Tailscale status:
 
    ```bash
@@ -541,8 +448,9 @@ The simulation includes:
    ros2 topic list
    ```
 
-### Hardware interface fails to activate
+///
 
+/// details | Hardware interface fails to activate
 1. Verify firmware is publishing:
 
    ```bash
@@ -561,8 +469,9 @@ The simulation includes:
    ros2 launch robot_bringup bringup.launch.py --log-level debug
    ```
 
-### Robot doesn't respond to commands
+///
 
+/// details | Robot doesn't respond to commands
 1. Test velocity commands:
 
    ```bash
@@ -583,11 +492,13 @@ The simulation includes:
    ros2 topic echo /rt/cmd_vel
    ```
 
+///
+
 ## Documentation
 
 - [PINMAP.md](PINMAP.md) - Pin assignments and hardware connections
 - [Projekt.md](PROJEKT.md) - Comprehensive project description (German)
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed system architecture
+- [FIRMWARE_ARCHITECTURE.md](FIRMWARE_ARCHITECTURE.md) - Detailed firmware architecture
 - [hardware_setup.md](hardware_setup.md) - Hardware assembly guide
 - [Firmware Documentation](https://github.com/goldjunge91/my_steel-robot_ws/blob/main/src/robot_firmware/README.md) - Raspberry Pi Pico firmware
 

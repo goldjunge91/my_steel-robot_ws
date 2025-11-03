@@ -19,19 +19,14 @@ theme:
       "\\dx": "\\mathrm{d}x"
   # show_datetime: true
 
-nav:
-  - "Home": "README.md"
-  - "Project Overview": "PROJEKT.md"
-  - "Architecture":
-      - "Architecture Index": "ARCHITECTURE_INDEX.md"
-      - "Firmware Architecture": "ARCHITECTURE.md"
-  - "Hardware":
-      - "Pin Assignments": "PINMAP.md"
-      - "Hardware Setup": "hardware_setup.md"
-      - "Raspberry Pi Setup": "raspberry_pi_setup_plan.md"
-  - "Extensions":
-      - "Overview": "extensions/README.md"
-      - "Attribute Lists": "extensions/attribute_lists.md"
+# nav:
+#   - Welcome: index.md
+#   - get_started.md
+#   - Extensions:
+#       - Footnotes: extensions/footnotes.md
+#       - Tabs: extensions/pymdownx_blocks_tab.md
+#       - Details: extensions/pymdownx_blocks_details.md
+#       - Codexec: extensions/codexec.md
 
 plugins:
   - search
@@ -152,7 +147,7 @@ markdown_extensions:
           #   - "Home": "README.md"
           #   - "Projekt": "PROJEKT.md"
           #   - "Architecture":
-          #       - "Overview": "ARCHITECTURE.md"
+          #       - "Overview": "FIRMWARE_ARCHITECTURE.md"
           #       - "Architecture Index": "ARCHITECTURE_INDEX.md"
           #   - "Hardware":
           #       - "Pin Assignments": "PINMAP.md"

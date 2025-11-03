@@ -1,206 +1,61 @@
+---
+title: Architecture Index
+summary: Navigation index for all architecture documentation
+description: Quick navigation to find the right documentation for your needs
+keywords: architecture, documentation, navigation, index
+author: goldjunge91
+alpha: true
+order: 8
+---
+
 # Architecture Documentation Index
 
-This document provides an index to all architecture documentation and Mermaid diagrams in the project.
+## What are you looking for?
 
-## Overview
+### 🔧 **Hardware Setup & Connections**
+- **[PINMAP.md](PINMAP.md)** - Pin assignments for Raspberry Pi Pico
+- **[hardware_setup.md](hardware_setup.md)** - Complete hardware setup guide
 
-The my_steel robot uses a two-tier architecture with a Raspberry Pi 4B running ROS2 Humble for high-level control and a Raspberry Pi Pico running FreeRTOS with micro-ROS for real-time motor control.
+### 💻 **Firmware & Low-Level**
+- **[FIRMWARE_ARCHITECTURE.md](FIRMWARE_ARCHITECTURE.md)** - Pico firmware architecture with detailed diagrams
 
-## Architecture Documents
+### 🚀 **Project Overview & Vision**
+- **[PROJEKT.md](PROJEKT.md)** - Complete project story from idea to implementation (German)
+- **[README.md](README.md)** - Quick start and workspace overview
 
-### Core Packages
+### 🐳 **Deployment & Setup**
+- **[raspberry_pi_setup_plan.md](raspberry_pi_setup_plan.md)** - Raspberry Pi deployment guide
 
-- **robot_hardware** - Hardware interface implementation
-  - Component diagram
-  - Class diagram
-  - Sequence diagrams (activation, control loop)
-  - Data flow
-  - State machine
-  - Design decisions (Twist vs Float32MultiArray, no mock mode)
+## Quick Navigation by Task
 
-- **robot_controller** - Controller configurations
-  - Package structure
-  - Controller architecture
-  - Data flow
-  - Configuration structure
-  - Sequence diagram (controller lifecycle)
-  - Mecanum drive kinematics
-  - Topic remapping
-  - State machine (controller states)
+| I want to... | Go to... |
+|---------------|----------|
+| Wire up the hardware | [PINMAP.md](PINMAP.md) |
+| Set up the robot from scratch | [hardware_setup.md](hardware_setup.md) |
+| Understand the firmware | [FIRMWARE_ARCHITECTURE.md](FIRMWARE_ARCHITECTURE.md) |
+| Get the big picture | [PROJEKT.md](PROJEKT.md) |
+| Deploy on Raspberry Pi | [raspberry_pi_setup_plan.md](raspberry_pi_setup_plan.md) |
+| Quick start development | [README.md](README.md) |
 
-- **robot_description** - URDF/xacro models
-  - Package structure
-  - URDF structure
-  - Link hierarchy
-  - Joint types
-  - ros2_control configuration
-  - Coordinate frames (TF tree)
-  - Gazebo integration
-  - Component configuration flow
-  - Physical properties
-  - Xacro macros
-  - URDF validation
+## Architecture at a Glance
 
-### Firmware
-
-- **Pico Firmware** - Real-time firmware
-  - System architecture
-  - Agent architecture
-  - Data flow
-  - Sequence diagrams (initialization, control loop)
-  - Task scheduling
-  - Memory layout
-  - Pin configuration
-  - PID control flow
-  - Odometry calculation
-  - Communication protocol
-  - Build system
-
-## Quick Reference
-
-### Key Diagrams by Topic
-
-#### Hardware Interface
-
-- Component Diagram
-- Control Loop Sequence
-- State Machine
-
-#### Controllers
-
-- Controller Architecture
-- Mecanum Kinematics
-- Controller Lifecycle
-
-#### Firmware
-
-- Agent Architecture
-- Control Loop
-- Task Scheduling
-- PID Control
-
-#### Robot Model
-
-- URDF Structure
-- TF Tree
-- ros2_control Config
-
-## Diagram Types
-
-### Component Diagrams
-
-Show the static structure of the system with components and their relationships.
-
-**Found in:**
-- Hardware Interfaces
-- Controllers
-
-### Sequence Diagrams
-
-Show the dynamic behavior of the system over time with message exchanges.
-
-**Found in:**
-- Hardware Interfaces (activation, control loop)
-- Controllers (lifecycle)
-- Firmware (initialization, control loop)
-
-### Data Flow Diagrams
-
-Show how data moves through the system.
-
-**Found in:**
-- Hardware Interfaces
-- Controllers
-- Firmware
-
-### State Machine Diagrams
-
-Show the states and transitions of system components.
-
-**Found in:**
-- Hardware Interfaces
-- Controllers
-
-### Class Diagrams
-
-Show the object-oriented structure of code.
-
-**Found in:**
-- Hardware Interfaces
-- Firmware
-
-### Flowcharts
-
-Show algorithmic processes and decision logic.
-
-**Found in:**
-- Firmware (PID control, odometry)
-- Robot Description (URDF validation)
-
-## Viewing Mermaid Diagrams
-
-### In GitHub
-
-GitHub automatically renders Mermaid diagrams in Markdown files.
-
-### In VS Code
-
-Install the "Markdown Preview Mermaid Support" extension:
-
-```bash
-code --install-extension bierner.markdown-mermaid
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  Raspberry Pi 4B │    │ Raspberry Pi    │    │ Arduino Nano/   │
+│                 │    │ Pico            │    │ Pro Micro       │
+│ • ROS2 Humble   │◄──►│ • FreeRTOS      │    │ • Nerf Launcher │
+│ • Navigation    │    │ • micro-ROS     │    │ • Separate      │
+│ • Computer      │    │ • Motor Control │    │   Controller    │
+│   Vision        │    │ • Sensors       │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### In Browser
+## Documentation Quality
 
-Use the Mermaid Live Editor: <https://mermaid.live/>
-
-### Generate Images
-
-Use the Mermaid CLI:
-
-```bash
-npm install -g @mermaid-js/mermaid-cli
-mmdc -i ARCHITECTURE.md -o architecture.png
-```
-
-## Contributing
-
-When adding new features or modifying architecture:
-
-1. Update the relevant architecture document
-2. Add or modify Mermaid diagrams as needed
-3. Update this index if adding new documents
-4. Ensure diagrams are clear and follow existing style
-5. Test that diagrams render correctly
-
-### Diagram Style Guidelines
-
-- Use consistent colors for similar components across diagrams
-- Keep diagrams focused on one aspect (don't try to show everything)
-- Add notes for important details
-- Use subgraphs to group related components
-- Label all connections clearly
-- Include legends when using custom colors
-
-### Color Conventions
-
-- **Green (#4CAF50)**: Primary/active components
-- **Blue (#2196F3)**: Data/communication components
-- **Orange (#FF9800)**: Hardware/physical components
-- **Purple (#9C27B0)**: Control/management components
-- **Red (#f44336)**: Errors/warnings
-- **Yellow (#FF9800)**: Warnings/cautions
-
-## Related Documentation
-
-- [PINMAP.md](PINMAP.md) - Hardware pin assignments
-- [hardware_setup.md](hardware_setup.md) - Hardware assembly guide
-
-## Maintenance
-
-This index should be updated whenever:
-- New architecture documents are added
-- Major architectural changes are made
-- New diagram types are introduced
-- Package structure changes significantly
+| Document | Completeness | Technical Depth | Diagrams |
+|----------|--------------|-----------------|----------|
+| FIRMWARE_ARCHITECTURE.md | ████████████ | ████████████ | ████████████ |
+| hardware_setup.md | ████████████ | ████████░░░░ | ████░░░░░░░░ |
+| PROJEKT.md | ████████████ | ████████░░░░ | ████████░░░░ |
+| PINMAP.md | ████████████ | ████░░░░░░░░ | ░░░░░░░░░░░░ |
+| README.md | ████████████ | ████████░░░░ | ████░░░░░░░░ |
