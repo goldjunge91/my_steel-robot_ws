@@ -193,7 +193,7 @@ jobs:
 
       - name: Download digests
         if: steps.check-secrets.outputs.skip != 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: ${{ runner.temp }}/digests
           # Lädt nur die Artifacts für diesen Job herunter, z.B. "digests-robot-pi-*"
@@ -456,7 +456,7 @@ jobs:
 
 #     steps:
 #       - name: Download digests
-#         uses: actions/download-artifact@v4
+#         uses: actions/download-artifact@v6
 #         with:
 #           path: ${{ runner.temp }}/digests
 #           # Lädt nur die Artifacts für diesen Job herunter, z.B. "digests-robot-pi-*"
@@ -716,7 +716,7 @@ jobs:
 
 #     steps:
 #       - name: Download digests
-#         uses: actions/download-artifact@v4
+#         uses: actions/download-artifact@v6
 #         with:
 #           path: ${{ runner.temp }}/digests
 #           # Lädt nur die Artifacts für diesen Job herunter, z.B. "digests-robot-pi-*"
