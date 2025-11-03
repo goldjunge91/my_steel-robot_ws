@@ -1,0 +1,9 @@
+docs/datasheet/
+docs/ros/
+docs/docker/
+docs/github/
+src/
+.git/
+.github/
+build
+install/

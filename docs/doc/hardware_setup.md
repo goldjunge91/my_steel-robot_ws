@@ -1,15 +1,24 @@
-# Hardware Preparation and Bringup Guide
+<!-- ---
+title: Hardware Setup Guide
+summary: Complete hardware preparation and bringup guide
+description: Step-by-step guide for preparing the remote PC, Raspberry Pi, and Pico firmware for the my_steel robot
+keywords: hardware setup, raspberry pi, pico, firmware flashing, bringup
+author: goldjunge91
+order: 4
+---
 
-This guide explains how to prepare the remote development PC, the single-board computer (SBC) on the robot, and the Raspberry Pi Pico firmware. It also covers hardware checks, flashing procedures, and how to start the full system in simulation or on the real robot.
+!!! info "Guide Scope"
+    This guide explains how to prepare the remote development PC, the single-board computer (SBC) on the robot, and the Raspberry Pi Pico firmware. It also covers hardware checks, flashing procedures, and how to start the full system in simulation or on the real robot.
 
 ## 1. Prerequisites
 
-- Ubuntu 22.04 (or matching ROS 2 Humble environment)
-- ROS 2 Humble installed (`/opt/ros/humble/setup.bash` available)
-- `colcon`, `rosdep`, `tmux`, `git`, `build-essential`
-- Pico SDK toolchain (or `picotool`) on the machine that flashes the firmware
-- Docker (optional) if the micro-ROS agent shall run in a container
-- Access to this workspace and the `ros2.repos` manifest already imported into `src/`
+!!! note "Requirements"
+    - Ubuntu 22.04 (or matching ROS 2 Humble environment)
+    - ROS 2 Humble installed (`/opt/ros/humble/setup.bash` available)
+    - `colcon`, `rosdep`, `tmux`, `git`, `build-essential`
+    - Pico SDK toolchain (or `picotool`) on the machine that flashes the firmware
+    - Docker (optional) if the micro-ROS agent shall run in a container
+    - Access to this workspace and the `ros2.repos` manifest already imported into `src/`
 
 Environment variables:
 
@@ -32,13 +41,16 @@ source ~/ros2_steel_ws/my_steel-robot_ws/install/setup.bash  # after building th
 
 ## 3. Hardware Verification (Robot Bench Test)
 
-Perform these checks before flashing or running the bringup:
+!!! warning "Critical Checks"
+    Perform these checks **before** flashing or running the bringup to avoid hardware damage!
 
 1. **Serial Devices**
+
    ```bash
    ls -l /dev/ttyACM* /dev/ttyUSB* /dev/ttyAMA* /dev/gpiochip*
    udevadm info -a -n /dev/ttyACM0  # adjust port
    ```
+
    Ensure the user is in the `dialout` group (`sudo usermod -aG dialout $USER`).
 
 2. **Power and Wiring**
@@ -46,6 +58,7 @@ Perform these checks before flashing or running the bringup:
    - Compare wiring against `docs/PINMAP.md`.
 
 3. **I2C / SPI peripherals (optional)**
+
    ```bash
    sudo apt install -y i2c-tools
    sudo i2cdetect -y 1
@@ -58,6 +71,7 @@ Perform these checks before flashing or running the bringup:
 
 1. Install dependencies and ROS 2 Humble.
 2. Clone the workspace, import repos, and build:
+
    ```bash
    cd ~/ros2_steel_ws/my_steel-robot_ws
    vcs import src < ros2.repos
@@ -65,6 +79,7 @@ Perform these checks before flashing or running the bringup:
    colcon build --symlink-install
    source install/setup.bash
    ```
+
 3. Optional convenience targets (`just` recipes):
    - `just start-gazebo-sim` – Gazebo with mecanum controller
    - `just start-sim-tmux` – tmux session for simulation
@@ -114,10 +129,12 @@ Use `make build` for a default build in `firmware/build/`.
 
 1. Hold BOOTSEL while connecting the Pico to USB; it mounts as `RPI-RP2`.
 2. Copy the generated UF2 file:
+
    ```bash
    cp build_release/src/my_firmware.uf2 /media/$USER/RPI-RP2/
    sync
    ```
+
 3. The board reboots automatically with the new firmware.
 
 ### 6.3 Flashing via picotool (optional)
@@ -243,6 +260,7 @@ Keep this section updated when new packages are added or deprecated to avoid sta
 Use this deep dive when you need to locate specific launch files, headers, or implementation details. Paths are relative to `my_steel-robot_ws/src`.
 
 ### husarion_controllers/mecanum_drive_controller
+
 - `package.xml`, `CMakeLists.txt`: declares ament-based shared library build.
 - Headers under `include/mecanum_drive_controller/`
   - `mecanum_drive_controller.hpp`: main controller class deriving from `controller_interface::ControllerInterface`.
@@ -256,6 +274,7 @@ Use this deep dive when you need to locate specific launch files, headers, or im
 - `doc/userdoc.rst`, `CHANGELOG.rst`: upstream documentation and release history.
 
 ### mecabridge_hardware
+
 - `package.xml`, `CMakeLists.txt`: builds the hardware interface library and installs launch/config assets.
 - `src/mecabridge_hardware/`
   - `mecabridge_hardware_interface.cpp`: implements `hardware_interface::SystemInterface` lifecycle, read/write loops, and watchdog logic.
@@ -274,6 +293,7 @@ Use this deep dive when you need to locate specific launch files, headers, or im
 - `README.md`, `README_drive_arduino.md`: architecture, serial protocol, tmux workflows.
 
 ### micro-ROS-Agent
+
 - Top-level licensing (`LICENSE`, `NOTICE`, third-party list) and contributor guide.
 - `micro_ros_agent/package.xml`, `CMakeLists.txt`: standard micro-ROS agent build; depends on `rcl`, `rmw` implementations.
 - `micro_ros_agent/README.md`: runtime options (serial, UDP, CAN).
@@ -281,6 +301,7 @@ Use this deep dive when you need to locate specific launch files, headers, or im
 - Treat this as an upstream dependency—avoid local modifications unless tracking forks.
 
 ### open_manipulator_x
+
 - Multi-package repository: `open_manipulator_x_description`, `open_manipulator_x_moveit`, `open_manipulator_x_joy` each provide `package.xml` + `CMakeLists.txt`.
   - `*_description`: URDF/Xacro, STL meshes for the manipulator; use with `robot_description` if arm is mounted.
   - `*_moveit`: MoveIt2 configs (`config/`, `launch/`) and `.setup_assistant` snapshot.
@@ -288,6 +309,7 @@ Use this deep dive when you need to locate specific launch files, headers, or im
 - `README.md`: upstream quickstart and wiring.
 
 ### robot
+
 - Core mobile base package.
 - `package.xml`, `CMakeLists.txt`, `pyproject.toml`: builds both C++ launch support and Python utilities.
 - `description/`: modular Xacro (sensors, ros2_control, inertials) aggregated by `robot.urdf.xacro`.
@@ -298,46 +320,56 @@ Use this deep dive when you need to locate specific launch files, headers, or im
 - `todo.md`, `Tasks.md`: outstanding work items.
 
 ### robot_autonomy
+
 - Not a ROS package; containerized Nav2/SLAM orchestrations.
 - Key directories: `docker/` (compose definitions), `nav2/` (param files, launch scripts), `justfile`/`Makefile` (developer recipes).
 - Use when bringing up autonomy stacks on remote machines.
 
 ### robot_bringup
+
 - Launch and scripting toolkit around micro-ROS agent and ros2_control bringup.
 - `launch/microros_agent.launch.py`: parameterized agent launcher (Docker or native).
 - `scripts/run_microros_agent.sh`, `scripts/install_microros_agent.sh`: automation for agent deployment.
 - `README.md`: tmux-based operations guide covering SBC and remote PC flows.
 
 ### robot_controller
+
 - Pure-Python ROS 2 package (`setup.py`, `setup.cfg`, `package.xml`).
 - `launch/controller.launch.py`, `launch/manipulator.launch.py`: spawn controller manager plus specific controllers.
 - `test/`: simple pytest hooks verifying xacro and style compliance.
 - Acts as glue between hardware interfaces and controllers shipped in this workspace.
 
 ### robot_description
+
 - URDF/Xacro + meshes describing the chassis.
 - `README.md`: usage instructions.
 - `config/components/` (if populated) and sensor macro includes to compose new variants.
 - Ensure any joint name changes propagate to matching controller YAMLs.
 
 ### robot_firmware
+
 - Placeholder for an external firmware repository (currently only `.git`).
 - Actual firmware you build lives in top-level `firmware/` directory; keep this as a reference if tracking upstream history.
 
 ### robot_gazebo
+
 - Currently a stub with `README.md`; extend with Gazebo plugins/worlds as simulation demands grow.
 
 ### robot_hardware
+
 - Concept notes and potential future hardware interface experiments documented in `README.md` (no code yet).
 
 ### robot_localization
+
 - Snapshot of the `robot_localization` stack, mostly populated with build/install artifacts and `COLCON_IGNORE` to avoid accidental builds.
 - Replace with a clean source checkout if you need to customize EKF/UKF nodes.
 
 ### robot_nerf_launcher
+
 - Placeholder for the Nerf attachment; `README.md` describes intended control interface.
 
 ### robot_utils
+
 - Installable Python package providing CLI helpers.
 - `robot_utils/flash_firmware.py`: entry point for flashing via UART/USB (downloads firmware if needed).
 - `flash_firmware_{uart,usb}.py`, `utils.py`: shared helpers (port discovery, subprocess wrappers).
@@ -345,18 +377,22 @@ Use this deep dive when you need to locate specific launch files, headers, or im
 - `README.md`: usage examples and best practices.
 
 ### robot_vision
+
 - Placeholder repository; `README.md` outlines planned vision stack (face detection, AprilTags, etc.).
 
 ### robot_hardware_interfaces
+
 - Upstream ros2_control implementation for robot platforms.
 - `README.md`: topic interface summary, launch instructions (`example_diff_drive.launch.py`).
 - Useful reference when comparing mecabridge configuration to existing Husarion robots.
 
 ### serial
+
 - Vendored serial-port library (git submodule). No ROS build files—used as third-party dependency for firmware flashing or hardware interface code.
 
 ### Additional Notes
+
 - Many repositories under `src/` contain their own `.git/` directories, indicating they were imported via `vcs`. Coordinate updates through `ros2.repos` or submodule management rather than editing history inside the workspace.
 - `COLCON_IGNORE` files (e.g., under `robot_localization/build/`) prevent colcon from descending into generated artifacts—keep them in place to avoid accidental rebuilds of cached outputs.
 
-Use this breakdown alongside the package inventory to quickly locate implementations, configs, or launch entries when debugging or extending the stack.
+Use this breakdown alongside the package inventory to quickly locate implementations, configs, or launch entries when debugging or extending the stack. -->

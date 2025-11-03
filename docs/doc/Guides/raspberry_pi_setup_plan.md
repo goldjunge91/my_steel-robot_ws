@@ -1,22 +1,59 @@
-# my_steel Robot - Einfacher Start Guide
+---
+title: Raspberry Pi Setup Guide
+summary: Quick start guide for robot deployment
+description: Step-by-step guide for setting up the my_steel robot on Raspberry Pi with Docker or manual installation
+keywords: raspberry pi, deployment, docker, setup, installation
+author: goldjunge91
+order: 6
+---
 
-## Deployment-Optionen
+# Raspberry Pi Setup Plan
 
-Es gibt zwei Möglichkeiten, den Roboter auf dem Raspberry Pi zu betreiben:
+## 1. Vorbereitung
 
-1. **Docker Deployment (Empfohlen)**: Containerisierte Lösung mit allen Abhängigkeiten vorinstalliert
-2. **Manuelle Installation**: Traditionelle Installation direkt auf dem System
+| Schritt | Befehl | Notizen |
+|---------|--------|---------|
+| OS flashen | Raspberry Pi Imager → Ubuntu Server 22.04 64-bit | SSH aktivieren |
+| System aktualisieren | `sudo apt update && sudo apt upgrade -y` | Neustart einplanen |
+| Basiswerkzeuge | `sudo apt install git build-essential python3-pip` | vcstool folgt im Workspace |
 
-### Option 1: Docker Deployment (Empfohlen)
+## 2. Deployment-Varianten
 
-**Vorteile:**
-- Alle Abhängigkeiten vorinstalliert
-- Einfache Updates durch neue Images
-- Automatische Service-Orchestrierung
-- Integrierte Tailscale VPN-Unterstützung
-- Persistente Logs und Konfiguration
+### A) Native Ausführung
 
+Dazu muss ROS2 Humble und alle Abhängigkeiten manuell installiert werden.
+
+1. ROS 2 Umgebung sourcen (`source /opt/ros/humble/setup.bash` + `source install/setup.bash`)
+2. micro-ROS Agent starten (`just start-microros`)
+3. Bringup starten (`ros2 launch robot_bringup bringup.launch.py robot_model:=robot_xl`)
+
+### B) Docker Compose
+
+Selbständig gebautes Docker-Image mit allen Abhängigkeiten vorinstalliert.
+
+```bash
+sudo apt install docker.io docker-compose-plugin
+docker pull mysteel/robot:humble-arm64
+cp docker/compose.robot-pi.yaml ~/robot-compose.yaml
+docker compose -f ~/robot-compose.yaml up -d
+```
+
+Konfiguration (`.env`) aus dem `docker/env.example` Verzeichnis kopieren und anpassen.
+!!! note "Vorteile"
+    - +heroicons:check-circle+ Alle Abhängigkeiten vorinstalliert
+    - +lucide:refresh-cw+ Einfache Updates durch neue Images
+    - +lucide:container+ Automatische Service-Orchestrierung
+    - +heroicons:lock-closed+ Integrierte Tailscale VPN-Unterstützung
+    - +lucide:hard-drive+ Persistente Logs und Konfiguration
+  
+## 4. Netzwerk & Remote
+
+- **Tailscale** installieren (`curl -fsSL https://tailscale.com/install.sh | sh`)
+- Robot dem Tailnet hinzufügen (`sudo tailscale up --authkey <key>`)
+- Domain ID festlegen (`export ROS_DOMAIN_ID=0`) bei Multi-Robot-Umgebungen
+<!-- 
 **Schnellstart:**
+
 ```bash
 # Docker und Docker Compose installieren (falls nicht vorhanden)
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -50,6 +87,7 @@ docker compose -f ~/compose.robot-pi.yaml logs -f
 ```
 
 **Systemd Integration (Autostart):**
+
 ```bash
 # Service-Datei kopieren
 sudo cp docker/robot-docker.service /etc/systemd/system/
@@ -64,7 +102,6 @@ sudo systemctl status robot-docker.service
 ```
 
 **Weitere Informationen:**
-- Siehe [docker/README.md](../docker/README.md) für vollständige Dokumentation
 - Build-Anleitung, Konfigurationsoptionen und erweiterte Troubleshooting
 
 ### Option 2: Manuelle Installation
@@ -163,7 +200,7 @@ ros2 run teleop_twist_joy teleop_node --ros-args -p joy_config:=xbox
 ### 5. Foxglove Studio verbinden
 
 1. Foxglove Studio öffnen
-2. "Open connection" → "Foxglove WebSocket" 
+2. "Open connection" → "Foxglove WebSocket"
 3. URL: `ws://[RASPBERRY_PI_IP]:8765`
 4. Connect
 
@@ -201,9 +238,10 @@ journalctl -u foxglove-bridge -f
 
 ## Troubleshooting
 
-### Docker-spezifische Probleme:
+### Docker-spezifische Probleme
 
 #### Container startet nicht
+
 ```bash
 # Container-Status prüfen
 docker compose -f ~/compose.robot-pi.yaml ps
@@ -217,6 +255,7 @@ docker compose -f ~/compose.robot-pi.yaml logs robot-bringup
 ```
 
 #### USB-Gerät nicht gefunden (/dev/ttyACM0)
+
 ```bash
 # Pico-Verbindung prüfen
 ls -l /dev/ttyACM*
@@ -230,6 +269,7 @@ sudo usermod -aG dialout $USER
 ```
 
 #### Health Checks schlagen fehl
+
 ```bash
 # Health Check Status prüfen
 docker inspect microros-agent | grep -A 10 Health
@@ -246,6 +286,7 @@ ros2 control list_controllers
 ```
 
 #### Tailscale verbindet nicht
+
 ```bash
 # Tailscale-Status im Container prüfen
 docker exec robot-bringup tailscale status
@@ -262,6 +303,7 @@ docker compose -f ~/compose.robot-pi.yaml restart robot-bringup
 ```
 
 #### Container-Updates
+
 ```bash
 # Neues Image herunterladen
 docker pull mysteel/robot:humble-arm64
@@ -274,6 +316,7 @@ docker image prune -a
 ```
 
 #### Logs und Debugging
+
 ```bash
 # Alle Logs anzeigen
 docker compose -f ~/compose.robot-pi.yaml logs -f
@@ -286,25 +329,4 @@ tail -f /var/log/robot/*.log
 
 # Container-Ressourcennutzung
 docker stats
-```
-
-### Manuelle Installation - Häufige Probleme:
-- **CycloneDDS Fehler**: `export RMW_IMPLEMENTATION=rmw_fastrtps_cpp` verwenden
-- **micro_ros_agent not found**: `sudo apt install ros-humble-micro-ros-agent`
-- **Socket buffer size**: CycloneDDS Config deaktivieren
-- **Controller manager conflicts**: ROS2 Humble Version prüfen
-- **Keine Topics sichtbar**: ROS_DOMAIN_ID=0 setzen
-- **Foxglove verbindet nicht**: IP-Adresse und Port 8765 prüfen
-
-### Debug-Befehle:
-```bash
-ros2 topic list
-ros2 node list  
-ros2 topic echo /joy
-ros2 topic echo /cmd_vel
-```
-
-### Weitere Dokumentation:
-- **Docker Deployment**: Siehe [docker/README.md](../docker/README.md)
-- **Allgemeine Architektur**: Siehe [SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md)
-- **Hardware Setup**: Siehe [hardware_setup.md](hardware_setup.md)
+``` -->

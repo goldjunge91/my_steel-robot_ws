@@ -100,7 +100,6 @@ docker compose -f ~/compose.robot-pi.yaml logs -f
 
 **Documentation:**
 
-- See [docker/README.md](docker/README.md) for complete deployment guide
 - Includes build instructions, configuration options, and troubleshooting
 - Supports Tailscale VPN for remote access over 4G/5G networks
 
@@ -257,7 +256,7 @@ cd lib/FreeRTOS-Kernel && git checkout V10.6.2
 
 ### Directory Structure
 
-```
+```txt
 my_steel-robot_ws/
 ├── src/                    # ROS2 Packages → VCS managed
 │   ├── robot/             # Your packages, frequent updates
@@ -298,7 +297,7 @@ my_steel-robot_ws/
 
 ### Package Structure
 
-```
+```txt
 src/
 ├── robot_description/          # URDF, meshes, component configs
 ├── robot_bringup/             # Launch files and configurations
@@ -584,46 +583,13 @@ The simulation includes:
    ros2 topic echo /rt/cmd_vel
    ```
 
-## Migration from Old Topic Names
-
-If you're upgrading from a previous version that used `/ddd/*` topic prefixes, see the [Migration Guide](docs/ROS2_TOPIC_MIGRATION_GUIDE.md) for detailed instructions.
-
-### Quick Migration Summary
-
-- `/ddd/imu` → `/imu/data_raw`
-- `/ddd/odom` → `/odom`
-- `/ddd/range_tof` → `/sensors/range_tof`
-- `/ddd/range` → `/sensors/range_ultrasonic`
-- `/ddd/cmd_vel` → `/cmd_vel` (alternative removed)
-
-**Important**: Firmware must be updated to work with new topic names. See migration guide for step-by-step instructions.
 
 ## Documentation
 
-- [PINMAP.md](docs/PINMAP.md) - Pin assignments and hardware connections
-- [Projekt.md](Projekt.md) - Comprehensive project description (German)
-- [SYSTEM_ARCHITECTURE.md](docs/SYSTEM_ARCHITECTURE.md) - Detailed system architecture
-- [ROS2_TOPIC_MIGRATION_GUIDE.md](docs/ROS2_TOPIC_MIGRATION_GUIDE.md) - Migration guide for topic standardization
-- [architecture_and_packages.md](docs/architecture_and_packages.md) - Package responsibilities
-- [hardware_setup.md](docs/hardware_setup.md) - Hardware assembly guide
-- [firmware.README.md](docs/firmware.README.md) - Firmware documentation
-
-## Contributing
-
-1. Follow ROS2 coding standards
-2. Use `clang-format` for C++ code
-3. Use `flake8` for Python code
-4. Add tests for new features
-5. Update documentation
-
-## License
-
-See [LICENSE](LICENSE) file for details.
-
-## Maintainer
-
-- **Owner**: @goldjunge91
-- **Repository**: goldjunge91/my_steel-robot_ws
+- [PINMAP.md](docs/doc/PINMAP.md) - Pin assignments and hardware connections
+- [Projekt.md](docs/doc/PROJEKT.md) - Comprehensive project description (German)
+- [hardware_setup.md](docs/doc/hardware_setup.md) - Hardware assembly guide
+- [firmware.README.md](src/robot_firmware/README.md) - Firmware documentation
 
 ## References
 
