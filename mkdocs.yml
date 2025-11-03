@@ -1,9 +1,9 @@
-site_name: my_steel Robot Documentation
-site_url: https://goldjunge91.github.io/my_steel-robot_ws
-repo_url: https://github.com/goldjunge91/my_steel-robot_ws
+site_name: "my_steel Robot Documentation"
+site_url: "https://goldjunge91.github.io/my_steel-robot_ws"
+repo_url: "https://github.com/goldjunge91/my_steel-robot_ws"
 repo_name: goldjunge91/my_steel-robot_ws
+site_description: "Documentation"
 dev_addr: "127.0.0.1:8080"
-
 docs_dir: docs/doc
 
 theme:
@@ -14,85 +14,165 @@ theme:
   pygments_style:
     light: shadcn-light
     dark: github-dark
-  topbar_sections: false
   katex_options:
     macros:
-      "\\RR": "\\mathbb{R}"
       "\\dx": "\\mathrm{d}x"
-  show_datetime: false
-
-plugins:
-  - excalidraw
-  - mkdocstrings:
-      handlers:
-        python:
-          paths: [src]
-  # - code-validator:
-  #     enabled: true
-  #     identifiers:
-  #       python: {}
-  #       cpp: {}
-  - awesome-pages:
-      collapse_single_pages: false
-  - search:
-      lang: [de, en]
-  - mermaid2:
-      arguments:
-        theme: dark
-        securityLevel: "loose"
-        startOnLoad: true
-        # flowchart:
-        #   useMaxWidth: false
-        # gantt:
-        #   useMaxWidth: false
-        # sequence:
-        #   useMaxWidth: false
-  - panzoom:
-      hint_location: "top" # default bottom
-      always_show_hint: true
-  - glightbox
-  - git-revision-date-localized:
-      enable_creation_date: true
-      type: timeago
-      enable_git_follow: false
-      locale: "de"
-  - minify:
-      minify_html: true
-
-markdown_extensions:
-  - admonition
-  - fenced_code
-  - footnotes
-  - extra
-  - attr_list
-  - md_in_html
-  - codehilite
-  - shadcn.extensions.codexec
-  - shadcn.extensions.echarts.alpha
-  - toc:
-      permalink: true
-  - pymdownx.blocks.details
-  - pymdownx.blocks.tab:
-      combine_header_slug: true
-      separator: ___
-  - pymdownx.blocks.caption
-  - pymdownx.tabbed:
-      alternate_style: true
-  - pymdownx.progressbar
-  - pymdownx.snippets
-  - pymdownx.arithmatex:
-      generic: true
-  - shadcn.extensions.iconify
+  # show_datetime: true
 
 nav:
   - "Home": "README.md"
-  - "Projekt": "PROJEKT.md"
+  - "Project Overview": "PROJEKT.md"
   - "Architecture":
-      - "Overview": "ARCHITECTURE.md"
       - "Architecture Index": "ARCHITECTURE_INDEX.md"
+      - "Firmware Architecture": "ARCHITECTURE.md"
   - "Hardware":
       - "Pin Assignments": "PINMAP.md"
       - "Hardware Setup": "hardware_setup.md"
       - "Raspberry Pi Setup": "raspberry_pi_setup_plan.md"
-  - "Guides":
-      - "tmux Usage": "tmux.md"
+  - "Extensions":
+      - "Overview": "extensions/README.md"
+      - "Attribute Lists": "extensions/attribute_lists.md"
+
+plugins:
+  - search
+  - excalidraw:
+      directory: docs/doc/excalidraw      
+  - mkdocstrings
+  - mermaid2
+  - panzoom:
+      hint_location: "top"
+      always_show_hint: true
+      images: true
+      full_screen: false
+      initial_zoom_level: -0.5
+
+markdown_extensions:
+  admonition:
+  attr_list:
+  codehilite:
+  fenced_code:
+  footnotes:
+  extra:
+  pymdownx.blocks.details:
+  pymdownx.tabbed:
+  pymdownx.blocks.tab:
+    combine_header_slug: true
+    separator: ___
+  pymdownx.progressbar:
+  pymdownx.snippets:
+  pymdownx.arithmatex:
+    generic: true
+  shadcn.extensions.echarts.alpha:
+  shadcn.extensions.codexec:
+  shadcn.extensions.iconify:
+  pymdownx.blocks.caption:
+  # shadcn.extensions.echarts.alpha:
+  shadcn.extensions.echarts.alpha:
+  pymdownx.superfences:
+    preserve_tabs: true
+    custom_fences:
+      - name: mermaid
+        class: mermaid
+        format: !!python/name:mermaid2.fence_mermaid
+          #
+
+          # site_name: my_steel Robot Documentation
+          # site_url: https://goldjunge91.github.io/my_steel-robot_ws
+          # repo_url: https://github.com/goldjunge91/my_steel-robot_ws
+          # repo_name: goldjunge91/my_steel-robot_ws
+          # dev_addr: "127.0.0.1:8080"
+
+          # theme:
+          # name: shadcn
+          # icon: heroicons:rocket-launch
+          # show_title: true
+          # show_stargazers: true
+          #   pygments_style:
+          #     light: shadcn-light
+          #     dark: github-dark
+          #   topbar_sections: false
+          #   katex_options:
+          #     macros:
+          #       "\\RR": "\\mathbb{R}"
+          #       "\\dx": "\\mathrm{d}x"
+          #   show_datetime: true
+
+          # plugins:
+          #   - awesome-pages:
+          #       collapse_single_pages: false
+          #   - search:
+          #       lang: en
+          #   - mkdocstrings
+          #   - excalidraw
+          #   - mermaid2:
+          #       arguments:
+          #         theme: dark
+          # - panzoom:
+          #     hint_location: "top"
+          #     always_show_hint: true
+          #   - glightbox
+          #   - git-revision-date-localized:
+          #       enable_creation_date: true
+          #       type: timeago
+          #       enable_git_follow: false
+          #       locale: "de"
+
+          # markdown_extensions:
+          #   - admonition
+          #   - footnotes
+          #   - extra
+          #   - attr_list
+          #   - md_in_html
+          #   - fenced_code
+          #   - codehilite
+          #   - shadcn.extensions.codexec
+          #   - shadcn.extensions.echarts.alpha
+          #   - shadcn.extensions.iconify
+          #   - pymdownx.blocks.details
+          #   - pymdownx.blocks.tab:
+          #       combine_header_slug: true
+          #       separator: ___
+          #   - pymdownx.blocks.caption
+          #   - pymdownx.tabbed:
+          #       alternate_style: true
+          #   - pymdownx.progressbar
+          #   - pymdownx.snippets
+          #   - pymdownx.arithmatex:
+          #       generic: true
+          # - pymdownx.superfences:
+          #     preserve_tabs: true
+          #     custom_fences:
+          #       - name: mermaid
+          #         class: mermaid
+          #         format: !!python/name:mermaid2.fence_mermaid
+          #           # - toc:
+          #           #     permalink: true
+
+          # nav:
+          #   - "Home": "README.md"
+          #   - "Projekt": "PROJEKT.md"
+          #   - "Architecture":
+          #       - "Overview": "ARCHITECTURE.md"
+          #       - "Architecture Index": "ARCHITECTURE_INDEX.md"
+          #   - "Hardware":
+          #       - "Pin Assignments": "PINMAP.md"
+          #       - "Hardware Setup": "hardware_setup.md"
+          #       - "Raspberry Pi Setup": "raspberry_pi_setup_plan.md"
+          #   - "Guides":
+          #       - "tmux Usage": "tmux.md"
+          #       - "Shadcn Extensions": "shadcn_extensions_guide.md"
+          #   - "Extensions":
+          #       - "Overview": "extensions/README.md"
+          #       - "Admonitions": "extensions/admonitions.md"
+          #       - "Codehilite": "extensions/codehilite.md"
+          #       - "Arithmatex": "extensions/arithmatex.md"
+          #       - "Attribute Lists": "extensions/attribute_lists.md"
+          #       - "Codexec": "extensions/codexec.md"
+          #       - "ECharts": "extensions/echarts.md"
+          #       - "Excalidraw": "extensions/excalidraw.md"
+          #       - "Fenced Code": "extensions/fenced_code.md"
+          #       - "Iconify": "extensions/iconify.md"
+          #       - "block": "extensions/blocks.md"
+          #       - "progressbar": "extensions/progressbar.md"
+          #       - "tabbed": "extensions/tabbed.md"
+          #       - "mkdocstrings": "extensions/mkdocstrings.md"

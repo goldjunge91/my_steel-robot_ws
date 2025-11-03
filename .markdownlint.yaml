@@ -11,8 +11,10 @@ MD014: false
 
 # MD024/no-duplicate-heading
 MD024: false
+MD025: false
 
 MD028: false
+MD029: false
 
 MD032: false
 # MD033/no-inline-html
