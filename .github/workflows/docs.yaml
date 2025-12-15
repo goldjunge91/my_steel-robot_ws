@@ -82,7 +82,7 @@ jobs:
       # Deploy to the github-pages environment
       # 1. Lade das Artefakt herunter
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: site-artifact
           path: site
