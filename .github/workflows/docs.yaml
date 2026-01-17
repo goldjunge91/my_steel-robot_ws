@@ -65,7 +65,7 @@ jobs:
 
       # Upload the built site as an artifact, this will be used by the deploy job.
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: site-artifact
           path: site/
