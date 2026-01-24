@@ -278,7 +278,7 @@ if docker --version &>/dev/null; then
 	# Docker-Dienst aktivieren
 	# sudo systemctl enable --now docker
 	# Benutzer in Gruppen (ab- und wieder anmelden, oder 'newgrp' nutzen)
-	sudo usermod -aG docker,dialout,video,plugdev,gpio,i2c,spi $USER
+	sudo usermod -aG docker,dialout,video,plugdev,gpio,i2c,spi "$USER"
 else
 	echo -e "${RED}✗ Docker installation failed.${RESET}"
 	# Logge Fehler mit trap (automatisch bei ERR)
@@ -322,7 +322,7 @@ if [[ "$response" =~ ^[Yy]$ ]]; then
 	sudo apt update
 	wait_for_apt
 	export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
-	curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
+	curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo "${UBUNTU_CODENAME:-${VERSION_CODENAME}}")_all.deb"
 	sudo dpkg -i /tmp/ros2-apt-source.deb
 	wait_for_apt
 	sudo apt update
