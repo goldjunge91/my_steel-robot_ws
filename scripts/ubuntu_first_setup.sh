@@ -9,12 +9,20 @@ set -u -o pipefail -E
 # set -m || true
 
 # --- KONFIGURATION ---
-PICO_DIR="$USER_HOME/pico-sdk"
+REAL_USER=$SUDO_USER
 USER_HOME="/home/$REAL_USER"
+PICO_DIR="$USER_HOME/pico-sdk"
 FAILURES=()
 SKIP_PICOTOOL=0
 PICOTOOL_INSTALLED=0
 SDK_INSTALLED=0
+
+TOOLS=(
+    curl git gnupg2 lsb-release build-essential cmake
+    python3-pip htop net-tools terminator shellcheck nano wget
+    zsh fontconfig python3-vcstool ca-certificates curl gnupg joystick jstest-gtk evtest
+)
+
 # Farbdefinitionen
 RED='\033[31m'
 GREEN='\033[32m'
@@ -28,7 +36,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Der User, der sudo ausgeführt hat (nicht root)
-REAL_USER=$SUDO_USER
+
 if [ -z "$REAL_USER" ]; then
     echo "Konnte den normalen Benutzer nicht ermitteln. Bitte via sudo ausführen."
     exit 1
@@ -36,7 +44,6 @@ fi
 # Log-Dateien
 LOG_FILE="setup.log"
 ERR_FILE="errors.log"
-
 # Wir leiten ALLES (stdout und stderr) in eine Pipe zu 'tee'.
 exec > >(tee -a "$LOG_FILE") 2>&1
 # 'tee' schreibt es in die Datei UND auf den Bildschirm.
@@ -93,29 +100,10 @@ run_command() {
 	fi
 }
 
-# install_and_check() {
-#     local pkg="$1"
-#     if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-#         echo -e "${GREEN}✓ $pkg ist bereits installiert${RESET}"
-#         return 0
-#     fi
-#     wait_for_apt
-#     echo -e "${BLUE}... Installiere $pkg${RESET}"
-#     if DEBIAN_FRONTEND=noninteractive apt install -y "$pkg" >>"$LOG_FILE" 2>&1; then
-#         echo -e "${GREEN}✓ $pkg installiert${RESET}"
-#     else
-#         echo -e "${RED}✗ $pkg fehlgeschlagen${RESET}"
-#         echo "$(date): $pkg failed" >>"$ERR_FILE"
-#         return 1
-#     fi
-# }
-
 # Install funktion benötigt paketname als Argument
-
 install_and_check() {
 	local packages=("$@")
 	echo -e "${BLUE}[STEP] ${packages[*]} installieren${RESET}"
-
 	# Laufzeit-Cache initialisieren (verhindert doppelte Prüfungen)
 	if [ -z "${INSTALL_CACHE+x}" ]; then
 		INSTALL_CACHE=""
@@ -332,17 +320,15 @@ install_docker() {
     https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) stable" |
         tee /etc/apt/sources.list.d/docker.list >/dev/null
-    
     # WICHTIG: Nach neuem Repo unbedingt update machen!
     echo -e "${BLUE}[STEP] Paketquellen aktualisieren (Docker)${RESET}"
     wait_for_apt
     run_command "apt update (docker)" apt update -y
-
     echo -e "${BLUE}[STEP] Docker installieren${RESET}"
-    docker_pkgs=(sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
+    DOCKER_PKGS=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
     wait_for_apt
     # for pkg in docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; do
-    for pkg in "${docker_pkgs[@]}"; do
+    for pkg in "${DOCKER_PKGS[@]}"; do
         install_and_check "$pkg"
     done
     # Checking Docker installation
@@ -389,19 +375,14 @@ wait_for_apt
 run_command "apt update" apt update -y
 wait_for_apt
 run_command "apt upgrade" apt upgrade -y
-
 install_and_check "software-properties-common"
-
 echo -e "${BLUE}[STEP] universe Repository hinzufügen${RESET}"
 wait_for_apt
 run_command "run add add-apt-repository universe" add-apt-repository universe -y
 
-TOOLS=(
-    curl git gnupg2 lsb-release build-essential cmake
-    python3-pip htop net-tools terminator shellcheck nano wget
-    zsh fontconfig python3-vcstool ca-certificates curl gnupg joystick jstest-gtk evtest
-)
-for tool in "${TOOLS[@]}"; do install_and_check "$tool"; done
+
+# for tool in "${TOOLS[@]}"; do install_and_check "$tool"; done
+run_command "Tools installieren" install_and_check "${TOOLS[@]}"
 
 install_gh
 install_formatter
