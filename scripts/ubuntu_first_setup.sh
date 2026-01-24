@@ -14,6 +14,7 @@ USER_HOME="/home/$REAL_USER"
 PICO_DIR="$USER_HOME/pico-sdk"
 FAILURES=()
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export DEBIAN_FRONTEND=noninteractive
 
 TOOLS=(
     curl git gnupg2 lsb-release build-essential cmake
@@ -399,16 +400,16 @@ install_gh() {
     log INFO "Installiere GitHub CLI..."
     mkdir -p /etc/apt/keyrings
     chmod 755 /etc/apt/keyrings
-    wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
-        tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null || {
-        record_failure "gh keyring download"
-        return 1
-    }
+    run_command "gh keyring download" \
+        wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
+        tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null || return 1
+    
     chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
         tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+    
     wait_for_apt || return 1
-    apt update -y -qq >/dev/null 2>&1 || return 1
+    run_command "apt update (gh)" apt update -y -qq || return 1
     install_and_check "gh" || return 1
 }
 
@@ -436,6 +437,12 @@ install_nvm() {
 }
 
 install_docker() {
+    # Check if Docker is already installed (e.g. in Codespaces)
+    if command -v docker &>/dev/null; then
+        log SUCCESS "Docker bereits installiert: $(docker --version)"
+        return 0
+    fi
+
     # Entferne moby-tini falls vorhanden (verhindert Konflikt mit docker-ce)
     if dpkg -l | grep -q moby-tini; then
         log_task "Entferne moby-tini (Konflikt)"
@@ -460,7 +467,7 @@ install_docker() {
     
     log_task "Paketquellen aktualisieren"
     wait_for_apt || return 1
-    apt update -qq >/dev/null 2>&1 && log_result ok "apt update" || return 1
+    run_command "apt update (docker)" apt update -y -qq || return 1
     
     log_task "Docker-Pakete installieren"
     local DOCKER_PKGS=(docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
@@ -513,20 +520,18 @@ install_ros() {
     log_result info "Ubuntu $ubuntu_codename -> ROS 2 $ROS_DISTRO"
 
     # Locales
-    log_task "Locales konfigurieren"
-    apt install -y -qq locales >/dev/null 2>&1 || return 1
-    locale-gen en_US en_US.UTF-8 >/dev/null 2>&1 || return 1
-    update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 >/dev/null 2>&1 || return 1
-    log_result ok "Locales konfiguriert"
+    install_and_check "locales" || return 1
+    run_command "locale-gen" locale-gen en_US en_US.UTF-8 || return 1
+    run_command "update-locale" update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 || return 1
     export LANG=en_US.UTF-8
 
     # Repository
-    log_task "ROS 2 Repository konfigurieren"
     if ! curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
         -o /usr/share/keyrings/ros-archive-keyring.gpg; then
         log_result fail "ROS key download"
         return 1
     fi
+    log_result ok "ROS key download"
     
     # shellcheck disable=SC1091
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $ubuntu_codename main" | \
@@ -535,8 +540,7 @@ install_ros() {
 
     # Installation
     wait_for_apt || return 1
-    log_task "apt update (ROS)"
-    apt update -qq >/dev/null 2>&1 && log_result ok "apt update" || return 1
+    run_command "apt update (ROS)" apt update -y -qq || return 1
     install_and_check "ros-$ROS_DISTRO-desktop" || return 1
     install_and_check "ros-dev-tools" || return 1
 
@@ -654,6 +658,13 @@ if [ ${#FAILURES[@]} -gt 0 ]; then
     log ERROR "Details in: $ERR_FILE"
     exit 1
 fi
+
+# Aufräumen & Rechte setzen
+log_task "Aufräumen"
+apt-get autoremove -y >/dev/null 2>&1
+apt-get clean >/dev/null 2>&1
+# Logs dem User übergeben
+chown "$REAL_USER:$REAL_USER" "$LOG_FILE" "$ERR_FILE" 2>/dev/null || true
 
 log SUCCESS "╔══════════════════════════════════════════╗"
 log SUCCESS "║ Setup erfolgreich ohne Fehler!          ║"
