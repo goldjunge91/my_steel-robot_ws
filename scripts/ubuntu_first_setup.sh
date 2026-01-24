@@ -67,120 +67,120 @@ log() {
     # echo -e "${color}[$level]${RESET} $*"
 }
 
-
 record_failure() {
-	FAILURES+=("$*")
-	echo "$(date): FAILURE: $*" >>"$ERR_FILE" 2>/dev/null || true
+    FAILURES+=("$*")
+    echo "$(date): FAILURE: $*" >>"$ERR_FILE" 2>/dev/null || true
 }
 
 wait_for_apt() {
-    while 
-        fuser /var/lib/dpkg/lock >/dev/null 2>&1 || \
-        fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ||
-        fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
+    while
+        fuser /var/lib/dpkg/lock >/dev/null 2>&1 ||
+            fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ||
+            fuser /var/lib/apt/lists/lock >/dev/null 2>&1
+    do
         echo -e "${BLUE}Warte auf apt-Lock...${RESET}"
         sleep 2
     done
 }
 
 run_command() {
-	local description="$1"
-	shift
-	echo -e "${BLUE}[CMD]${RESET} $description"
-	if "$@" 2>&1 | tee -a command.log; then
-		echo -e "${GREEN}✓ $description erfolgreich${RESET}"
-		echo "$(date): $description succeeded" >>setup.log 2>/dev/null || true
-		return 0
-	else
-		echo -e "${RED}✗ $description fehlgeschlagen${RESET}"
-		echo "$(date): $description failed" >>errors.log 2>/dev/null || true
-		return 1
-	fi
+    local description="$1"
+    shift
+    echo -e "${BLUE}[CMD]${RESET} $description"
+    if "$@" 2>&1 | tee -a command.log; then
+        echo -e "${GREEN}✓ $description erfolgreich${RESET}"
+        echo "$(date): $description succeeded" >>setup.log 2>/dev/null || true
+        return 0
+    else
+        echo -e "${RED}✗ $description fehlgeschlagen${RESET}"
+        echo "$(date): $description failed" >>errors.log 2>/dev/null || true
+        return 1
+    fi
 }
 
 # Install funktion benötigt paketname als Argument
 install_and_check() {
-	local packages=("$@")
-	echo -e "${BLUE}[STEP] ${packages[*]} installieren${RESET}"
-	# Laufzeit-Cache initialisieren (verhindert doppelte Prüfungen)
-	if [ -z "${INSTALL_CACHE+x}" ]; then
-		INSTALL_CACHE=""
-	fi
+    local packages=("$@")
+    echo -e "${BLUE}[STEP] ${packages[*]} installieren${RESET}"
+    # Laufzeit-Cache initialisieren (verhindert doppelte Prüfungen)
+    if [ -z "${INSTALL_CACHE+x}" ]; then
+        INSTALL_CACHE=""
+    fi
 
-	local missing=()
-	local pkg
-	for pkg in "${packages[@]}"; do
-		# Wenn bereits im Cache, überspringen
-		if [[ " $INSTALL_CACHE " == *" $pkg "* ]]; then
-			echo -e "${GREEN}✓ $pkg bereits geprüft (Cache)${RESET}"
-			continue
-		fi
+    local missing=()
+    local pkg
+    for pkg in "${packages[@]}"; do
+        # Wenn bereits im Cache, überspringen
+        if [[ " $INSTALL_CACHE " == *" $pkg "* ]]; then
+            echo -e "${GREEN}✓ $pkg bereits geprüft (Cache)${RESET}"
+            continue
+        fi
 
-		# Robustere Prüfung, ob Paket bereits installiert ist
-		if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-			echo -e "${GREEN}✓ $pkg bereits installiert${RESET}"
-			echo "$(date): $pkg bereits installiert" >>setup.log
-			INSTALL_CACHE="$INSTALL_CACHE $pkg"
-		else
-			missing+=("$pkg")
-		fi
-	done
+        # Robustere Prüfung, ob Paket bereits installiert ist
+        if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
+            echo -e "${GREEN}✓ $pkg bereits installiert${RESET}"
+            echo "$(date): $pkg bereits installiert" >>setup.log
+            INSTALL_CACHE="$INSTALL_CACHE $pkg"
+        else
+            missing+=("$pkg")
+        fi
+    done
 
-	# Nichts zu tun
-	if [ ${#missing[@]} -eq 0 ]; then
-		echo -e "${GREEN}✓ Keine neuen Pakete zu installieren${RESET}"
-		return 0
-	fi
+    # Nichts zu tun
+    if [ ${#missing[@]} -eq 0 ]; then
+        echo -e "${GREEN}✓ Keine neuen Pakete zu installieren${RESET}"
+        return 0
+    fi
 
-	# Batch-Installation der fehlenden Pakete
-	wait_for_apt
-	if DEBIAN_FRONTEND=noninteractive apt install -y "${missing[@]}" 2>&1 | tee -a apt_install.log; then
-		local failed=()
-		for pkg in "${missing[@]}"; do
-			if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-				echo -e "${GREEN}✓ $pkg erfolgreich installiert${RESET}"
-				echo "$(date): $pkg erfolgreich installiert" >>setup.log
-				INSTALL_CACHE="$INSTALL_CACHE $pkg"
-			else
-				# Meta-Paket-Fallback prüfen
-				# if grep -qE "(is already the newest version|newly installed)" apt_install.log; then
+    # Batch-Installation der fehlenden Pakete
+    wait_for_apt
+    if DEBIAN_FRONTEND=noninteractive apt install -y "${missing[@]}" 2>&1 | tee -a apt_install.log; then
+        local failed=()
+        for pkg in "${missing[@]}"; do
+            if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
+                echo -e "${GREEN}✓ $pkg erfolgreich installiert${RESET}"
+                echo "$(date): $pkg erfolgreich installiert" >>setup.log
+                INSTALL_CACHE="$INSTALL_CACHE $pkg"
+            else
+                # Meta-Paket-Fallback prüfen
+                # if grep -qE "(is already the newest version|newly installed)" apt_install.log; then
                 if grep -qE "$pkg.*(is already the newest version|newly installed)" apt_install.log; then
-					echo -e "${GREEN}✓ $pkg scheint installiert (Meta/keine Aktion)${RESET}"
-					echo "$(date): $pkg installiert (Meta/keine Aktion)" >>setup.log
-					INSTALL_CACHE="$INSTALL_CACHE $pkg"
-				else
-					echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
-					echo "$(date): $pkg Installation fehlgeschlagen" >>errors.log
-					failed+=("$pkg")
-				fi
-			fi
-		done
+                    echo -e "${GREEN}✓ $pkg scheint installiert (Meta/keine Aktion)${RESET}"
+                    echo "$(date): $pkg installiert (Meta/keine Aktion)" >>setup.log
+                    INSTALL_CACHE="$INSTALL_CACHE $pkg"
+                else
+                    echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
+                    echo "$(date): $pkg Installation fehlgeschlagen" >>errors.log
+                    failed+=("$pkg")
+                fi
+            fi
+        done
 
-		[ ${#failed[@]} -eq 0 ]
-		return $?
-	else
-		# Wenn Batch fehlschlägt: Einzelinstallation für bessere Diagnose
-		echo -e "${RED}✗ Batch-Installation fehlgeschlagen, versuche Einzelinstallation${RESET}"
-		for pkg in "${missing[@]}"; do
-			wait_for_apt
-			if DEBIAN_FRONTEND=noninteractive apt install -y "$pkg" 2>&1 | tee -a apt_install.log; then
-				if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-					echo -e "${GREEN}✓ $pkg erfolgreich installiert${RESET}"
-					echo "$(date): $pkg erfolgreich installiert" >>setup.log
-					INSTALL_CACHE="$INSTALL_CACHE $pkg"
-				else
-					echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
-					echo "$(date): $pkg Installation fehlgeschlagen" >>errors.log
-					return 1
-				fi
-			else
-				echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
-				echo "$(date): $pkg Installation fehlgeschlagen" >>errors.log
-				return 1
-			fi
-		done
-		return 0
-	fi
+        [ ${#failed[@]} -eq 0 ]
+        return $?
+    else
+        # Wenn Batch fehlschlägt: Einzelinstallation für bessere Diagnose
+        echo -e "${RED}✗ Batch-Installation fehlgeschlagen, versuche Einzelinstallation${RESET}"
+        for pkg in "${missing[@]}"; do
+            wait_for_apt
+            if DEBIAN_FRONTEND=noninteractive apt install -y "$pkg" 2>&1 | tee -a apt_install.log; then
+                if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
+                    echo -e "${GREEN}✓ $pkg erfolgreich installiert${RESET}"
+                    echo "$(date): $pkg erfolgreich installiert" >>setup.log
+                    INSTALL_CACHE="$INSTALL_CACHE $pkg"
+                else
+                    echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
+                    echo "$(date): $pkg Installation fehlgeschlagen" >>errors.log
+                    return 1
+                fi
+            else
+                echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
+                echo "$(date): $pkg Installation fehlgeschlagen" >>errors.log
+                return 1
+            fi
+        done
+        return 0
+    fi
 }
 
 # Funktion um Dinge in .bashrc UND .zshrc zu schreiben
@@ -244,7 +244,10 @@ install_picotool() {
         }
         # git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_PICO/picotool"
         # cd "$TMP_PICO/picotool" || exit
-        cd "$TMP_PICO/picotool" || { record_failure "cd failed"; return 1; }
+        cd "$TMP_PICO/picotool" || {
+            record_failure "cd failed"
+            return 1
+        }
         mkdir build && cd build || exit
         run_command "Picotool cmake" cmake .. -DPICO_SDK_PATH="$PICO_DIR" || return 1
         run_command "Picotool build" make -j$(nproc) || return 1
@@ -274,15 +277,16 @@ install_pico_sdk() {
     if [ ! -d "$PICO_DIR" ]; then
         log INFO "Klone Pico SDK nach $PICO_DIR..."
         # Als normaler User klonen, damit Rechte stimmen
-        sudo -u "$REAL_USER" git clone --depth 1 --recursive https://github.com/raspberrypi/pico-sdk.git "$PICO_DIR"
+        # sudo -u "$REAL_USER" git clone --depth 1 --recursive https://github.com/raspberrypi/pico-sdk.git "$PICO_DIR"
+        run_command "clone pico-sdk" git clone --depth 1 --recursive https://github.com/raspberrypi/pico-sdk.git "$PICO_DIR"
     else
         log INFO "Pico SDK bereits vorhanden."
     fi
 }
 
 install_formatter() {
-    if ! command -v shfmt &> /dev/null; then
-        log INFO "Installiere shfmt..."        
+    if ! command -v shfmt &>/dev/null; then
+        log INFO "Installiere shfmt..."
         # Download Binary
         curl -sLo /tmp/shfmt https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64
         chmod +x /tmp/shfmt
@@ -387,7 +391,6 @@ install_and_check "software-properties-common"
 echo -e "${BLUE}[STEP] universe Repository hinzufügen${RESET}"
 wait_for_apt
 run_command "run add add-apt-repository universe" add-apt-repository universe -y
-
 
 # for tool in "${TOOLS[@]}"; do install_and_check "$tool"; done
 run_command "Tools installieren" install_and_check "${TOOLS[@]}"
