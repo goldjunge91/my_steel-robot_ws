@@ -161,6 +161,21 @@ run_command() {
     fi
 }
 
+fix_broken_sources() {
+    log_task "Prüfe und bereinige defekte Paketquellen..."
+    local yarn_list="/etc/apt/sources.list.d/yarn.list"
+    
+    # Bekanntes Problem: Yarn Key Expiration (Error 100)
+    if [ -f "$yarn_list" ]; then
+        log_task "Entferne bekannten Problem-Kandidaten: $yarn_list"
+        rm -f "$yarn_list"
+        log_result ok "yarn.list gelöscht"
+    fi
+    
+    # Optional: Allgemeiner Check auf "EXPKEYSIG" in apt update output wäre hier möglich,
+    # aber "Force Fix" impliziert oft aggressives Vorgehen gegen bekannte Übeltäter.
+}
+
 # Install funktion benötigt paketname als Argument
 install_and_check() {
     local packages=("$@")
@@ -409,7 +424,7 @@ install_gh() {
         tee /etc/apt/sources.list.d/github-cli.list >/dev/null
     
     wait_for_apt || return 1
-    run_command "apt update (gh)" apt update -y -qq || return 1
+    run_command "apt update (gh)" apt update -y -qq || log WARN "apt update (gh) had errors, proceeding..."
     install_and_check "gh" || return 1
 }
 
@@ -467,7 +482,7 @@ install_docker() {
     
     log_task "Paketquellen aktualisieren"
     wait_for_apt || return 1
-    run_command "apt update (docker)" apt update -y -qq || return 1
+    run_command "apt update (docker)" apt update -y -qq || log WARN "apt update (docker) had errors, proceeding..."
     
     log_task "Docker-Pakete installieren"
     local DOCKER_PKGS=(docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
@@ -540,7 +555,7 @@ install_ros() {
 
     # Installation
     wait_for_apt || return 1
-    run_command "apt update (ROS)" apt update -y -qq || return 1
+    run_command "apt update (ROS)" apt update -y || log WARN "apt update (ROS) had errors, proceeding..."
     install_and_check "ros-$ROS_DISTRO-desktop" || return 1
     install_and_check "ros-dev-tools" || return 1
 
@@ -563,6 +578,9 @@ log_result info "Logs: $LOG_FILE"
 log_result info "Fehler: $ERR_FILE"
 
 log_step "SYSTEM AKTUALISIEREN"
+
+# Force Fix für defekte Quellen
+fix_broken_sources
 
 # Repariere dpkg falls vom letzten Lauf unterbrochen
 if ! dpkg --audit &>/dev/null; then
