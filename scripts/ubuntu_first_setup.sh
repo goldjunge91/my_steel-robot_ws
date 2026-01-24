@@ -51,6 +51,9 @@ exec > >(tee -a "$LOG_FILE")
 exec 2> >(tee -a "$ERR_FILE" >&2)
 
 echo "=== Setup gestartet am $(date) ==="
+echo "--- OS Release Info ---"
+cat /etc/os-release
+echo "-----------------------"
 
 # ==============================================================================
 # --- Hilfsfunktionen ---
@@ -379,7 +382,7 @@ install_just() {
     fi
 
     log INFO "Installiere just..."
-    if snap install just --classic; then
+    if curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin; then
         log SUCCESS "just installiert"
     else
         log WARN "just Installation fehlgeschlagen (optional)"
