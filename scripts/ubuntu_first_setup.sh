@@ -18,7 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOOLS=(
     curl git gnupg2 lsb-release build-essential cmake
     python3-pip htop net-tools terminator shellcheck nano wget
-    zsh fontconfig python3-vcstool ca-certificates curl gnupg joystick jstest-gtk evtest
+    zsh fontconfig ca-certificates gnupg joystick jstest-gtk evtest
 )
 
 # Farbdefinitionen
@@ -126,122 +126,113 @@ wait_for_apt() {
 run_command() {
     local description="$1"
     shift
-    echo -e "${BLUE}[CMD]${RESET} $description"
-    log INFO "$description"
-    if "$@" 2>&1 | tee -a command.log; then
-        echo -e "${GREEN}✓ $description erfolgreich${RESET}"
-        echo "$(date): $description succeeded" >>"$LOG_FILE" 2>/dev/null || true
-        log SUCCESS "$description erfolgreich"
+    
+    log_task "$description"
+    
+    # Temporäres Log für besseres Error-Handling
+    local tmplog
+    tmplog=$(mktemp)
+    
+    if "$@" > "$tmplog" 2>&1; then
+        # Zeige Output nur wenn nicht leer
+        if [ -s "$tmplog" ]; then
+            cat "$tmplog"
+        fi
+        
+        if [ -s "$tmplog" ]; then
+            # Output is already captured by global tee via stdout
+             :
+        fi
+        
+        rm -f "$tmplog"
+        log_result ok "$description"
         return 0
     else
-        echo -e "${RED}✗ $description fehlgeschlagen${RESET}"
-        echo "$(date): $description failed" >>"$ERR_FILE" 2>/dev/null || true
-        log ERROR "$description fehlgeschlagen"
-        record_failure "$description"
+        local ret=$?
+        # Zeige Error-Output
+        cat "$tmplog"
+        rm -f "$tmplog"
+        log_result fail "$description (exit $ret)"
         return 1
     fi
 }
-
-# run_command() {
-#     local description="$1"
-#     shift
-#     log INFO "$description"
-    
-#     local tmplog
-#     tmplog=$(mktemp)
-    
-#     if "$@" > "$tmplog" 2>&1; then
-#         cat "$tmplog"
-#         rm -f "$tmplog"
-#         log SUCCESS "$description completed"
-#         return 0
-#     else
-#         local ret=$?
-#         cat "$tmplog"
-#         rm -f "$tmplog"
-#         log ERROR "$description failed (exit $ret)"
-#         record_failure "$description"
-#         return $ret
-#     fi
-# }
 
 # Install funktion benötigt paketname als Argument
 install_and_check() {
     local packages=("$@")
     local missing=()
-    echo -e "${BLUE}[STEP] ${packages[*]} installieren${RESET}"
-    # Laufzeit-Cache initialisieren (verhindert doppelte Prüfungen)
+    
+    log_task "Prüfe ${#packages[@]} Paket(e)"
+    
+    # Cache initialisieren
     if [ -z "${INSTALL_CACHE+x}" ]; then
         INSTALL_CACHE=""
     fi
 
     local pkg
     for pkg in "${packages[@]}"; do
-        # Wenn bereits im Cache, überspringen
+        # Cache-Check
         if [[ " $INSTALL_CACHE " == *" $pkg "* ]]; then
-            echo -e "${GREEN}✓ $pkg bereits geprüft (Cache)${RESET}"
+            log_result skip "$pkg (Cache)"
             continue
         fi
 
-        # Robustere Prüfung, ob Paket bereits installiert ist
+        # Installation-Check
         if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-            echo -e "${GREEN}✓ $pkg bereits installiert${RESET}"
-            echo "$(date): $pkg bereits installiert" >>"$LOG_FILE"
+            log_result ok "$pkg (bereits installiert)"
             INSTALL_CACHE="$INSTALL_CACHE $pkg"
         else
             missing+=("$pkg")
         fi
     done
 
-    # Nichts zu tun
+    # Installation
     if [ ${#missing[@]} -eq 0 ]; then
-        echo -e "${GREEN}✓ Keine neuen Pakete zu installieren${RESET}"
         return 0
     fi
 
-    # Batch-Installation der fehlenden Pakete
-    wait_for_apt
-    if DEBIAN_FRONTEND=noninteractive apt install -y "${missing[@]}" 2>&1 | tee -a apt_install.log; then
+    log_task "Installiere ${#missing[@]} fehlende Paket(e)"
+    
+    wait_for_apt || return 1
+    
+    # Batch-Installation
+    local install_output
+    install_output=$(mktemp)
+    if DEBIAN_FRONTEND=noninteractive apt install -y -qq "${missing[@]}" 2>&1 | tee "$install_output" >/dev/null; then
+        # Verification
         local failed=()
         for pkg in "${missing[@]}"; do
             if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-                echo -e "${GREEN}✓ $pkg erfolgreich installiert${RESET}"
-                echo "$(date): $pkg erfolgreich installiert" >>"$LOG_FILE"
+                log_result ok "$pkg"
+                INSTALL_CACHE="$INSTALL_CACHE $pkg"
+            elif grep -qE "$pkg.*(is already the newest version|newly installed)" "$install_output"; then
+                log_result ok "$pkg (Meta-Paket)"
                 INSTALL_CACHE="$INSTALL_CACHE $pkg"
             else
-                # Meta-Paket-Fallback prüfen
-                if grep -qE "$pkg.*(is already the newest version|newly installed)" apt_install.log; then
-                    echo -e "${GREEN}✓ $pkg scheint installiert (Meta/keine Aktion)${RESET}"
-                    echo "$(date): $pkg installiert (Meta/keine Aktion)" >>"$LOG_FILE"
-                    INSTALL_CACHE="$INSTALL_CACHE $pkg"
-                else
-                    echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
-                    echo "$(date): $pkg Installation fehlgeschlagen" >>"$ERR_FILE"
-                    failed+=("$pkg")
-                fi
+                log_result fail "$pkg"
+                failed+=("$pkg")
             fi
         done
+        rm -f "$install_output"
 
         [ ${#failed[@]} -eq 0 ]
         return $?
     else
-        # Wenn Batch fehlschlägt: Einzelinstallation für bessere Diagnose
-        echo -e "${RED}✗ Batch-Installation fehlgeschlagen, versuche Einzelinstallation${RESET}"
+        rm -f "$install_output"
+        # Fallback: Einzelinstallation
+        log_task "Batch fehlgeschlagen, versuche einzeln"
         for pkg in "${missing[@]}"; do
             wait_for_apt || return 1
-            if DEBIAN_FRONTEND=noninteractive apt install -y "$pkg" 2>&1 | tee -a apt_install.log; then
+            if DEBIAN_FRONTEND=noninteractive apt install -y -qq "$pkg" >/dev/null 2>&1; then
                 if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-                    echo -e "${GREEN}✓ $pkg erfolgreich installiert${RESET}"
-                    echo "$(date): $pkg erfolgreich installiert" >>"$LOG_FILE"
+                    log_result ok "$pkg"
                     INSTALL_CACHE="$INSTALL_CACHE $pkg"
                 else
-                    echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
-                    record_failure "$pkg Installation"
+                    log_result fail "$pkg"
                     return 1
                 fi
             else
-                echo -e "${RED}✗ $pkg Installation fehlgeschlagen${RESET}"
-                record_failure "$pkg Installation"
+                log_result fail "$pkg"
                 return 1
             fi
         done
@@ -279,17 +270,25 @@ add_to_shells() {
     fi
 }
 
+# shellcheck disable=SC2329
 cleanup() {
     # Exit Code speichern
     local exit_code=$?
     if [ "$exit_code" -ne 0 ]; then
         echo -e "\n${RED}Skript wurde unterbrochen oder fehlerhaft beendet.${RESET}"
+        
+        # Repariere dpkg falls unterbrochen
+        if ! dpkg --audit &>/dev/null 2>&1; then
+            log WARN "dpkg scheint unterbrochen - versuche Reparatur"
+            dpkg --configure -a &>/dev/null || true
+            apt-get --fix-broken install -y &>/dev/null || true
+        fi
     fi
     # Prozesse aufräumen
     pkill -P $$ 2>/dev/null || true
 }
 
-trap cleanup EXIT
+trap cleanup EXIT SIGINT SIGTERM
 
 # ==============================================================================
 # --- INSTALLATIONS FUNKTIONEN ---
@@ -318,10 +317,14 @@ install_picotool() {
         return 1
     }
 
-    mkdir build && cd build || {
-        record_failure "mkdir/cd build failed"
+    if ! mkdir build; then
+        record_failure "mkdir build failed"
         return 1
-    }
+    fi
+    if ! cd build; then
+        record_failure "cd build failed"
+        return 1
+    fi
 
     run_command "Picotool cmake" cmake .. -DPICO_SDK_PATH="$PICO_DIR" || return 1
     run_command "Picotool build" make -j"$(nproc)" || return 1
@@ -391,7 +394,8 @@ install_gh() {
     fi
 
     log INFO "Installiere GitHub CLI..."
-    mkdir -p -m 755 /etc/apt/keyrings
+    mkdir -p /etc/apt/keyrings
+    chmod 755 /etc/apt/keyrings
     wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
         tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null || {
         record_failure "gh keyring download"
@@ -401,184 +405,222 @@ install_gh() {
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
         tee /etc/apt/sources.list.d/github-cli.list >/dev/null
     wait_for_apt || return 1
-    apt update -y || return 1
+    apt update -y -qq >/dev/null 2>&1 || return 1
     install_and_check "gh" || return 1
 }
 
 install_docker() {
-    # Add GPG Key
-    echo -e "${BLUE}[STEP] GPG-Schlüssel hinzufügen${RESET}"
+    # Entferne moby-tini falls vorhanden (verhindert Konflikt mit docker-ce)
+    if dpkg -l | grep -q moby-tini; then
+        log_task "Entferne moby-tini (Konflikt)"
+        apt-get remove -y -qq moby-tini >/dev/null 2>&1 || true
+        log_result ok "moby-tini entfernt"
+    fi
+    
+    log_task "GPG-Schlüssel hinzufügen"
     install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
-        gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    # Add Docker Repository for Ubuntu
-    echo -e "${BLUE}[STEP] Docker-Repository hinzufügen${RESET}"
-    echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-    https://download.docker.com/linux/ubuntu \
-    $(lsb_release -cs) stable" |
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+        gpg --dearmor -o /etc/apt/keyrings/docker.gpg || {
+        log_result fail "GPG-Key Download"
+        return 1
+    }
+    log_result ok "GPG-Schlüssel"
+    
+    log_task "Docker-Repository konfigurieren"
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+    https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
         tee /etc/apt/sources.list.d/docker.list >/dev/null
-    # WICHTIG: Nach neuem Repo unbedingt update machen!
-    echo -e "${BLUE}[STEP] Paketquellen aktualisieren (Docker)${RESET}"
-    wait_for_apt
-    run_command "apt update (docker)" apt update -y
-    echo -e "${BLUE}[STEP] Docker installieren${RESET}"
-    DOCKER_PKGS=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
-    wait_for_apt
-    # for pkg in docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; do
+    log_result ok "Repository"
+    
+    log_task "Paketquellen aktualisieren"
+    wait_for_apt || return 1
+    apt update -qq >/dev/null 2>&1 && log_result ok "apt update" || return 1
+    
+    log_task "Docker-Pakete installieren"
+    local DOCKER_PKGS=(docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
+    wait_for_apt || return 1
     for pkg in "${DOCKER_PKGS[@]}"; do
-        install_and_check "$pkg"
+        install_and_check "$pkg" || return 1
     done
-    # Docker-Dienst aktivieren
-    log INFO "Docker-Dienst aktivieren..."
-    systemctl enable --now docker || log WARN "systemctl enable docker fehlgeschlagen"
-
-    # Checking Docker installation
-    echo -e "${BLUE}[STEP] Docker-Installation prüfen${RESET}"
-    log INFO "Docker-Installation prüfen"
+    
+    log_task "Docker-Dienst aktivieren"
+    systemctl enable --now docker || log WARN "systemctl enable fehlgeschlagen"
+    log_result ok "Docker-Dienst"
+    
+    log_task "Docker-Installation verifizieren"
     if docker --version &>/dev/null; then
-        log SUCCESS "Docker installiert: $(docker --version)"
-        log INFO "Nutzer $REAL_USER zu Gruppen hinzufügen"
-        usermod -aG docker,dialout,video,plugdev,gpio,i2c,spi "$REAL_USER"
+        log_result ok "Docker: $(docker --version)"
     else
-        log ERROR "Docker installation fehlgeschlagen"
-        record_failure "Docker installation"
+        log_result fail "Docker nicht verfügbar"
         return 1
     fi
-
-    # Checking Docker Compose installation
-    log INFO "Docker Compose-Installation prüfen"
+    
     if docker compose version &>/dev/null; then
-        log SUCCESS "Docker Compose: $(docker compose version)"
+        log_result ok "Docker Compose: $(docker compose version)"
     else
-        log ERROR "Docker Compose installation fehlgeschlagen"
-        record_failure "Docker Compose"
+        log_result fail "Docker Compose nicht verfügbar"
         return 1
     fi
+    
+    log_task "Benutzer zu Gruppen hinzufügen"
+    usermod -aG docker,dialout,video,plugdev,gpio,i2c,spi "$REAL_USER"
+    log_result ok "User $REAL_USER → docker,dialout,video,plugdev,gpio,i2c,spi"
+}
+
+install_ros() {
+    log_step "ROS 2 SETUP"
+    # OS Check & Distro Selection
+    # Note: ROS_DISTRO is intentionally global for later use in shell config
+    local ubuntu_codename
+    ubuntu_codename=$(source /etc/os-release && echo "$UBUNTU_CODENAME")
+    ROS_DISTRO=""
+
+    case "$ubuntu_codename" in
+        jammy) ROS_DISTRO="humble" ;;
+        noble) ROS_DISTRO="jazzy" ;;
+        *) 
+            log ERROR "Nicht unterstützte Ubuntu-Version: $ubuntu_codename (erwarte jammy oder noble)"
+            return 1
+            ;;
+    esac
+
+    log_result info "Ubuntu $ubuntu_codename -> ROS 2 $ROS_DISTRO"
+
+    # Locales
+    log_task "Locales konfigurieren"
+    apt install -y -qq locales >/dev/null 2>&1 || return 1
+    locale-gen en_US en_US.UTF-8 >/dev/null 2>&1 || return 1
+    update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 >/dev/null 2>&1 || return 1
+    log_result ok "Locales konfiguriert"
+    export LANG=en_US.UTF-8
+
+    # Repository
+    log_task "ROS 2 Repository konfigurieren"
+    if ! curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+        -o /usr/share/keyrings/ros-archive-keyring.gpg; then
+        log_result fail "ROS key download"
+        return 1
+    fi
+    
+    # shellcheck disable=SC1091
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $ubuntu_codename main" | \
+        tee /etc/apt/sources.list.d/ros2.list >/dev/null
+    log_result ok "Repository konfiguriert"
+
+    # Installation
+    wait_for_apt || return 1
+    log_task "apt update (ROS)"
+    apt update -qq >/dev/null 2>&1 && log_result ok "apt update" || return 1
+    install_and_check "ros-$ROS_DISTRO-desktop" || return 1
+    install_and_check "ros-dev-tools" || return 1
+
+    # Rosdep
+    log_task "Rosdep initialisieren"
+    if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
+        rosdep init || log WARN "rosdep init fehlgeschlagen"
+    fi
+    sudo -u "$REAL_USER" rosdep update || log WARN "rosdep update fehlgeschlagen"
+    log_result ok "Rosdep initialisiert"
 }
 
 # ==============================================================================
 # MAIN EXECUTION
 # ==============================================================================
-echo ""
-log INFO "Setup gestartet für User: $REAL_USER"
-echo ""
 
-echo -e "${BLUE}[STEP]${RESET} System aktualisieren"
+log_step "INITIALISIERUNG"
+log_result info "User: $REAL_USER"
+log_result info "Logs: $LOG_FILE"
+log_result info "Fehler: $ERR_FILE"
+
+log_step "SYSTEM AKTUALISIEREN"
+
+# Repariere dpkg falls vom letzten Lauf unterbrochen
+if ! dpkg --audit &>/dev/null; then
+    log_task "Repariere unterbrochene dpkg-Installation"
+    if dpkg --configure -a >/dev/null; then
+        log_result ok "dpkg --configure -a erfolgreich"
+    else
+        log_result fail "dpkg --configure -a fehlgeschlagen"
+    fi
+    
+    if apt-get --fix-broken install -y >/dev/null; then
+        log_result ok "apt --fix-broken erfolgreich"
+    else
+        log WARN "apt --fix-broken hatte Probleme"
+    fi
+    
+    # Erneuter Audit-Check
+    if dpkg --audit &>/dev/null; then
+        log_result ok "dpkg ist jetzt konsistent"
+    else
+        log ERROR "dpkg ist IMMER NOCH inkonsistent - manuelle Reparatur erforderlich"
+        log ERROR "Bitte ausführen: sudo dpkg --configure -a"
+        exit 1
+    fi
+fi
+
 wait_for_apt || exit 1
-run_command "apt update" apt update -y || exit 1
-
+log_task "apt update"
+apt update -qq >/dev/null 2>&1 && log_result ok "apt update" || log WARN "apt update mit Warnungen"
 wait_for_apt || exit 1
-run_command "apt upgrade" apt upgrade -y || exit 1
-
+log_task "apt upgrade"
+apt upgrade -y -qq >/dev/null 2>&1 && log_result ok "apt upgrade" || log WARN "apt upgrade übersprungen"
 install_and_check "software-properties-common" || exit 1
 
-echo -e "${BLUE}[STEP]${RESET} universe Repository hinzufügen"
+log_step "REPOSITORIES KONFIGURIEREN"
 wait_for_apt || exit 1
-run_command "add-apt-repository universe" add-apt-repository universe -y || exit 1
+log_task "add-apt-repository universe"
+add-apt-repository universe -y >/dev/null 2>&1 && log_result ok "universe repository" || exit 1
 
-echo -e "${BLUE}[STEP]${RESET} Basis-Tools installieren"
+log_step "BASIS-TOOLS"
 install_and_check "${TOOLS[@]}" || exit 1
 
-echo ""
-echo -e "${BLUE}[STEP]${RESET} Optionale Tools installieren"
-install_formatter || log WARN "Formatter Installation optional fehlgeschlagen"
-install_just || log WARN "just Installation optional fehlgeschlagen"
-install_gh || log WARN "gh Installation optional fehlgeschlagen"
+log_step "OPTIONALE TOOLS"
+install_formatter || log WARN "shfmt optional übersprungen"
+install_just || log WARN "just optional übersprungen"
+install_gh || log WARN "gh optional übersprungen"
 
-echo ""
-echo -e "${BLUE}[STEP]${RESET} Docker installieren"
-install_docker || { log ERROR "Docker Installation fehlgeschlagen"; exit 1; }
+log_step "DOCKER"
+install_docker || exit 1
 
-# ==============================================================================
-# INSTALL Pico SDK und Tools
-# ==============================================================================
-echo ""
-echo -e "${BLUE}[STEP]${RESET} Pico SDK und Tools installieren"
-install_pico_sdk || { record_failure "Pico SDK"; exit 1; }
-install_picotool || { record_failure "Picotool"; exit 1; }
+log_step "PICO SDK & TOOLS"
+install_pico_sdk || exit 1
+install_picotool || exit 1
 
-# ==============================================================================
-# 4. ROS 2 Humble Installation
-# ==============================================================================
-echo ""
-echo -e "${BLUE}[STEP]${RESET} ROS 2 Humble installieren"
-log INFO "Installiere ROS 2 Humble..."
+install_ros || exit 1
 
-# Locales
-run_command "locales installieren" apt install -y locales || exit 1
-run_command "locale-gen" locale-gen en_US en_US.UTF-8 || exit 1
-run_command "update-locale" update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 || exit 1
-export LANG=en_US.UTF-8
-
-# ROS 2 Repository
-log INFO "ROS 2 Repository hinzufügen..."
-curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
-    -o /usr/share/keyrings/ros-archive-keyring.gpg || {
-    record_failure "ROS key download"
-    exit 1
-}
-
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(source /etc/os-release && echo "$UBUNTU_CODENAME") main" | \
-    tee /etc/apt/sources.list.d/ros2.list >/dev/null
-
-wait_for_apt || exit 1
-run_command "apt update (ROS)" apt update -y || exit 1
-install_and_check "ros-humble-desktop" || exit 1
-install_and_check "ros-dev-tools" || exit 1
-
-# Rosdep
-log INFO "Rosdep initialisieren..."
-if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
-    rosdep init || log WARN "rosdep init fehlgeschlagen (möglicherweise bereits initialisiert)"
-fi
-sudo -u "$REAL_USER" rosdep update || log WARN "rosdep update fehlgeschlagen"
-
-# ==============================================================================
-# 5. Shell Konfiguration
-# ==============================================================================
-echo ""
-echo -e "${BLUE}[STEP]${RESET} Shell-Konfiguration (.bashrc & .zshrc)"
-log INFO "Konfiguriere Shell Pfade..."
-
-# Pico SDK Variable
+log_step "SHELL-KONFIGURATION"
+log_task "Pico SDK Pfad setzen"
 add_to_shells "export PICO_SDK_PATH=\"$PICO_DIR\"" "both"
+log_result ok "PICO_SDK_PATH"
 
-# ROS 2 Sourcing (Unterschiedlich für Bash/Zsh)
+log_task "ROS 2 Setup"
 add_to_shells "# ROS 2 Setup" "both"
-add_to_shells "source /opt/ros/humble/setup.bash" "bash"
-add_to_shells "source /opt/ros/humble/setup.zsh" "zsh"
+add_to_shells "source /opt/ros/$ROS_DISTRO/setup.bash" "bash"
+add_to_shells "source /opt/ros/$ROS_DISTRO/setup.zsh" "zsh"
+log_result ok "ROS 2 Sourcing"
 
-# Colcon Autocomplete
+log_task "Colcon Autocomplete"
 add_to_shells "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" "bash"
 add_to_shells "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.zsh" "zsh"
+log_result ok "Colcon Autocomplete"
 
-# # 6. Swap File (2GB) für Compiling in VM
-# if [ ! -f /swapfile ]; then
-#     log INFO "Erstelle 2GB Swapfile..."
-#     fallocate -l 2G /swapfile
-#     chmod 600 /swapfile
-#     mkswap /swapfile
-#     swapon /swapfile
-#     echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
-# fi
-
-log SUCCESS "=========================================="
-log SUCCESS " Setup abgeschlossen!"
-log SUCCESS "=========================================="
-log INFO " ZSH installiert. Wechsel: chsh -s \$(which zsh)"
-log INFO " Pico SDK Pfad: $PICO_DIR"
-log INFO " Docker Gruppe aktiv nach: sudo su - $REAL_USER"
-log INFO " ROS 2 sourcing: source /opt/ros/humble/setup.bash"
-log INFO " Logs: $LOG_FILE"
-if [ ${#FAILURES[@]} -gt 0 ]; then
-    log INFO " Fehler-Log: $ERR_FILE"
-fi
-log SUCCESS "=========================================="
+# ==============================================================================
+# FINAL SUMMARY
+# ==============================================================================
+echo ""
+log_step "SETUP ABGESCHLOSSEN"
+log_result ok "ZSH installiert → chsh -s \$(which zsh)"
+log_result ok "Pico SDK → $PICO_DIR"
+log_result ok "Docker Gruppe → sudo su - $REAL_USER"
+log_result ok "ROS 2 → source /opt/ros/$ROS_DISTRO/setup.bash"
+log_result info "Logs → $LOG_FILE"
 
 if [ ${#FAILURES[@]} -gt 0 ]; then
     echo ""
-    log ERROR "=== FEHLER-ZUSAMMENFASSUNG (${#FAILURES[@]} Fehler) ==="
+    log ERROR "╔══════════════════════════════════════════╗"
+    log ERROR "║ FEHLER-ZUSAMMENFASSUNG: ${#FAILURES[@]} Fehler"
+    log ERROR "╚══════════════════════════════════════════╝"
     for fail in "${FAILURES[@]}"; do
         log ERROR "  ✗ $fail"
     done
@@ -586,5 +628,7 @@ if [ ${#FAILURES[@]} -gt 0 ]; then
     exit 1
 fi
 
-log SUCCESS "Setup erfolgreich abgeschlossen ohne Fehler!"
+log SUCCESS "╔══════════════════════════════════════════╗"
+log SUCCESS "║ Setup erfolgreich ohne Fehler!          ║"
+log SUCCESS "╚══════════════════════════════════════════╝"
 exit 0
