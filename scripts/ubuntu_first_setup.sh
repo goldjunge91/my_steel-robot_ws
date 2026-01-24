@@ -19,7 +19,7 @@ export DEBIAN_FRONTEND=noninteractive
 TOOLS=(
     curl git gnupg2 lsb-release build-essential cmake
     python3-pip htop net-tools terminator shellcheck nano wget
-    zsh fontconfig ca-certificates gnupg joystick jstest-gtk evtest
+    zsh fontconfig ca-certificates gnupg joystick jstest-gtk evtest fzf
 )
 
 # Farbdefinitionen
