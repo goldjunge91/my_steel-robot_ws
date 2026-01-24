@@ -403,7 +403,32 @@ install_gh() {
         tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null || {
         record_failure "gh keyring download"
         return 1
-    }
+        apt update -y -qq >/dev/null 2>&1 || return 1
+    install_and_check "gh" || return 1
+}
+
+install_nvm() {
+    # Check if nvm directory exists
+    if [ -d "$USER_HOME/.nvm" ]; then
+        log SUCCESS "nvm bereits installiert"
+        return 0
+    fi
+
+    log INFO "Installiere nvm..."
+    # Installation als REAL_USER durchführen, damit es im Home-Dir des Users landet
+    # und die korrekten Shell-Configs (.bashrc/.zshrc des Users) bearbeitet werden.
+    if sudo -u "$REAL_USER" bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"; then
+        log SUCCESS "nvm installiert"
+        
+        # NVM environment vars für das laufende Skript verfügbar machen (optional, falls wir nvm noch nutzen wollen)
+        export NVM_DIR="$USER_HOME/.nvm"
+        # shellcheck disable=SC1091
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    else
+        log_result fail "nvm Installation"
+        return 1
+    fi
+}
     chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
         tee /etc/apt/sources.list.d/github-cli.list >/dev/null
@@ -581,7 +606,9 @@ install_and_check "${TOOLS[@]}" || exit 1
 log_step "OPTIONALE TOOLS"
 install_formatter || log WARN "shfmt optional übersprungen"
 install_just || log WARN "just optional übersprungen"
+install_just || log WARN "just optional übersprungen"
 install_gh || log WARN "gh optional übersprungen"
+install_nvm || log WARN "nvm optional übersprungen"
 
 log_step "DOCKER"
 install_docker || exit 1
