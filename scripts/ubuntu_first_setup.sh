@@ -66,22 +66,20 @@ log() {
     # Wir machen hier kein >> $LOG_FILE mehr, da das globale exec das übernimmt!
     # echo -e "${color}[$level]${RESET} $*"
 }
-# Simple logging / helper functions
-log_warn() {
-	echo -e "${RED}[WARN]${RESET} $*"
-	echo "$(date): WARN: $*" >>errors.log 2>/dev/null || true
-}
+
 
 record_failure() {
 	FAILURES+=("$*")
-	echo "$(date): FAILURE: $*" >>errors.log 2>/dev/null || true
+	echo "$(date): FAILURE: $*" >>"$ERR_FILE" 2>/dev/null || true
 }
 
 wait_for_apt() {
-    while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ||
+    while 
+        fuser /var/lib/dpkg/lock >/dev/null 2>&1 || \
+        fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ||
         fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
         echo -e "${BLUE}Warte auf apt-Lock...${RESET}"
-        sleep 1
+        sleep 2
     done
 }
 
@@ -145,7 +143,8 @@ install_and_check() {
 				INSTALL_CACHE="$INSTALL_CACHE $pkg"
 			else
 				# Meta-Paket-Fallback prüfen
-				if grep -qE "(is already the newest version|newly installed)" apt_install.log; then
+				# if grep -qE "(is already the newest version|newly installed)" apt_install.log; then
+                if grep -qE "$pkg.*(is already the newest version|newly installed)" apt_install.log; then
 					echo -e "${GREEN}✓ $pkg scheint installiert (Meta/keine Aktion)${RESET}"
 					echo "$(date): $pkg installiert (Meta/keine Aktion)" >>setup.log
 					INSTALL_CACHE="$INSTALL_CACHE $pkg"
@@ -244,7 +243,8 @@ install_picotool() {
             return 1
         }
         # git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_PICO/picotool"
-        cd "$TMP_PICO/picotool" || exit
+        # cd "$TMP_PICO/picotool" || exit
+        cd "$TMP_PICO/picotool" || { record_failure "cd failed"; return 1; }
         mkdir build && cd build || exit
         run_command "Picotool cmake" cmake .. -DPICO_SDK_PATH="$PICO_DIR" || return 1
         run_command "Picotool build" make -j$(nproc) || return 1
