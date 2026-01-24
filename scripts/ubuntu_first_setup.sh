@@ -238,12 +238,20 @@ install_picotool() {
         chmod 777 "$TMP_PICO"
 
         # Klonen & Bauen als Root (im Temp), Install nach /usr/local/bin
-        git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_PICO/picotool"
+        run_command "Picotool klonen" \
+            git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_PICO/picotool" || {
+            record_failure "Picotool clone failed"
+            return 1
+        }
+        # git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_PICO/picotool"
         cd "$TMP_PICO/picotool" || exit
         mkdir build && cd build || exit
-        cmake .. -DPICO_SDK_PATH="$PICO_DIR"
-        make -j$(nproc)
-        make install
+        run_command "Picotool cmake" cmake .. -DPICO_SDK_PATH="$PICO_DIR" || return 1
+        run_command "Picotool build" make -j$(nproc) || return 1
+        run_command "Picotool install" make install || return 1
+        # cmake .. -DPICO_SDK_PATH="$PICO_DIR"
+        # make -j$(nproc)
+        # make install
         cd /
         rm -rf "$TMP_PICO"
         log SUCCESS "Picotool installiert."
