@@ -403,7 +403,12 @@ install_gh() {
         tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null || {
         record_failure "gh keyring download"
         return 1
-        apt update -y -qq >/dev/null 2>&1 || return 1
+    }
+    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
+        tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+    wait_for_apt || return 1
+    apt update -y -qq >/dev/null 2>&1 || return 1
     install_and_check "gh" || return 1
 }
 
@@ -428,13 +433,6 @@ install_nvm() {
         log_result fail "nvm Installation"
         return 1
     fi
-}
-    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
-        tee /etc/apt/sources.list.d/github-cli.list >/dev/null
-    wait_for_apt || return 1
-    apt update -y -qq >/dev/null 2>&1 || return 1
-    install_and_check "gh" || return 1
 }
 
 install_docker() {
@@ -605,7 +603,6 @@ install_and_check "${TOOLS[@]}" || exit 1
 
 log_step "OPTIONALE TOOLS"
 install_formatter || log WARN "shfmt optional übersprungen"
-install_just || log WARN "just optional übersprungen"
 install_just || log WARN "just optional übersprungen"
 install_gh || log WARN "gh optional übersprungen"
 install_nvm || log WARN "nvm optional übersprungen"
