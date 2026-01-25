@@ -11,11 +11,38 @@ HELPERS_LOADED=1
 # Require REAL_USER and USER_HOME to be exported by caller.
 
 # Simple log functions (use main script colors if available)
-log() { if declare -f log >/dev/null 2>&1; then log "$@"; else echo "[$1] ${*:2}"; fi }
-log_step() { if declare -f log_step >/dev/null 2>&1; then log_step "$@"; else echo "== $* =="; fi }
-log_task() { if declare -f log_task >/dev/null 2>&1; then log_task "$@"; else echo "> $*"; fi }
-log_result() { if declare -f log_result >/dev/null 2>&1; then log_result "$@"; else echo "RESULT: $*"; fi }
-record_failure() { if declare -f record_failure >/dev/null 2>&1; then record_failure "$@"; else echo "FAIL: $*"; fi }
+# log() { if declare -f log >/dev/null 2>&1; then log "$@"; else echo "[$1] ${*:2}"; fi }
+# log_step() { if declare -f log_step >/dev/null 2>&1; then log_step "$@"; else echo "== $* =="; fi }
+# log_task() { if declare -f log_task >/dev/null 2>&1; then log_task "$@"; else echo "> $*"; fi }
+# log_result() { if declare -f log_result >/dev/null 2>&1; then log_result "$@"; else echo "RESULT: $*"; fi }
+# record_failure() { if declare -f record_failure >/dev/null 2>&1; then record_failure "$@"; else echo "FAIL: $*"; fi }
+
+# --- SICHERE LOG-FUNKTIONEN (Verhindert Segmentation Fault) ---
+
+# log: Standard-Ausgabe
+if ! declare -f log >/dev/null 2>&1; then
+    log() { local lvl="$1"; shift; echo "[$lvl] $*"; }
+fi
+
+# log_step: Große Überschriften
+if ! declare -f log_step >/dev/null 2>&1; then
+    log_step() { echo -e "\n=== $* ==="; }
+fi
+
+# log_task: Einzelschritte mit Pfeil
+if ! declare -f log_task >/dev/null 2>&1; then
+    log_task() { echo "→ $*"; }
+fi
+
+# log_result: Ergebnis eines Schritts
+if ! declare -f log_result >/dev/null 2>&1; then
+    log_result() { echo "  ✓ $*"; }
+fi
+
+# record_failure: Fehler protokollieren
+if ! declare -f record_failure >/dev/null 2>&1; then
+    record_failure() { echo "✗ ERROR: $*" >&2; }
+fi
 
 # run_action: respects DRY_RUN/VERBOSE if defined in caller
 run_action() {
