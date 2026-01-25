@@ -861,30 +861,38 @@ log_step "BASIS-TOOLS"
 install_and_check "${TOOLS[@]}" || exit 1
 
 log_step "OPTIONALE TOOLS"
-if ! install_formatter; then
+if ! run_action "install_formatter" bash "$SCRIPT_DIR/installers/install_formatter.sh"; then
     log WARN "shfmt optional übersprungen"
 fi
-if ! install_just; then
+if ! run_action "install_just" bash "$SCRIPT_DIR/installers/install_just.sh"; then
     log WARN "just optional übersprungen"
 fi
-if ! install_gh; then
+if ! run_action "install_gh" bash "$SCRIPT_DIR/installers/install_gh.sh"; then
     log WARN "gh optional übersprungen"
 fi
-if ! install_nvm; then
+if ! run_action "install_nvm" bash "$SCRIPT_DIR/installers/install_nvm.sh"; then
     log WARN "nvm optional übersprungen"
 fi
-if ! install_oh_my_bash; then
+if ! run_action "install_oh_my_bash" bash "$SCRIPT_DIR/installers/install_oh_my_bash.sh"; then
     log WARN "Oh My Bash optional übersprungen"
 fi
 
 log_step "DOCKER"
-install_docker || exit 1
+if ! run_action "install_docker" bash "$SCRIPT_DIR/installers/install_docker.sh"; then
+    exit 1
+fi
 
 log_step "PICO SDK & TOOLS"
-install_pico_sdk || exit 1
-install_picotool || exit 1
+if ! run_action "install_pico_sdk" bash "$SCRIPT_DIR/installers/install_pico_sdk.sh"; then
+    exit 1
+fi
+if ! run_action "install_picotool" bash "$SCRIPT_DIR/installers/install_picotool.sh"; then
+    exit 1
+fi
 
-install_ros_via_script || exit 1
+if ! run_action "install_ros" bash "$SCRIPT_DIR/installers/install_ros_via_script.sh"; then
+    exit 1
+fi
 
 log_step "SHELL-KONFIGURATION"
 log_task "Pico SDK Pfad setzen"
