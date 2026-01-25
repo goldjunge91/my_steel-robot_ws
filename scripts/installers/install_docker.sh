@@ -1,36 +1,50 @@
 #!/usr/bin/env bash
 set -euo pipefail
 DOCKER_PKGS=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
+DOCKER_GPG_PATH="/etc/apt/keyrings/docker.gpg"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/helpers.sh"
-: ${REAL_USER:=${SUDO_USER:-}}
+: ${REAL_USER:=${SUDO_USER:-$USER}}
 
-# Prüfung: Docker UND Engine müssen da sein
+# 1. Prüfung: Ist Docker bereits vollständig installiert?
 if command -v docker &>/dev/null && dpkg -l | grep -q docker-ce; then
     log SUCCESS "Docker Engine & CLI bereits installiert"
     exit 0
 fi
 
-# Remove moby-tini if present
+# 2. Konflikte bereinigen
 if dpkg -l | grep -q moby-tini; then
     log_task "Entferne moby-tini (Konflikt)"
     apt-get remove -y -qq moby-tini >/dev/null 2>&1 || true
     log_result ok "moby-tini entfernt"
 fi
 
-log_task "GPG-Schlüssel hinzufügen"
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg || { log_result fail "GPG-Key Download"; exit 1; }
-log_result ok "GPG-Schlüssel"
+# 3. Docker GPG-Schlüssel (Überspringen, wenn vorhanden)
+if [ -f "$DOCKER_GPG_PATH" ]; then
+    log_result skip "Docker GPG-Schlüssel existiert bereits"
+else
+    log_task "GPG-Schlüssel hinzufügen"
+    mkdir -p /etc/apt/keyrings
+    # --batch verhindert interaktive Rückfragen
+    if curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --batch -o "$DOCKER_GPG_PATH"; then
+        log_result ok "GPG-Schlüssel erfolgreich hinzugefügt"
+    else
+        log_result fail "Fehler beim Hinzufügen des GPG-Schlüssels"
+        exit 1
+    fi
+fi
 
+# 4. Repository konfigurieren
 log_task "Docker-Repository konfigurieren"
 ARCH=$(dpkg --print-architecture)
-echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list >/dev/null
-log_result ok "Repository"
+DISTRO=$(lsb_release -cs)
+echo "deb [arch=$ARCH signed-by=$DOCKER_GPG_PATH] https://download.docker.com/linux/ubuntu $DISTRO stable" | tee /etc/apt/sources.list.d/docker.list >/dev/null
+log_result ok "Repository ($DISTRO)"
 
+# 5. Installation
 wait_for_apt || exit 1
 if ! run_action "apt update (docker)" apt update -y -qq; then
-    log WARN "apt update (docker) had errors, proceeding..."
+    log WARN "apt update (docker) hatte Fehler, fahre trotzdem fort..."
 fi
 
 for pkg in "${DOCKER_PKGS[@]}"; do
@@ -40,50 +54,31 @@ for pkg in "${DOCKER_PKGS[@]}"; do
     fi
 done
 
-if ! systemctl enable --now docker; then
-    log WARN "systemctl enable fehlgeschlagen"
-fi
+# 6. Dienst starten
+systemctl enable --now docker >/dev/null 2>&1 || log WARN "Docker-Dienst konnte nicht aktiviert werden"
 log_result ok "Docker-Dienst"
 
-if docker --version &>/dev/null; then
-    log_result ok "Docker: $(docker --version)"
-else
-    log_result fail "Docker nicht verfügbar"
-    exit 1
-fi
-
-if docker compose version &>/dev/null; then
-    log_result ok "Docker Compose: $(docker compose version)"
-else
-    log_result fail "Docker Compose nicht verfügbar"
-    exit 1
-fi
-# Liste der gewünschten Gruppen
+# 7. Gruppen-Management (Hardware-agnostisch)
 WANTED_GROUPS=("docker" "dialout" "video" "plugdev" "gpio" "i2c" "spi")
 EXISTING_GROUPS=()
 log_task "Prüfe verfügbare Benutzergruppen..."
-# Prüfe jede Gruppe, ob sie im System existiert
+
 for grp in "${WANTED_GROUPS[@]}"; do
     if getent group "$grp" >/dev/null; then
         EXISTING_GROUPS+=("$grp")
     else
-        log_result skip "Gruppe '$grp' existiert nicht auf diesem System (übersprungen)"
+        log_result skip "Gruppe '$grp' nicht auf diesem System"
     fi
 done
 
-# Nur hinzufügen, wenn wir existierende Gruppen gefunden haben
 if [ ${#EXISTING_GROUPS[@]} -gt 0 ]; then
-    # Array zu kommagetrennter Liste umwandeln
     GROUP_LIST=$(IFS=,; echo "${EXISTING_GROUPS[*]}")
-    
-    if run_action "Benutzer $REAL_USER zu Gruppen hinzufügen ($GROUP_LIST)" usermod -aG "$GROUP_LIST" "$REAL_USER"; then
-        log_result ok "Benutzer erfolgreich zugewiesen"
+    if run_action "Benutzer $REAL_USER zu Gruppen hinzufügen" usermod -aG "$GROUP_LIST" "$REAL_USER"; then
+        log_result ok "Zugefügt zu: $GROUP_LIST"
     else
-        log_result fail "Fehler beim Zuweisen der Gruppen"
+        log ERROR "Gruppenzuweisung fehlgeschlagen"
         exit 1
     fi
-else
-    log_result skip "Keine der Zielgruppen gefunden."
 fi
 
 exit 0
