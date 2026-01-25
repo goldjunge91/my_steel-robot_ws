@@ -9,11 +9,17 @@ set -u -o pipefail -E
 # set -m || true
 
 # --- KONFIGURATION ---
+# Dry-run and verbose flags
+DRY_RUN=${DRY_RUN:-false}
+VERBOSE=${VERBOSE:-false}
 REAL_USER=$SUDO_USER
 USER_HOME="/home/$REAL_USER"
 PICO_DIR="$USER_HOME/pico-sdk"
 FAILURES=()
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Backup directory for changed files
+BACKUP_DIR="${SCRIPT_DIR}/backups/$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$BACKUP_DIR"
 export DEBIAN_FRONTEND=noninteractive
 
 TOOLS=(
@@ -22,6 +28,7 @@ TOOLS=(
     zsh fontconfig ca-certificates gnupg joystick jstest-gtk evtest fzf
 )
 DOCKER_PKGS=(docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
+
 # Farbdefinitionen
 RED='\033[31m'
 GREEN='\033[32m'
@@ -75,9 +82,6 @@ log() {
 }
 
 # ---- Idempotence & Safety Helpers ----
-# Dry-run and verbose flags
-DRY_RUN=${DRY_RUN:-false}
-VERBOSE=${VERBOSE:-false}
 
 run_action() {
     local desc="$1"; shift
@@ -91,10 +95,6 @@ run_action() {
     log_task "$desc"
     "$@"
 }
-
-# Backup directory for changed files
-BACKUP_DIR="${SCRIPT_DIR}/backups/$(date +%Y%m%d_%H%M%S)"
-mkdir -p "$BACKUP_DIR"
 
 backup_file() {
     local file="$1"
@@ -430,11 +430,10 @@ install_picotool() {
     TMP_PICO=$(mktemp -d)
     chmod 755 "$TMP_PICO"
 
-    run_command "Picotool klonen" \
-        git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_PICO/picotool" || {
+    if ! run_action "Picotool klonen" git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_PICO/picotool"; then
         record_failure "Picotool clone failed"
         return 1
-    }
+    fi
 
     cd "$TMP_PICO/picotool" || {
         record_failure "cd to picotool failed"
@@ -450,9 +449,15 @@ install_picotool() {
         return 1
     fi
 
-    run_command "Picotool cmake" cmake .. -DPICO_SDK_PATH="$PICO_DIR" || return 1
-    run_command "Picotool build" make -j"$(nproc)" || return 1
-    run_command "Picotool install" make install || return 1
+    if ! run_action "Picotool cmake" cmake .. -DPICO_SDK_PATH="$PICO_DIR"; then
+        return 1
+    fi
+    if ! run_action "Picotool build" make -j"$(nproc)"; then
+        return 1
+    fi
+    if ! run_action "Picotool install" make install; then
+        return 1
+    fi
 
     cd / || true
     rm -rf "$TMP_PICO"
@@ -469,9 +474,10 @@ install_pico_sdk() {
 
     if [ ! -d "$PICO_DIR" ]; then
         log INFO "Klone Pico SDK nach $PICO_DIR..."
-        run_command "clone pico-sdk" \
-            sudo -u "$REAL_USER" git clone --depth 1 --recursive \
-            https://github.com/raspberrypi/pico-sdk.git "$PICO_DIR" || return 1
+        if ! run_action "clone pico-sdk" sudo -u "$REAL_USER" git clone --depth 1 --recursive https://github.com/raspberrypi/pico-sdk.git "$PICO_DIR"; then
+            record_failure "clone pico-sdk failed"
+            return 1
+        fi
         chown -R "$REAL_USER:$REAL_USER" "$PICO_DIR"
     else
         log INFO "Pico SDK bereits vorhanden."
@@ -485,15 +491,25 @@ install_formatter() {
     fi
 
     log INFO "Installiere shfmt..."
-    if curl -sLo /tmp/shfmt https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64; then
-        chmod +x /tmp/shfmt
-        mv /tmp/shfmt /usr/local/bin/shfmt
-        log SUCCESS "shfmt installiert"
-    else
+    local tmp_shfmt
+    tmp_shfmt=$(mktemp)
+    if ! curl -sLo "$tmp_shfmt" https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64; then
+        rm -f "$tmp_shfmt"
         log ERROR "shfmt Download fehlgeschlagen"
         record_failure "shfmt installation"
         return 1
     fi
+
+    # If existing binary identical, skip; otherwise backup and install
+    if [ -x /usr/local/bin/shfmt ] && cmp -s "$tmp_shfmt" /usr/local/bin/shfmt; then
+        log_result skip "shfmt already up-to-date"
+        rm -f "$tmp_shfmt"
+        return 0
+    fi
+    backup_file /usr/local/bin/shfmt
+    chmod +x "$tmp_shfmt"
+    run_action "Install shfmt" mv "$tmp_shfmt" /usr/local/bin/shfmt
+    log SUCCESS "shfmt installiert"
 }
 
 install_just() {
@@ -503,12 +519,22 @@ install_just() {
     fi
 
     log INFO "Installiere just..."
-    if curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin; then
+    local just_tmp
+    just_tmp=$(mktemp)
+    if ! curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh -o "$just_tmp"; then
+        rm -f "$just_tmp"
+        log WARN "just download fehlgeschlagen (optional)"
+        return 1
+    fi
+    chmod +x "$just_tmp"
+    if run_action "Run just installer" bash "$just_tmp" -- --to /usr/local/bin; then
         log SUCCESS "just installiert"
     else
         log WARN "just Installation fehlgeschlagen (optional)"
+        rm -f "$just_tmp"
         return 1
     fi
+    rm -f "$just_tmp"
 }
 
 install_gh() {
@@ -520,14 +546,28 @@ install_gh() {
     log INFO "Installiere GitHub CLI..."
     mkdir -p /etc/apt/keyrings
     chmod 755 /etc/apt/keyrings
-    run_command "gh keyring download" \
-        wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
-        tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null || return 1
-    
-    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
-        tee /etc/apt/sources.list.d/github-cli.list >/dev/null
-    
+
+    # Download key to temp and write only if changed
+    local gh_key_tmp
+    gh_key_tmp=$(mktemp)
+    if ! curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o "$gh_key_tmp"; then
+        rm -f "$gh_key_tmp"
+        log_result fail "gh key download"
+        return 1
+    fi
+    write_if_changed /etc/apt/keyrings/githubcli-archive-keyring.gpg < "$gh_key_tmp"
+    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg || true
+    rm -f "$gh_key_tmp"
+
+    # Write apt source list only if changed
+    local arch
+    arch=$(dpkg --print-architecture)
+    cat > /tmp/new_github_repo <<EOF
+deb [arch=$arch signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main
+EOF
+    write_if_changed /etc/apt/sources.list.d/github-cli.list < /tmp/new_github_repo
+    rm -f /tmp/new_github_repo
+
     wait_for_apt || return 1
     if ! run_command "apt update (gh)" apt update -y -qq; then
         log WARN "apt update (gh) had errors, proceeding..."
@@ -543,19 +583,26 @@ install_nvm() {
     fi
 
     log INFO "Installiere nvm..."
-    # Installation als REAL_USER durchführen, damit es im Home-Dir des Users landet
-    # und die korrekten Shell-Configs (.bashrc/.zshrc des Users) bearbeitet werden.
-    if sudo -u "$REAL_USER" bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"; then
+    # Download installer to temp and run as REAL_USER for idempotence and safety
+    local nvm_tmp
+    nvm_tmp=$(mktemp)
+    if ! curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh -o "$nvm_tmp"; then
+        rm -f "$nvm_tmp"
+        log_result fail "nvm download fehlgeschlagen"
+        return 1
+    fi
+
+    if run_action "Run nvm installer" sudo -u "$REAL_USER" bash "$nvm_tmp"; then
         log SUCCESS "nvm installiert"
-        
-        # NVM environment vars für das laufende Skript verfügbar machen (optional, falls wir nvm noch nutzen wollen)
         export NVM_DIR="$USER_HOME/.nvm"
         # shellcheck disable=SC1091
         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
     else
-        log_result fail "nvm Installation"
+        log_result fail "nvm Installation fehlgeschlagen"
+        rm -f "$nvm_tmp"
         return 1
     fi
+    rm -f "$nvm_tmp"
 }
 
 install_docker() {
@@ -622,8 +669,16 @@ install_docker() {
     fi
     
     log_task "Benutzer zu Gruppen hinzufügen"
-    usermod -aG docker,dialout,video,plugdev,gpio,i2c,spi "$REAL_USER"
-    log_result ok "User $REAL_USER → docker,dialout,video,plugdev,gpio,i2c,spi"
+    # Add user to groups only if not already member
+    if id -nG "$REAL_USER" | tr ' ' '\n' | grep -q -w docker; then
+        log_result skip "User $REAL_USER ist bereits in Gruppe docker"
+    else
+        if run_action "Add $REAL_USER to groups" usermod -aG docker,dialout,video,plugdev,gpio,i2c,spi "$REAL_USER"; then
+            log_result ok "User $REAL_USER -> docker,dialout,video,plugdev,gpio,i2c,spi"
+        else
+            log_result fail "Failed to add $REAL_USER to groups"
+        fi
+    fi
 }
 
 install_ros() {
@@ -703,10 +758,9 @@ install_ros_via_script() {
         log SUCCESS "ROS2 installiert (via script)"
         return 0
     fi
-
     # Script failed — versuche internen Installer als Fallback
     log INFO "Installationsskript fehlgeschlagen, versuche internen Installer..."
-    if install_ros; then
+    if run_action "Run internal ROS installer" install_ros; then
         log SUCCESS "ROS2 installiert (via internal installer)"
         return 0
     else
