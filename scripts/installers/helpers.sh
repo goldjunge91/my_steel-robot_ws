@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Vollständige Helper Functions (Single Source of Truth)
+# ROBOT SETUP HELPERS (FINAL VERSION 2026)
 # ==============================================================================
 
 # Guard gegen mehrfaches Laden
 : ${HELPERS_LOADED:=}
-if [ -n "$HELPERS_LOADED" ]; then return 0; fi
+[ -n "$HELPERS_LOADED" ] && return 0
 HELPERS_LOADED=1
 
 # --- BASIS VARIABLEN ---
@@ -49,50 +49,40 @@ log_result() {
 
 record_failure() {
     local msg="$*"
-    # Schreibt in die globale FAILURES-Variable des Hauptskripts (wenn vorhanden)
     if declare -p FAILURES >/dev/null 2>&1; then FAILURES+=("$msg"); fi
-    # Schreibt in das Error-Log
     local log_target="${ERR_FILE:-/tmp/setup_errors.log}"
     echo "$(date): FAILURE: $msg" >> "$log_target" 2>/dev/null || true
     log ERROR "$msg"
 }
 
-# --- AKTIONEN ---
+# --- TRACKING & ROLLBACK ---
+record_change() {
+    if [ -z "${APPLIED_CHANGES+x}" ]; then APPLIED_CHANGES=(); fi
+    APPLIED_CHANGES+=("$1")
+}
+
+rollback_changes() {
+    [ ${#APPLIED_CHANGES[@]} -eq 0 ] && return 0
+    log_step "ROLLBACK / SIMULATION"
+    for ((i=${#APPLIED_CHANGES[@]}-1; i>=0; i--)); do
+        local ch="${APPLIED_CHANGES[i]}"
+        if [ "$DRY_RUN" = "true" ]; then
+            log INFO "[DRY-RUN] Würde rückgängig machen: $ch"
+            continue
+        fi
+        case "$ch" in
+            file:*) local f="${ch#file:}"; [ -e "$BACKUP_DIR$f" ] && cp -a "$BACKUP_DIR$f" "$f" ;;
+            pkg:*)  apt remove -y -qq "${ch#pkg:}" >/dev/null 2>&1 || true ;;
+        esac
+    done
+}
+
+# --- AKTIONEN & DATEIEN ---
 run_action() {
     local desc="$1"; shift
-    if [ "$DRY_RUN" = "true" ]; then
-        log_task "[DRY-RUN] $desc"; return 0
-    fi
+    if [ "$DRY_RUN" = "true" ]; then log_task "[DRY-RUN] $desc"; return 0; fi
     log_task "$desc"
     "$@"
-}
-
-run_command() {
-    local description="$1"; shift
-    log_task "$description"
-    local tmplog=$(mktemp)
-    if [ "$DRY_RUN" = "true" ]; then
-        log_result ok "$description (dry-run)"; rm -f "$tmplog"; return 0
-    fi
-    if "$@" > "$tmplog" 2>&1; then
-        [ -s "$tmplog" ] && cat "$tmplog"
-        log_result ok "$description"
-        rm -f "$tmplog"
-    else
-        cat "$tmplog"; rm -f "$tmplog"
-        log_result fail "$description"
-        return 1
-    fi
-}
-
-# --- DATEI-OPERATIONEN ---
-backup_file() {
-    local file="$1"
-    if [ -e "$file" ]; then
-        mkdir -p "$BACKUP_DIR$(dirname "$file")" 2>/dev/null || true
-        cp -a "$file" "$BACKUP_DIR$file"
-        log_result ok "Backup: $file"
-    fi
 }
 
 write_if_changed() {
@@ -106,31 +96,32 @@ write_if_changed() {
     if [ -e "$dest" ] && cmp -s "$tmp" "$dest"; then
         log_result skip "$dest (unverändert)"; rm -f "$tmp"; return 0
     fi
-    [ -e "$dest" ] && backup_file "$dest"
+    [ -e "$dest" ] && { mkdir -p "$BACKUP_DIR$(dirname "$dest")"; cp -a "$dest" "$BACKUP_DIR$dest"; }
     mkdir -p "$(dirname "$dest")" 2>/dev/null || true
     mv "$tmp" "$dest"
     chown "$REAL_USER:$REAL_USER" "$dest" 2>/dev/null || true
     log_result ok "Datei geschrieben: $dest"
+    record_change "file:$dest"
 }
 
 download_and_verify_and_run() {
     local url="$1"; local dest="$2"; local sha256="${3:-}"
     run_action "Download $url" curl -fsSL "$url" -o "$dest"
-    if [ "$DRY_RUN" = "true" ]; then return 0; fi
+    [ "$DRY_RUN" = "true" ] && return 0
     if [ -n "$sha256" ]; then
-        echo "$sha256  $dest" | sha256sum -c - || { log ERROR "Checksum failed"; return 1; }
+        echo "$sha256  $dest" | sha256sum -c --status || { log ERROR "Checksum failed"; return 1; }
     fi
-    chmod +x "$dest"
-    run_action "Ausführen: $(basename "$dest")" bash "$dest"
+    chmod +x "$dest"; bash "$dest"
 }
 
-# --- SYSTEM-CHECKS ---
+# --- SYSTEM ---
 wait_for_apt() {
     local timeout=300 elapsed=0
     while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
-        if [ $elapsed -ge $timeout ]; then return 1; fi
+        [ $elapsed -ge $timeout ] && return 1
         echo -e "${BLUE}Warte auf apt-Lock...${RESET}"; sleep 2; elapsed=$((elapsed + 2))
     done
+    return 0
 }
 
 install_and_check() {
@@ -140,10 +131,10 @@ install_and_check() {
             missing+=("$pkg")
         else log_result ok "$pkg (bereits installiert)"; fi
     done
-    if [ ${#missing[@]} -eq 0 ]; then return 0; fi
+    [ ${#missing[@]} -eq 0 ] && return 0
     if [ "$DRY_RUN" = "true" ]; then log_result info "[DRY-RUN] Würde installieren: ${missing[*]}"; return 0; fi
     wait_for_apt || return 1
     if DEBIAN_FRONTEND=noninteractive apt install -y -qq "${missing[@]}"; then
-        for pkg in "${missing[@]}"; do log_result ok "$pkg installiert"; done
+        for pkg in "${missing[@]}"; do log_result ok "$pkg installiert"; record_change "pkg:$pkg"; done
     else return 1; fi
 }
