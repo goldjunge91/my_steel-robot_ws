@@ -28,31 +28,6 @@ record_change() {
     APPLIED_CHANGES+=("$1")
 }
 
-rollback_changes() {
-    if [ ${#APPLIED_CHANGES[@]} -eq 0 ]; then
-        log INFO "No changes recorded to rollback"
-        return 0
-    fi
-    log_step "Rollback: starte Wiederherstellung von ${#APPLIED_CHANGES[@]} Änderungen"
-    for ((i=${#APPLIED_CHANGES[@]}-1;i>=0;i--)); do
-        local ch="${APPLIED_CHANGES[i]}"
-        case "$ch" in
-            file:*)
-                local f="${ch#file:}"
-                restore_file "$f"
-                ;;
-            pkg:*)
-                local p="${ch#pkg:}"
-                log_task "Remove package $p"
-                apt remove -y "$p" >/dev/null 2>&1 || log WARN "Failed to remove $p"
-                ;;
-            *)
-                log WARN "Unknown change: $ch"
-                ;;
-        esac
-    done
-    log SUCCESS "Rollback abgeschlossen"
-}
 export DEBIAN_FRONTEND=noninteractive
 
 TOOLS=(
@@ -60,7 +35,6 @@ TOOLS=(
     python3-pip htop net-tools terminator shellcheck nano wget
     zsh fontconfig ca-certificates gnupg joystick jstest-gtk evtest fzf
 )
-DOCKER_PKGS=(docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
 
 # Farbdefinitionen
 RED='\033[31m'
@@ -202,6 +176,31 @@ log_step() {
     echo -e "${BLUE}╚════════════════════════════════════════╝${RESET}"
 }
 
+rollback_changes() {
+    if [ ${#APPLIED_CHANGES[@]} -eq 0 ]; then
+        log INFO "No changes recorded to rollback"
+        return 0
+    fi
+    log_step "Rollback: starte Wiederherstellung von ${#APPLIED_CHANGES[@]} Änderungen"
+    for ((i=${#APPLIED_CHANGES[@]}-1;i>=0;i--)); do
+        local ch="${APPLIED_CHANGES[i]}"
+        case "$ch" in
+            file:*)
+                local f="${ch#file:}"
+                restore_file "$f"
+                ;;
+            pkg:*)
+                local p="${ch#pkg:}"
+                log_task "Remove package $p"
+                apt remove -y "$p" >/dev/null 2>&1 || log WARN "Failed to remove $p"
+                ;;
+            *)
+                log WARN "Unknown change: $ch"
+                ;;
+        esac
+    done
+    log SUCCESS "Rollback abgeschlossen"
+}
 # Druckt eine einfache Ein-Zeilen-Aufgabe mit Pfeil-Präfix
 log_task() {
     echo -e "${BLUE}→${RESET} $*"

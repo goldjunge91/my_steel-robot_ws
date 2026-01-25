@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : ${REAL_USER:=${SUDO_USER:-}}
 
 log INFO "Installiere Oh My Bash..."
-if sudo -u "$REAL_USER" bash "$SCRIPT_DIR/../bash/install_omb.sh"; then
+if sudo -u "$REAL_USER" bash "$SCRIPT_DIR/install_omb.sh"; then
     log SUCCESS "Oh My Bash installiert"
     exit 0
 else
