@@ -219,7 +219,7 @@ echo -e "${BLUE}[STEP] Essentielle Pakete installieren${RESET}"
 # install_and_check " jstest-gtk"
 # install_and_check "evtest"
 FAILED_PACKAGES=()
-for pkg in git ca-certificates curl gnupg python3-pip joystick jstest-gtk evtest; do
+for pkg in git ca-certificates curl gnupg python3-pip joystick evtest i2c-tools linux-modules-extra-raspi; do
 	if ! install_and_check "$pkg"; then
 		FAILED_PACKAGES+=("$pkg")
 	fi
@@ -316,34 +316,30 @@ fi
 # ROS2 Humble Installation (optional)
 # https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#
 ###############################################################################
-echo -e "${BLUE}[ABFRAGE] Soll ros-humble-desktop installiert werden? (y/n)${RESET}"
+echo -e "${BLUE}[ABFRAGE] Soll ros-humble-desktop installiert werden? (y/N) [Standard: N -> ros-base]${RESET}"
 read -r response
+ROS_PACKAGE="ros-humble-ros-base"
+
 if [[ "$response" =~ ^[Yy]$ ]]; then
-	sudo apt update
-	wait_for_apt
-	export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
-	curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo "${UBUNTU_CODENAME:-${VERSION_CODENAME}}")_all.deb"
-	sudo dpkg -i /tmp/ros2-apt-source.deb
-	wait_for_apt
-	sudo apt update
-	wait_for_apt
-	echo -e "${BLUE}[ROS2 Base Install]${RESET}"
-	install_and_check "ros-humble-ros-base" # Für ROS2
-	if [ $? -eq 0 ]; then
-		echo -e "${GREEN}✓ ros-humble-ros-base installiert${RESET}"
-	else
-		echo -e "${RED}✗ ros-humble-ros-base Installation fehlgeschlagen${RESET}"
-	fi
-	wait_for_apt
-	echo -e "${BLUE}[ROS2 Base dev tools] installiere dev tools${RESET}"
-	install_and_check "ros-dev-tools" # Für ROS2
-	if [ $? -eq 0 ]; then
-		echo -e "${GREEN}✓ ros-dev-tools installiert${RESET}"
-	else
-		echo -e "${RED}✗ ros-dev-tools Installation fehlgeschlagen${RESET}"
-	fi
+    ROS_PACKAGE="ros-humble-desktop"
+fi
+
+sudo apt update
+wait_for_apt
+export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
+curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo "${UBUNTU_CODENAME:-${VERSION_CODENAME}}")_all.deb"
+sudo dpkg -i /tmp/ros2-apt-source.deb
+wait_for_apt
+sudo apt update
+wait_for_apt
+
+echo -e "${BLUE}[ROS2 Install] Installiere $ROS_PACKAGE und Tools${RESET}"
+install_and_check "$ROS_PACKAGE" "ros-dev-tools" "ros-humble-v4l2-camera"
+
+if [ $? -eq 0 ]; then
+	echo -e "${GREEN}✓ ROS 2 ($ROS_PACKAGE) + Camera Treiber installiert${RESET}"
 else
-	echo -e "${BLUE}Überspringe ros-humble-desktop${RESET}"
+	echo -e "${RED}✗ ROS 2 Installation fehlgeschlagen${RESET}"
 fi
 
 ###############################################################################
@@ -379,6 +375,30 @@ free -h | grep -i swap
 echo -e "${GREEN}[✓] Setup fertig!${RESET}"
 echo -e "${BLUE}Reboot empfohlen: sudo reboot${RESET}"
 echo "$(date): Setup abgeschlossen" >>setup.log
+
+###############################################################################
+# Udev Rules für USB Devices (Pico, Lidar, Camera)
+###############################################################################
+echo -e "${BLUE}[STEP] Udev Rules einrichten${RESET}"
+# Pico: Erlaubt Zugriff ohne sudo
+# Camera: Erlaubt Video-Zugriff
+# Lidar: Erlaubt Serial-Zugriff
+echo 'SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000a", MODE="0666", SYMLINK+="pico"
+KERNEL=="video*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="*", ATTRS{idProduct}=="*", MODE="0666"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE="0666", SYMLINK+="lidar"' | sudo tee /etc/udev/rules.d/99-robot.rules >/dev/null
+
+sudo udevadm control --reload-rules && sudo udevadm trigger
+echo -e "${GREEN}✓ Udev Rules erstellt (/etc/udev/rules.d/99-robot.rules)${RESET}"
+
+###############################################################################
+# Micro-ROS Agent (Docker)
+###############################################################################
+echo -e "${BLUE}[STEP] Micro-ROS Agent Image laden${RESET}"
+if docker pull microros/micro-ros-agent:humble; then
+    echo -e "${GREEN}✓ Micro-ROS Agent Image geladen${RESET}"
+else
+    echo -e "${RED}✗ Micro-ROS Agent Download fehlgeschlagen${RESET}"
+fi
 
 ###############################################################################
 # Pico SDK 2.0.x + Picotool
