@@ -1,31 +1,60 @@
+#!/usr/bin/env python3
 import subprocess
 import os
 
-def check_command(cmd_name, is_alias=False):
-    """Prüft, ob ein Befehl oder Alias in einer interaktiven Bash existiert."""
-    check_type = "alias" if is_alias else "type"
-    # Wir starten eine interaktive Shell, um die .bashrc zu laden
-    proc = subprocess.run(
-        ["bash", "-ic", f"{check_type} {cmd_name}"],
+# Farben für die Konsole
+GREEN = "\033[92m"
+RED = "\033[91m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
+
+def check_env(cmd, name, is_alias=False):
+    """Prüft, ob ein Befehl oder Alias in einer interaktiven Shell existiert."""
+    # Wir nutzen 'bash -ic', um die .bashrc tatsächlich zu laden
+    check_cmd = f"alias {cmd}" if is_alias else f"type {cmd}"
+    
+    result = subprocess.run(
+        ["bash", "-ic", check_cmd],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True
     )
-    return proc.returncode == 0
+    
+    if result.returncode == 0:
+        print(f"  {GREEN}✓{RESET} {name:<20} gefunden")
+        return True
+    else:
+        print(f"  {RED}✗{RESET} {name:<20} FEHLT")
+        return False
 
-# Liste deiner Tools und Aliase aus der .bashrc
-checks = {
-    "Core Tools": ["shfmt", "just", "gh", "docker", "nvm"],
-    "Pico SDK": ["picotool"],
-    "ROS 2 Aliase": ["cb", "cdws", "sbs", "sbr"],
-    "fzf Funktionen": ["rte", "rtl", "rnl", "rbuild"]
-}
+print(f"\n{BLUE}=== Umgebungstest für ROS 2 & Pico SDK ==={RESET}\n")
 
-print(f"{' COMPONENT ':=^40}")
-for category, items in checks.items():
-    print(f"\n{category}:")
-    for item in items:
-        status = "✅ OK" if check_command(item) else "❌ MISSING"
-        print(f"  {item:<15} {status}")
+# 1. System Tools
+print("System Tools:")
+check_env("shfmt", "shfmt")
+check_env("just", "just")
+check_env("gh", "GitHub CLI")
+check_env("docker", "Docker")
+check_env("nvm", "NVM (Node Manager)")
 
-print(f"\n{' CHECK FINISHED ':=^40}")
+# 2. Pico & Toolchain
+print("\nPico Development:")
+check_env("picotool", "Picotool")
+check_env("arm-none-eabi-gcc", "ARM Toolchain")
+
+# 3. ROS 2 & Workspace Aliase
+print("\nROS 2 & Aliase:")
+check_env("ros2", "ROS 2 Core")
+check_env("cb", "Alias: colcon build", is_alias=True)
+check_env("sbs", "Alias: Simulation Mode", is_alias=True)
+check_env("rte", "fzf: Topic Echo", is_alias=False) # Funktion
+
+# 4. Pfad-Check
+print("\nPfad-Validierung:")
+pico_path = os.environ.get('PICO_SDK_PATH', 'NICHT GESETZT')
+if "pico-sdk" in pico_path:
+    print(f"  {GREEN}✓{RESET} PICO_SDK_PATH: {pico_path}")
+else:
+    print(f"  {RED}✗{RESET} PICO_SDK_PATH: {pico_path}")
+
+print(f"\n{BLUE}==========================================={RESET}\n")
