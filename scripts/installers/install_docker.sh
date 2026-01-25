@@ -23,14 +23,18 @@ fi
 if [ -f "$DOCKER_GPG_PATH" ]; then
     log_result skip "Docker GPG-Schlüssel existiert bereits"
 else
-    log_task "GPG-Schlüssel hinzufügen"
-    mkdir -p /etc/apt/keyrings
-    # --batch verhindert interaktive Rückfragen
-    if curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --batch -o "$DOCKER_GPG_PATH"; then
-        log_result ok "GPG-Schlüssel erfolgreich hinzugefügt"
+    if [ "$DRY_RUN" = "true" ]; then
+        log_task "[DRY-RUN] Würde GPG-Key herunterladen und dearmoren"
     else
-        log_result fail "Fehler beim Hinzufügen des GPG-Schlüssels"
-        exit 1
+        log_task "GPG-Schlüssel hinzufügen"
+        mkdir -p /etc/apt/keyrings
+        # --batch verhindert interaktive Rückfragen von gpg
+        if curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --batch -o "$DOCKER_GPG_PATH"; then
+            log_result ok "GPG-Schlüssel erfolgreich hinzugefügt"
+        else
+            log_result fail "Fehler beim Hinzufügen des GPG-Schlüssels"
+            exit 1
+        fi
     fi
 fi
 
