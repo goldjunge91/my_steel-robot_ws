@@ -58,16 +58,32 @@ else
     log_result fail "Docker Compose nicht verfügbar"
     exit 1
 fi
-
-# Add user to groups if needed
-if id -nG "$REAL_USER" | tr ' ' '\n' | grep -q -w docker; then
-    log_result skip "User $REAL_USER ist bereits in Gruppe docker"
-else
-    if run_action "Add $REAL_USER to groups" usermod -aG docker,dialout,video,plugdev,gpio,i2c,spi "$REAL_USER"; then
-        log_result ok "User $REAL_USER -> docker,dialout,video,plugdev,gpio,i2c,spi"
+# Liste der gewünschten Gruppen
+WANTED_GROUPS=("docker" "dialout" "video" "plugdev" "gpio" "i2c" "spi")
+EXISTING_GROUPS=()
+log_task "Prüfe verfügbare Benutzergruppen..."
+# Prüfe jede Gruppe, ob sie im System existiert
+for grp in "${WANTED_GROUPS[@]}"; do
+    if getent group "$grp" >/dev/null; then
+        EXISTING_GROUPS+=("$grp")
     else
-        log_result fail "Failed to add $REAL_USER to groups"
+        log_result skip "Gruppe '$grp' existiert nicht auf diesem System (übersprungen)"
     fi
+done
+
+# Nur hinzufügen, wenn wir existierende Gruppen gefunden haben
+if [ ${#EXISTING_GROUPS[@]} -gt 0 ]; then
+    # Array zu kommagetrennter Liste umwandeln
+    GROUP_LIST=$(IFS=,; echo "${EXISTING_GROUPS[*]}")
+    
+    if run_action "Benutzer $REAL_USER zu Gruppen hinzufügen ($GROUP_LIST)" usermod -aG "$GROUP_LIST" "$REAL_USER"; then
+        log_result ok "Benutzer erfolgreich zugewiesen"
+    else
+        log_result fail "Fehler beim Zuweisen der Gruppen"
+        exit 1
+    fi
+else
+    log_result skip "Keine der Zielgruppen gefunden."
 fi
 
 exit 0
