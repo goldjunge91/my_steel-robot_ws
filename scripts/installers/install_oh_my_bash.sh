@@ -2,14 +2,15 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/helpers.sh"
-: ${REAL_USER:=${SUDO_USER:-}}
 
-log INFO "Installiere Oh My Bash..."
-if sudo -u "$REAL_USER" bash "$SCRIPT_DIR/install_omb.sh"; then
-    log SUCCESS "Oh My Bash installiert"
+log INFO "Starte Oh My Bash Modul..."
+
+# Wir führen das Installations-Skript direkt aus. 
+# Die internen sudo-Befehle im install_omb.sh regeln die Rechte.
+if bash "$SCRIPT_DIR/install_omb.sh"; then
+    log SUCCESS "Oh My Bash erfolgreich eingerichtet"
     exit 0
 else
-    log WARN "Oh My Bash Installation fehlgeschlagen"
-    record_failure "Oh My Bash Installation"
+    log ERROR "Oh My Bash Installation fehlgeschlagen"
     exit 1
 fi
