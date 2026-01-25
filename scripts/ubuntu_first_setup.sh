@@ -74,6 +74,83 @@ log() {
 
 }
 
+# ---- Idempotence & Safety Helpers ----
+# Dry-run and verbose flags
+DRY_RUN=${DRY_RUN:-false}
+VERBOSE=${VERBOSE:-false}
+
+run_action() {
+    local desc="$1"; shift
+    if [ "$DRY_RUN" = "true" ]; then
+        log_task "[DRY-RUN] $desc"
+        if [ "$VERBOSE" = "true" ]; then
+            "$@" || true
+        fi
+        return 0
+    fi
+    log_task "$desc"
+    "$@"
+}
+
+# Backup directory for changed files
+BACKUP_DIR="${SCRIPT_DIR}/backups/$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+
+backup_file() {
+    local file="$1"
+    if [ -e "$file" ]; then
+        mkdir -p "$BACKUP_DIR$(dirname "$file")"
+        cp -a "$file" "$BACKUP_DIR$file"
+        log_result ok "Backup: $file -> $BACKUP_DIR$file"
+    else
+        log_result skip "Backup skipped (missing): $file"
+    fi
+}
+
+restore_file() {
+    local file="$1"
+    local backup="$BACKUP_DIR$file"
+    if [ -e "$backup" ]; then
+        cp -a "$backup" "$file"
+        log_result ok "Restore: $backup -> $file"
+    else
+        log WARN "Kein Backup zum Wiederherstellen: $file"
+    fi
+}
+
+# Write content only if changed; reads content from stdin
+write_if_changed() {
+    local dest="$1"
+    local tmp
+    tmp=$(mktemp)
+    cat >"$tmp"
+    if [ -e "$dest" ]; then
+        if cmp -s "$tmp" "$dest"; then
+            log_result skip "No change for $dest"
+            rm -f "$tmp"
+            return 0
+        else
+            backup_file "$dest"
+        fi
+    else
+        mkdir -p "$(dirname "$dest")"
+    fi
+    mv "$tmp" "$dest"
+    chown "$REAL_USER:$REAL_USER" "$dest" 2>/dev/null || true
+    log_result ok "Wrote $dest"
+}
+
+# Download, verify (sha256 optional) and run a script
+download_and_verify_and_run() {
+    local url="$1"; local dest="$2"; local sha256="$3"
+    run_action "Download $url to $dest" curl -fsSL "$url" -o "$dest"
+    if [ -n "$sha256" ]; then
+        echo "$sha256  $dest" | sha256sum -c - || { log ERROR "Checksum failed for $dest"; return 1; }
+    fi
+    chmod +x "$dest"
+    run_action "Execute $dest" bash "$dest"
+}
+
 # Druckt eine hervorgehobene Abschnittsüberschrift (mehrzeilige Box)
 log_step() {
     echo ""
@@ -86,6 +163,7 @@ log_step() {
 log_task() {
     echo -e "${BLUE}→${RESET} $*"
 }
+
 # Formatiert Ergebnis-Status für eine Aufgabe.
 log_result() {
     local status="$1"
@@ -97,6 +175,7 @@ log_result() {
         info) echo -e "  ${BLUE}ℹ${RESET} $*" ;;
     esac
 }
+
 # Protokolliert einen Fehler: hängt Nachricht an das Array `FAILURES`
 record_failure() {
     FAILURES+=("$*")
@@ -450,7 +529,9 @@ install_gh() {
         tee /etc/apt/sources.list.d/github-cli.list >/dev/null
     
     wait_for_apt || return 1
-    run_command "apt update (gh)" apt update -y -qq || log WARN "apt update (gh) had errors, proceeding..."
+    if ! run_command "apt update (gh)" apt update -y -qq; then
+        log WARN "apt update (gh) had errors, proceeding..."
+    fi
     install_and_check "gh" || return 1
 }
 
@@ -508,7 +589,9 @@ install_docker() {
     
     log_task "Paketquellen aktualisieren"
     wait_for_apt || return 1
-    run_command "apt update (docker)" apt update -y -qq || log WARN "apt update (docker) had errors, proceeding..."
+    if ! run_command "apt update (docker)" apt update -y -qq; then
+        log WARN "apt update (docker) had errors, proceeding..."
+    fi
     
     log_task "Docker-Pakete installieren"
     # local DOCKER_PKGS=(docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
@@ -518,7 +601,9 @@ install_docker() {
     done
     
     log_task "Docker-Dienst aktivieren"
-    systemctl enable --now docker || log WARN "systemctl enable fehlgeschlagen"
+    if ! systemctl enable --now docker; then
+        log WARN "systemctl enable fehlgeschlagen"
+    fi
     log_result ok "Docker-Dienst"
     
     log_task "Docker-Installation verifizieren"
@@ -545,9 +630,20 @@ install_ros() {
     log_step "ROS 2 SETUP"
     # OS Check & Distro Selection
     # Note: ROS_DISTRO is intentionally global for later use in shell config
-    local ubuntu_codename
-    ubuntu_codename=$(source /etc/os-release && echo "$UBUNTU_CODENAME")
+    local ubuntu_codename=""
     ROS_DISTRO=""
+
+    # Determine Ubuntu codename robustly: prefer lsb_release, fallback to /etc/os-release
+    if command -v lsb_release >/dev/null 2>&1; then
+        ubuntu_codename=$(lsb_release -cs 2>/dev/null || true)
+    fi
+    if [ -z "$ubuntu_codename" ] && [ -f /etc/os-release ]; then
+        ubuntu_codename=$(grep -E '^VERSION_CODENAME=' /etc/os-release | cut -d= -f2 | tr -d '"' || true)
+    fi
+    if [ -z "$ubuntu_codename" ]; then
+        log ERROR "Konnte Ubuntu-Codenamen nicht ermitteln"
+        return 1
+    fi
 
     case "$ubuntu_codename" in
         jammy) ROS_DISTRO="humble" ;;
@@ -581,16 +677,22 @@ install_ros() {
 
     # Installation
     wait_for_apt || return 1
-    run_command "apt update (ROS)" apt update -y || log WARN "apt update (ROS) had errors, proceeding..."
+    if ! run_command "apt update (ROS)" apt update -y; then
+        log WARN "apt update (ROS) had errors, proceeding..."
+    fi
     install_and_check "ros-$ROS_DISTRO-desktop" || return 1
     install_and_check "ros-dev-tools" || return 1
 
     # Rosdep
     log_task "Rosdep initialisieren"
     if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
-        rosdep init || log WARN "rosdep init fehlgeschlagen"
+        if ! rosdep init; then
+            log WARN "rosdep init fehlgeschlagen"
+        fi
     fi
-    sudo -u "$REAL_USER" rosdep update || log WARN "rosdep update fehlgeschlagen"
+    if ! sudo -u "$REAL_USER" rosdep update; then
+        log WARN "rosdep update fehlgeschlagen"
+    fi
     log_result ok "Rosdep initialisiert"
 }
 install_ros_via_script() {
@@ -642,26 +744,48 @@ fix_broken_sources
 
 wait_for_apt || exit 1
 log_task "apt update"
-apt update -qq >/dev/null 2>&1 && log_result ok "apt update" || log WARN "apt update mit Warnungen"
+if apt update -qq >/dev/null 2>&1; then
+    log_result ok "apt update"
+else
+    log WARN "apt update mit Warnungen"
+fi
 wait_for_apt || exit 1
 log_task "apt upgrade"
-apt upgrade -y -qq >/dev/null 2>&1 && log_result ok "apt upgrade" || log WARN "apt upgrade übersprungen"
+if apt upgrade -y -qq >/dev/null 2>&1; then
+    log_result ok "apt upgrade"
+else
+    log WARN "apt upgrade übersprungen"
+fi
 install_and_check "software-properties-common" || exit 1
 
 log_step "REPOSITORIES KONFIGURIEREN"
 wait_for_apt || exit 1
 log_task "add-apt-repository universe"
-add-apt-repository universe -y >/dev/null 2>&1 && log_result ok "universe repository" || exit 1
+if add-apt-repository universe -y >/dev/null 2>&1; then
+    log_result ok "universe repository"
+else
+    exit 1
+fi
 
 log_step "BASIS-TOOLS"
 install_and_check "${TOOLS[@]}" || exit 1
 
 log_step "OPTIONALE TOOLS"
-install_formatter || log WARN "shfmt optional übersprungen"
-install_just || log WARN "just optional übersprungen"
-install_gh || log WARN "gh optional übersprungen"
-install_nvm || log WARN "nvm optional übersprungen"
-install_oh_my_bash || log WARN "Oh My Bash optional übersprungen"
+if ! install_formatter; then
+    log WARN "shfmt optional übersprungen"
+fi
+if ! install_just; then
+    log WARN "just optional übersprungen"
+fi
+if ! install_gh; then
+    log WARN "gh optional übersprungen"
+fi
+if ! install_nvm; then
+    log WARN "nvm optional übersprungen"
+fi
+if ! install_oh_my_bash; then
+    log WARN "Oh My Bash optional übersprungen"
+fi
 
 log_step "DOCKER"
 install_docker || exit 1
