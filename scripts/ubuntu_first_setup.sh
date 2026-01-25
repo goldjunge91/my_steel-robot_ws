@@ -439,41 +439,36 @@ install_and_check() {
     fi
 }
 
-# Funktion um Dinge in .bashrc UND .zshrc zu schreiben
+# Funktion um Konfigurationen sicher in .bashrc und .zshrc zu schreiben
 add_to_shells() {
     local content="$1"
-    local specific_file="${2:-both}" # both, bash, or zsh
+    local shell_type="${2:-both}" # both, bash, or zsh
+    local targets=()
 
-    # .bashrc
-    if [[ "$specific_file" == "both" || "$specific_file" == "bash" ]]; then
-        local b_rc="$USER_HOME/.bashrc"
-        # Ensure file exists so grep won't error on some systems
-        if [ ! -f "$b_rc" ]; then
-            touch "$b_rc"
-            chown "$REAL_USER:$REAL_USER" "$b_rc" 2>/dev/null || true
+    # Ziel-Dateien bestimmen
+    [[ "$shell_type" == "both" || "$shell_type" == "bash" ]] && targets+=("$USER_HOME/.bashrc")
+    [[ "$shell_type" == "both" || "$shell_type" == "zsh" ]] && targets+=("$USER_HOME/.zshrc")
+
+    for target in "${targets[@]}"; do
+        # Sicherstellen, dass die Datei existiert und dem User gehört
+        if [ ! -f "$target" ]; then
+            touch "$target"
+            chown "$REAL_USER:$REAL_USER" "$target" 2>/dev/null || true
         fi
-        if ! grep -Fq "$content" "$b_rc"; then
-            echo "$content" >>"$b_rc"
-            chown "$REAL_USER:$REAL_USER" "$b_rc" 2>/dev/null || true
-            log INFO "Added to .bashrc: $content"
-            record_change "file:$b_rc"
+
+        # -F (Fixed strings) interpretiert den Inhalt nicht als Regex (wichtig für Pfade)
+        # -q (quiet) unterdrückt die Ausgabe
+        # -z (line-regexp) erzwingt die Übereinstimmung der ganzen Zeile
+        if grep -Fq "$content" "$target"; then
+            log_result skip "$(basename "$target"): bereits vorhanden"
+        else
+            # Mit einer Leerzeile davor anhängen, um Dateien nicht zu "verkleben"
+            echo -e "\n$content" >> "$target"
+            chown "$REAL_USER:$REAL_USER" "$target" 2>/dev/null || true
+            log_result ok "$(basename "$target"): Eintrag hinzugefügt"
+            record_change "file:$target"
         fi
-    fi
-    # .zshrc
-    if [[ "$specific_file" == "both" || "$specific_file" == "zsh" ]]; then
-        local z_rc="$USER_HOME/.zshrc"
-        # Falls nicht existiert, anlegen
-        if [ ! -f "$z_rc" ]; then
-            touch "$z_rc"
-            chown "$REAL_USER:$REAL_USER" "$z_rc"
-        fi
-        if ! grep -Fq "$content" "$z_rc"; then
-            echo "$content" >>"$z_rc"
-            chown "$REAL_USER:$REAL_USER" "$z_rc"
-            log INFO "Added to .zshrc: $content"
-            record_change "file:$z_rc"
-        fi
-    fi
+    done
 }
 
 # shellcheck disable=SC2329
@@ -632,6 +627,9 @@ if ! install_ros; then
 fi
 
 log_step "SHELL-KONFIGURATION"
+log_task "PATH für lokale Tools (.local/bin)"
+add_to_shells 'export PATH="$HOME/.local/bin:$PATH"' "both"
+
 log_task "Pico SDK Pfad setzen"
 add_to_shells "export PICO_SDK_PATH=\"$PICO_DIR\"" "both"
 log_result ok "PICO_SDK_PATH"
@@ -647,6 +645,11 @@ add_to_shells "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash
 add_to_shells "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.zsh" "zsh"
 log_result ok "Colcon Autocomplete"
 
+log_task "NVM Initialisierung"
+NVM_INIT='export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"'
+add_to_shells "$NVM_INIT" "both"
 # ==============================================================================
 # FINAL SUMMARY
 # ==============================================================================
