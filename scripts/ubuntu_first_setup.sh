@@ -20,7 +20,9 @@ export USER_HOME="/home/$REAL_USER"
 PICO_DIR="$USER_HOME/pico-sdk"
 FAILURES=()
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Ensure ROS_DISTRO exists to avoid 'set -u' failures when dry-running
+# Helpers laden & Funktionen für Sub-Shells bereitstellen
+source "$SCRIPT_DIR/installers/helpers.sh"
+export -f log log_step log_task log_result record_failure run_action install_and_check record_change
 
 # --- Automatische ROS 2 Distro Auswahl ---
 if [ -f /etc/os-release ]; then
@@ -100,16 +102,11 @@ if [ -z "$REAL_USER" ] || [ "$REAL_USER" = "root" ]; then
         exit 1
     fi
 fi
-# Log files
-LOG_FILE="$SCRIPT_DIR/setup_$(date +%Y%m%d_%H%M%S).log"
-ERR_FILE="$SCRIPT_DIR/errors_$(date +%Y%m%d_%H%M%S).log"
 
-# Wir leiten ALLES (stdout und stderr) in eine Pipe zu 'tee'.
-# exec > >(tee -a "$LOG_FILE") 2>&1
-# 'tee' schreibt es in die Datei UND auf den Bildschirm.
-# Redirect ALL output (exec runs ONCE, not inside functions)
-exec > >(tee -a "$LOG_FILE")
-exec 2> >(tee -a "$ERR_FILE" >&2)
+
+# Helpers laden & Funktionen für Sub-Shells bereitstellen
+source "$SCRIPT_DIR/installers/helpers.sh"
+export -f log log_step log_task log_result record_failure run_action install_and_check run_action
 
 echo "=== Setup gestartet am $(date) ==="
 echo "--- OS Release Info ---"
@@ -120,214 +117,7 @@ echo "-----------------------"
 # --- Hilfsfunktionen ---
 # ==============================================================================
 
-log() {
-    local level="$1"
-    shift
-    local color="${RESET}"
-    case "$level" in
-        INFO) color="${BLUE}" ;;
-        SUCCESS) color="${GREEN}" ;;
-        ERROR) color="${RED}" ;;
-        WARN) color="${YELLOW}" ;;
-    esac
-    echo -e "${color}[$level]${RESET} $*"
 
-}
-
-# ---- Idempotence & Safety Helpers ----
-
-run_action() {
-    local desc="$1"; shift
-    if [ "$DRY_RUN" = "true" ]; then
-        log_task "[DRY-RUN] $desc"
-        if [ "$VERBOSE" = "true" ]; then
-            # Show what would run but do not execute in dry-run
-            log_result info "Would run: $*"
-        fi
-        return 0
-    fi
-    log_task "$desc"
-    "$@"
-}
-
-backup_file() {
-    local file="$1"
-    if [ -e "$file" ]; then
-        mkdir -p "$BACKUP_DIR$(dirname "$file")"
-        cp -a "$file" "$BACKUP_DIR$file"
-        log_result ok "Backup: $file -> $BACKUP_DIR$file"
-    else
-        log_result skip "Backup skipped (missing): $file"
-    fi
-}
-
-restore_file() {
-    local file="$1"
-    local backup="$BACKUP_DIR$file"
-    if [ -e "$backup" ]; then
-        cp -a "$backup" "$file"
-        log_result ok "Restore: $backup -> $file"
-    else
-        log WARN "Kein Backup zum Wiederherstellen: $file"
-    fi
-}
-
-# Write content only if changed; reads content from stdin
-write_if_changed() {
-    local dest="$1"
-    local tmp
-    tmp=$(mktemp)
-    cat >"$tmp"
-    if [ -e "$dest" ]; then
-        if cmp -s "$tmp" "$dest"; then
-            log_result skip "No change for $dest"
-            rm -f "$tmp"
-            return 0
-        else
-            backup_file "$dest"
-        fi
-    else
-        mkdir -p "$(dirname "$dest")"
-    fi
-    mv "$tmp" "$dest"
-    chown "$REAL_USER:$REAL_USER" "$dest" 2>/dev/null || true
-    log_result ok "Wrote $dest"
-    # record file change for potential rollback
-    record_change "file:$dest"
-}
-
-# Download, verify (sha256 optional) and run a script
-download_and_verify_and_run() {
-    local url="$1"; local dest="$2"; local sha256="$3"
-    run_action "Download $url to $dest" curl -fsSL "$url" -o "$dest"
-    if [ -n "$sha256" ]; then
-        echo "$sha256  $dest" | sha256sum -c - || { log ERROR "Checksum failed for $dest"; return 1; }
-    fi
-    chmod +x "$dest"
-    run_action "Execute $dest" bash "$dest"
-}
-
-# Druckt eine hervorgehobene Abschnittsüberschrift (mehrzeilige Box)
-log_step() {
-    echo ""
-    echo -e "${BLUE}╔════════════════════════════════════════╗${RESET}"
-    echo -e "${BLUE}║ $*${RESET}"
-    echo -e "${BLUE}╚════════════════════════════════════════╝${RESET}"
-}
-
-rollback_changes() {
-    if [ ${#APPLIED_CHANGES[@]} -eq 0 ]; then
-        log INFO "No changes recorded to rollback"
-        return 0
-    fi
-    log_step "Rollback: starte Wiederherstellung von ${#APPLIED_CHANGES[@]} Änderungen"
-    for ((i=${#APPLIED_CHANGES[@]}-1;i>=0;i--)); do
-        local ch="${APPLIED_CHANGES[i]}"
-        case "$ch" in
-            file:*)
-                local f="${ch#file:}"
-                restore_file "$f"
-                ;;
-            pkg:*)
-                local p="${ch#pkg:}"
-                log_task "Remove package $p"
-                apt remove -y "$p" >/dev/null 2>&1 || log WARN "Failed to remove $p"
-                ;;
-            *)
-                log WARN "Unknown change: $ch"
-                ;;
-        esac
-    done
-    log SUCCESS "Rollback abgeschlossen"
-}
-# Druckt eine einfache Ein-Zeilen-Aufgabe mit Pfeil-Präfix
-log_task() {
-    echo -e "${BLUE}→${RESET} $*"
-}
-
-# Formatiert Ergebnis-Status für eine Aufgabe.
-log_result() {
-    local status="$1"
-    shift
-    case "$status" in
-        ok)   echo -e "  ${GREEN}✓${RESET} $*" ;;
-        skip) echo -e "  ${YELLOW}○${RESET} $*" ;;
-        fail) echo -e "  ${RED}✗${RESET} $*"; record_failure "$*" ;;
-        info) echo -e "  ${BLUE}ℹ${RESET} $*" ;;
-    esac
-}
-
-# Protokolliert einen Fehler: hängt Nachricht an das Array `FAILURES`
-record_failure() {
-    FAILURES+=("$*")
-    echo "$(date): FAILURE: $*" >>"$ERR_FILE" 2>/dev/null || true
-    log ERROR "$*"
-
-}
-# Wartet, bis apt/dpkg-Lockfiles freigegeben sind
-wait_for_apt() {
-    local timeout=300
-    local elapsed=0
-    while fuser /var/lib/dpkg/lock >/dev/null 2>&1 ||
-            fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ||
-            fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
-        if [ $elapsed -ge $timeout ]; then
-            log ERROR "apt lock timeout after ${timeout}s"
-            record_failure "apt lock timeout"
-            return 1
-        fi
-        echo -e "${BLUE}Warte auf apt-Lock...${RESET}"
-        sleep 2
-        elapsed=$((elapsed + 2))
-    done
-    return 0
-}
-# Führt ein externes Kommando aus mit Beschreibung.
-run_command() {
-        #    Verhalten:
-        #   - Loggt die Aufgabe (`log_task`).
-        #   - Leitet stdout/stderr in eine temporäre Datei.
-        #   - Bei Erfolg: zeigt Output (wenn vorhanden) und meldet `ok`.
-        #   - Bei Fehler: zeigt Output, meldet `fail` mit Exit-Code.
-        #   - Rückgabewert: Exit-Status des Kommandos (0/1)."
-    local description="$1"
-    shift
-    log_task "$description"
-
-    # Temporäres Log für besseres Error-Handling
-    local tmplog
-    tmplog=$(mktemp)
-
-    # If DRY_RUN requested, avoid executing commands; optionally show output in VERBOSE
-    if [ "$DRY_RUN" = "true" ]; then
-        log_task "[DRY-RUN] $description"
-        if [ "$VERBOSE" = "true" ]; then
-            # Try to run in a subshell but don't fail the script
-            ("$@") > "$tmplog" 2>&1 || true
-            if [ -s "$tmplog" ]; then
-                cat "$tmplog"
-            fi
-        fi
-        rm -f "$tmplog"
-        log_result ok "$description (dry-run)"
-        return 0
-    fi
-
-    if "$@" > "$tmplog" 2>&1; then
-        if [ -s "$tmplog" ]; then
-            cat "$tmplog"
-        fi
-        rm -f "$tmplog"
-        log_result ok "$description"
-        return 0
-    else
-        local ret=$?
-        cat "$tmplog"
-        rm -f "$tmplog"
-        log_result fail "$description (exit $ret)"
-        return 1
-    fi
-}
 
 fix_broken_sources() {
     log_task "Prüfe und bereinige defekte Paketquellen..."
@@ -369,97 +159,6 @@ fix_broken_sources() {
 
 }
 
-# Install funktion benötigt paketname als Argument
-install_and_check() {
-    local packages=("$@")
-    local missing=()
-    
-    log_task "Prüfe ${#packages[@]} Paket(e)"
-    
-    # Cache initialisieren
-    if [ -z "${INSTALL_CACHE+x}" ]; then
-        INSTALL_CACHE=""
-    fi
-
-    local pkg
-    for pkg in "${packages[@]}"; do
-        # Cache-Check
-        if [[ " $INSTALL_CACHE " == *" $pkg "* ]]; then
-            log_result skip "$pkg (Cache)"
-            continue
-        fi
-
-        # Installation-Check
-        if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-            log_result ok "$pkg (bereits installiert)"
-            INSTALL_CACHE="$INSTALL_CACHE $pkg"
-        else
-            missing+=("$pkg")
-        fi
-    done
-
-    # Installation
-    if [ ${#missing[@]} -eq 0 ]; then
-        return 0
-    fi
-
-    log_task "Installiere ${#missing[@]} fehlende Paket(e)"
-
-    # If DRY_RUN, do not perform installs — just show what would be installed
-    if [ "$DRY_RUN" = "true" ]; then
-        log_result info "DRY-RUN: would install: ${missing[*]}"
-        return 0
-    fi
-
-    wait_for_apt || return 1
-
-    # Batch-Installation
-    local install_output
-    install_output=$(mktemp)
-    if DEBIAN_FRONTEND=noninteractive apt install -y -qq "${missing[@]}" 2>&1 | tee "$install_output" >/dev/null; then
-        # Verification
-        local failed=()
-        for pkg in "${missing[@]}"; do
-            if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-                log_result ok "$pkg"
-                INSTALL_CACHE="$INSTALL_CACHE $pkg"
-                record_change "pkg:$pkg"
-            elif grep -qE "$pkg.*(is already the newest version|newly installed)" "$install_output"; then
-                log_result ok "$pkg (Meta-Paket)"
-                INSTALL_CACHE="$INSTALL_CACHE $pkg"
-                record_change "pkg:$pkg"
-            else
-                log_result fail "$pkg"
-                failed+=("$pkg")
-            fi
-        done
-        rm -f "$install_output"
-
-        [ ${#failed[@]} -eq 0 ]
-        return $?
-    else
-        rm -f "$install_output"
-        # Fallback: Einzelinstallation
-        log_task "Batch fehlgeschlagen, versuche einzeln"
-        for pkg in "${missing[@]}"; do
-            wait_for_apt || return 1
-            if DEBIAN_FRONTEND=noninteractive apt install -y -qq "$pkg" >/dev/null 2>&1; then
-                if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
-                    log_result ok "$pkg"
-                    INSTALL_CACHE="$INSTALL_CACHE $pkg"
-                    record_change "pkg:$pkg"
-                else
-                    log_result fail "$pkg"
-                    return 1
-                fi
-            else
-                log_result fail "$pkg"
-                return 1
-            fi
-        done
-        return 0
-    fi
-}
 
 # Funktion um Konfigurationen sicher in .bashrc und .zshrc zu schreiben
 add_to_shells() {
@@ -511,7 +210,18 @@ cleanup() {
 }
 
 trap cleanup EXIT SIGINT SIGTERM
+# --- INITIALISIERUNG LOGS ---
+LOG_FILE="$SCRIPT_DIR/setup_$(date +%Y%m%d_%H%M%S).log"
+export ERR_FILE="$SCRIPT_DIR/errors_$(date +%Y%m%d_%H%M%S).log"
+exec > >(tee -a "$LOG_FILE")
+exec 2> >(tee -a "$ERR_FILE" >&2)
 
+# --- AUTOMATISCHE ROS DISTRO ---
+source /etc/os-release
+case "$VERSION_CODENAME" in
+    focal) ROS_DISTRO="foxy" ;; jammy) ROS_DISTRO="humble" ;; noble) ROS_DISTRO="jazzy" ;;
+    *) ROS_DISTRO="humble" ;;
+esac
 # ==============================================================================
 # --- INSTALLATIONS FUNKTIONEN ---
 # ==============================================================================
