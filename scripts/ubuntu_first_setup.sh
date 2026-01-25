@@ -31,7 +31,7 @@ record_change() {
 export DEBIAN_FRONTEND=noninteractive
 
 TOOLS=(
-    curl git gnupg2 lsb-release build-essential cmake
+    curl git gnupg2 lsb-release build-essential cmake shfmt
     python3-pip htop net-tools terminator shellcheck nano wget
     zsh fontconfig ca-certificates gnupg joystick jstest-gtk evtest fzf
 )
