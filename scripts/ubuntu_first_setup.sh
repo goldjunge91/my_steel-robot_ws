@@ -76,6 +76,7 @@ TOOLS=(
     jstest-gtk
     evtest
     fzf
+    rpi-imager
 )
 
 # Der User, der sudo ausgeführt hat (nicht root)
