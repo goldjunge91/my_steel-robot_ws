@@ -106,6 +106,11 @@ backup_file() {
 write_if_changed() {
     local dest="$1"
     local tmp
+    if [ "$DRY_RUN" = "true" ]; then
+        log_task "[DRY-RUN] Würde Datei schreiben: $dest"
+        cat > /dev/null # Verbraucht den Input von stdin, damit das Skript nicht hängen bleibt
+        return 0
+    fi
     tmp=$(mktemp)
     cat >"$tmp"
     if [ -e "$dest" ]; then
