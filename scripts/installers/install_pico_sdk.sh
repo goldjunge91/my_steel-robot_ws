@@ -3,14 +3,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/helpers.sh"
 : ${REAL_USER:=${SUDO_USER:-}}
+# --- NEU: Sicherstellen, dass USER_HOME definiert ist ---
 USER_HOME="/home/$REAL_USER"
 PICO_DIR="$USER_HOME/pico-sdk"
 
 log INFO "Installiere Pico SDK Abhängigkeiten..."
-if ! install_and_check gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib libusb-1.0-0-dev pkg-config; then
+# --- ERGÄNZT: cmake und build-essential für den späteren Picotool-Bau ---
+if ! install_and_check gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib libusb-1.0-0-dev pkg-config cmake build-essential; then
     exit 1
 fi
-
+# Diese Variable ist nur für dieses Skript aktiv
 export PICO_SDK_PATH="$PICO_DIR"
 
 if [ ! -d "$PICO_DIR" ]; then
@@ -19,8 +21,9 @@ if [ ! -d "$PICO_DIR" ]; then
         record_failure "clone pico-sdk failed"
         exit 1
     fi
+    # chown ist hier wichtig, falls sudo-Rechte das Verzeichnis "root" gegeben haben
     chown -R "$REAL_USER:$REAL_USER" "$PICO_DIR"
 else
-    log INFO "Pico SDK bereits vorhanden."
+    log SUCCESS "Pico SDK bereits vorhanden."
 fi
 exit 0
