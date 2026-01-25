@@ -1,66 +1,42 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Variablen definieren
 REPO_URL="https://github.com/ohmybash/oh-my-bash.git"
 OH_DIR="$HOME/.oh-my-bash"
-EXAMPLE_DEST="$HOME/.bashrc_example"
+TEMPLATE_FILE="$OH_DIR/templates/bashrc.osh-template"
 
-echo "==> Installing oh-my-bash to: $OH_DIR"
+echo "==> Oh My Bash Installation gestartet..."
 
-if command -v git >/dev/null 2>&1; then
-  if [ -d "$OH_DIR" ]; then
-    echo "Repository already exists, updating..."
+# 1. Repository klonen oder aktualisieren
+if [ -d "$OH_DIR" ]; then
+    echo "Repository existiert bereits, aktualisiere..."
     git -C "$OH_DIR" pull --ff-only || true
-  else
-    echo "Cloning $REPO_URL..."
+else
+    echo "Klone Oh My Bash von $REPO_URL..."
     git clone --depth=1 "$REPO_URL" "$OH_DIR"
-  fi
-else
-  echo "ERROR: 'git' is required but not installed. Install git and re-run this script." >&2
-  exit 2
 fi
 
-# Rename existing ~/.bashrc to ~/.bashrc_bak (if ~/.bashrc_bak exists, keep it and create a timestamped fallback)
+# 2. Bestehende .bashrc sichern (nur wenn sie noch kein OMB enthält)
 if [ -f "$HOME/.bashrc" ]; then
-  if [ -e "$HOME/.bashrc_bak" ]; then
-    bak_back="$HOME/.bashrc_bak.$(date +%s)"
-    echo "Existing .bashrc_bak found; moving it to: $bak_back"
-    mv -f "$HOME/.bashrc_bak" "$bak_back"
-  fi
-  echo "Renaming existing ~/.bashrc -> ~/.bashrc_bak"
-  mv -f "$HOME/.bashrc" "$HOME/.bashrc_bak"
+    if ! grep -q "source.*oh-my-bash.sh" "$HOME/.bashrc"; then
+        TIMESTAMP=$(date +%s)
+        echo "Sichere originale .bashrc nach .bashrc.pre-omb-$TIMESTAMP"
+        cp "$HOME/.bashrc" "$HOME/.bashrc.pre-omb-$TIMESTAMP"
+    fi
 fi
 
-# Try to locate an example bashrc inside the cloned repo
-echo "Searching for an example bashrc inside $OH_DIR..."
-example=$(find "$OH_DIR" -maxdepth 4 -type f \( -iname "bashrc*" -o -iname "*bashrc*" \) 2>/dev/null | head -n1 || true)
-
-if [ -n "$example" ] && [ -f "$example" ]; then
-  echo "Found example: $example"
-  cp -a "$example" "$EXAMPLE_DEST"
-  echo "Copied example to: $EXAMPLE_DEST"
+# 3. Neue .bashrc aus Template erstellen
+if [ -f "$TEMPLATE_FILE" ]; then
+    echo "Erstelle neue .bashrc aus Template..."
+    cp "$TEMPLATE_FILE" "$HOME/.bashrc"
+    
+    # Pfad zum OSH Verzeichnis in der Datei korrigieren
+    # Wir nutzen @ als Trenner für sed, falls Pfade Slashes enthalten
+    sed -i "s@export OSH=.*@export OSH=\"$OH_DIR\"@" "$HOME/.bashrc"
+    
+    echo "✓ Oh My Bash Template wurde erfolgreich nach ~/.bashrc kopiert."
 else
-  echo "No example found in repo; creating minimal $EXAMPLE_DEST"
-  cat > "$EXAMPLE_DEST" <<'EOF'
-# Minimal .bashrc_example to source oh-my-bash
-export OSH="$HOME/.oh-my-bash"
-source "$OSH/oh-my-bash.sh"
-
-# You can add your customizations below
-EOF
-  echo "Created $EXAMPLE_DEST"
+    echo "ERROR: Template Datei nicht gefunden: $TEMPLATE_FILE" >&2
+    exit 1
 fi
-
-cat <<EOF
-
-Installation finished.
-- oh-my-bash installed at: $OH_DIR
-- Example bashrc copied to: $EXAMPLE_DEST
-
-To activate immediately, either:
-  1) Copy the example to your active .bashrc:
-     cp -i "$EXAMPLE_DEST" "$HOME/.bashrc" && source "$HOME/.bashrc"
-  2) Or manually source the oh-my-bash script now:
-     source "$OH_DIR/oh-my-bash.sh"
-
-EOF
