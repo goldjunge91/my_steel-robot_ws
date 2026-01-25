@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
+DOCKER_PKGS=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/helpers.sh"
 : ${REAL_USER:=${SUDO_USER:-}}
 
-if command -v docker &>/dev/null; then
-    log SUCCESS "Docker bereits installiert: $(docker --version)"
+# Prüfung: Docker UND Engine müssen da sein
+if command -v docker &>/dev/null && dpkg -l | grep -q docker-ce; then
+    log SUCCESS "Docker Engine & CLI bereits installiert"
     exit 0
 fi
 
@@ -31,8 +33,9 @@ if ! run_action "apt update (docker)" apt update -y -qq; then
     log WARN "apt update (docker) had errors, proceeding..."
 fi
 
-for pkg in docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; do
+for pkg in "${DOCKER_PKGS[@]}"; do
     if ! install_and_check "$pkg"; then
+        log ERROR "Fehler bei Paket: $pkg"
         exit 1
     fi
 done
