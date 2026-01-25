@@ -21,7 +21,7 @@ TOOLS=(
     python3-pip htop net-tools terminator shellcheck nano wget
     zsh fontconfig ca-certificates gnupg joystick jstest-gtk evtest fzf
 )
-
+DOCKER_PKGS=(docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
 # Farbdefinitionen
 RED='\033[31m'
 GREEN='\033[32m'
@@ -64,9 +64,6 @@ log() {
     local level="$1"
     shift
     local color="${RESET}"
-    # [ "$level" = "INFO" ] && color="${BLUE}"
-    # [ "$level" = "SUCCESS" ] && color="${GREEN}"
-    # [ "$level" = "ERROR" ] && color="${RED}"
     case "$level" in
         INFO) color="${BLUE}" ;;
         SUCCESS) color="${GREEN}" ;;
@@ -74,12 +71,10 @@ log() {
         WARN) color="${YELLOW}" ;;
     esac
     echo -e "${color}[$level]${RESET} $*"
-    # echo "$(date): $level: $*" >>"$LOG_FILE" 2>/dev/null || true
-    # Wir machen hier kein >> $LOG_FILE mehr, da das globale exec das übernimmt!
-    # echo -e "${color}[$level]${RESET} $*"
+
 }
 
-# Hierarchische Log-Level
+# Druckt eine hervorgehobene Abschnittsüberschrift (mehrzeilige Box)
 log_step() {
     echo ""
     echo -e "${BLUE}╔════════════════════════════════════════╗${RESET}"
@@ -87,10 +82,11 @@ log_step() {
     echo -e "${BLUE}╚════════════════════════════════════════╝${RESET}"
 }
 
+# Druckt eine einfache Ein-Zeilen-Aufgabe mit Pfeil-Präfix
 log_task() {
     echo -e "${BLUE}→${RESET} $*"
 }
-
+# Formatiert Ergebnis-Status für eine Aufgabe.
 log_result() {
     local status="$1"
     shift
@@ -101,14 +97,14 @@ log_result() {
         info) echo -e "  ${BLUE}ℹ${RESET} $*" ;;
     esac
 }
-
+# Protokolliert einen Fehler: hängt Nachricht an das Array `FAILURES`
 record_failure() {
     FAILURES+=("$*")
     echo "$(date): FAILURE: $*" >>"$ERR_FILE" 2>/dev/null || true
     log ERROR "$*"
 
 }
-
+# Wartet, bis apt/dpkg-Lockfiles freigegeben sind
 wait_for_apt() {
     local timeout=300
     local elapsed=0
@@ -126,11 +122,16 @@ wait_for_apt() {
     done
     return 0
 }
-
+# Führt ein externes Kommando aus mit Beschreibung.
 run_command() {
+        #    Verhalten:
+        #   - Loggt die Aufgabe (`log_task`).
+        #   - Leitet stdout/stderr in eine temporäre Datei.
+        #   - Bei Erfolg: zeigt Output (wenn vorhanden) und meldet `ok`.
+        #   - Bei Fehler: zeigt Output, meldet `fail` mit Exit-Code.
+        #   - Rückgabewert: Exit-Status des Kommandos (0/1)."
     local description="$1"
     shift
-    
     log_task "$description"
     
     # Temporäres Log für besseres Error-Handling
@@ -174,6 +175,31 @@ fix_broken_sources() {
     
     # Optional: Allgemeiner Check auf "EXPKEYSIG" in apt update output wäre hier möglich,
     # aber "Force Fix" impliziert oft aggressives Vorgehen gegen bekannte Übeltäter.
+    # Repariere dpkg falls vom letzten Lauf unterbrochen
+    if ! dpkg --audit &>/dev/null; then
+        log_task "Repariere unterbrochene dpkg-Installation"
+        if dpkg --configure -a >/dev/null; then
+            log_result ok "dpkg --configure -a erfolgreich"
+        else
+            log_result fail "dpkg --configure -a fehlgeschlagen"
+        fi
+        
+        if apt-get --fix-broken install -y >/dev/null; then
+            log_result ok "apt --fix-broken erfolgreich"
+        else
+            log WARN "apt --fix-broken hatte Probleme"
+        fi
+        
+        # Erneuter Audit-Check
+        if dpkg --audit &>/dev/null; then
+            log_result ok "dpkg ist jetzt konsistent"
+        else
+            log ERROR "dpkg ist IMMER NOCH inkonsistent - manuelle Reparatur erforderlich"
+            log ERROR "Bitte ausführen: sudo dpkg --configure -a"
+            exit 1
+        fi
+    fi
+
 }
 
 # Install funktion benötigt paketname als Argument
@@ -402,7 +428,7 @@ install_just() {
         log SUCCESS "just installiert"
     else
         log WARN "just Installation fehlgeschlagen (optional)"
-        return 0
+        return 1
     fi
 }
 
@@ -485,7 +511,7 @@ install_docker() {
     run_command "apt update (docker)" apt update -y -qq || log WARN "apt update (docker) had errors, proceeding..."
     
     log_task "Docker-Pakete installieren"
-    local DOCKER_PKGS=(docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
+    # local DOCKER_PKGS=(docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
     wait_for_apt || return 1
     for pkg in "${DOCKER_PKGS[@]}"; do
         install_and_check "$pkg" || return 1
@@ -567,7 +593,39 @@ install_ros() {
     sudo -u "$REAL_USER" rosdep update || log WARN "rosdep update fehlgeschlagen"
     log_result ok "Rosdep initialisiert"
 }
+install_ros_via_script() {
+    log INFO "Installiere ROS2..."
+    # Execute the installer as the real user to ensure files land in $USER_HOME
+    # and permissions are correct.
+    if sudo -u "$REAL_USER" bash "$SCRIPT_DIR/bash/install_ros2.sh"; then
+        log SUCCESS "ROS2 installiert (via script)"
+        return 0
+    fi
 
+    # Script failed — versuche internen Installer als Fallback
+    log INFO "Installationsskript fehlgeschlagen, versuche internen Installer..."
+    if install_ros; then
+        log SUCCESS "ROS2 installiert (via internal installer)"
+        return 0
+    else
+        log WARN "ROS2 Installation fehlgeschlagen"
+        record_failure "ROS2 Installation"
+        return 1
+    fi
+}
+
+install_oh_my_bash() {
+    log INFO "Installiere Oh My Bash..."
+    # Execute the installer as the real user to ensure files land in $USER_HOME
+    # and permissions are correct.
+    if sudo -u "$REAL_USER" bash "$SCRIPT_DIR/bash/install_omb.sh"; then
+        log SUCCESS "Oh My Bash installiert"
+    else
+        log WARN "Oh My Bash Installation fehlgeschlagen"
+        record_failure "Oh My Bash Installation"
+        return 1
+    fi
+}
 # ==============================================================================
 # MAIN EXECUTION
 # ==============================================================================
@@ -581,31 +639,6 @@ log_step "SYSTEM AKTUALISIEREN"
 
 # Force Fix für defekte Quellen
 fix_broken_sources
-
-# Repariere dpkg falls vom letzten Lauf unterbrochen
-if ! dpkg --audit &>/dev/null; then
-    log_task "Repariere unterbrochene dpkg-Installation"
-    if dpkg --configure -a >/dev/null; then
-        log_result ok "dpkg --configure -a erfolgreich"
-    else
-        log_result fail "dpkg --configure -a fehlgeschlagen"
-    fi
-    
-    if apt-get --fix-broken install -y >/dev/null; then
-        log_result ok "apt --fix-broken erfolgreich"
-    else
-        log WARN "apt --fix-broken hatte Probleme"
-    fi
-    
-    # Erneuter Audit-Check
-    if dpkg --audit &>/dev/null; then
-        log_result ok "dpkg ist jetzt konsistent"
-    else
-        log ERROR "dpkg ist IMMER NOCH inkonsistent - manuelle Reparatur erforderlich"
-        log ERROR "Bitte ausführen: sudo dpkg --configure -a"
-        exit 1
-    fi
-fi
 
 wait_for_apt || exit 1
 log_task "apt update"
@@ -628,6 +661,7 @@ install_formatter || log WARN "shfmt optional übersprungen"
 install_just || log WARN "just optional übersprungen"
 install_gh || log WARN "gh optional übersprungen"
 install_nvm || log WARN "nvm optional übersprungen"
+install_oh_my_bash || log WARN "Oh My Bash optional übersprungen"
 
 log_step "DOCKER"
 install_docker || exit 1
@@ -636,7 +670,7 @@ log_step "PICO SDK & TOOLS"
 install_pico_sdk || exit 1
 install_picotool || exit 1
 
-install_ros || exit 1
+install_ros_via_script || exit 1
 
 log_step "SHELL-KONFIGURATION"
 log_task "Pico SDK Pfad setzen"
@@ -685,6 +719,6 @@ apt-get clean >/dev/null 2>&1
 chown "$REAL_USER:$REAL_USER" "$LOG_FILE" "$ERR_FILE" 2>/dev/null || true
 
 log SUCCESS "╔══════════════════════════════════════════╗"
-log SUCCESS "║ Setup erfolgreich ohne Fehler!          ║"
+log SUCCESS "║ Setup erfolgreich ohne Fehler!           ║"
 log SUCCESS "╚══════════════════════════════════════════╝"
 exit 0
