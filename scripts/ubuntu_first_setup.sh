@@ -599,7 +599,7 @@ install_gh() {
     local arch
     arch=$(dpkg --print-architecture)
     cat > /tmp/new_github_repo <<EOF
-deb [arch=$arch signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main
+    deb [arch=$arch signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main
 EOF
     write_if_changed /etc/apt/sources.list.d/github-cli.list < /tmp/new_github_repo
     rm -f /tmp/new_github_repo
