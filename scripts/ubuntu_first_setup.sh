@@ -10,19 +10,17 @@ set -u -o pipefail -E
 
 # --- KONFIGURATION ---
 # Dry-run and verbose flags
-export DRY_RUN=${DRY_RUN:-false}  # Hinzugefügt: export
-export VERBOSE=${VERBOSE:-false}  # Hinzugefügt: export
+export DRY_RUN=${DRY_RUN:-false}
+export VERBOSE=${VERBOSE:-false}
 export REAL_USER=${SUDO_USER:-$USER}
 export USER_HOME="/home/$REAL_USER"
+export DEBIAN_FRONTEND=noninteractive
 # Falls root der REAL_USER ist (direkter Login), ist das Home /root
 [ "$REAL_USER" = "root" ] && export USER_HOME="/root"
 
 PICO_DIR="$USER_HOME/pico-sdk"
 FAILURES=()
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Helpers laden & Funktionen für Sub-Shells bereitstellen
-source "$SCRIPT_DIR/installers/helpers.sh"
-export -f log log_step log_task log_result record_failure run_action install_and_check record_change
 
 # --- Automatische ROS 2 Distro Auswahl ---
 if [ -f /etc/os-release ]; then
@@ -41,16 +39,19 @@ else
     ROS_DISTRO="humble"
 fi
 
-# Backup directory for changed files
-BACKUP_DIR="${SCRIPT_DIR}/backups/$(date +%Y%m%d_%H%M%S)"
-mkdir -p "$BACKUP_DIR"
 # Track applied changes for rollback
 APPLIED_CHANGES=()
 record_change() {
     APPLIED_CHANGES+=("$1")
 }
-
-export DEBIAN_FRONTEND=noninteractive
+# Backup directory for changed files
+BACKUP_DIR="${SCRIPT_DIR}/backups/$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+# 1. Root-Check & User-Variable bestimmen
+if [ "$DRY_RUN" != "true" ] && [ "$EUID" -ne 0 ]; then
+    echo "Bitte mit sudo ausführen: sudo ./vm_setup_complete.sh"
+    exit 1
+fi
 
 TOOLS=(
     curl
@@ -76,19 +77,6 @@ TOOLS=(
     evtest
     fzf
 )
-
-# Farbdefinitionen
-RED='\033[31m'
-GREEN='\033[32m'
-YELLOW='\033[33m'
-BLUE='\033[34m'
-RESET='\033[0m'  
-
-# 1. Root-Check & User-Variable bestimmen
-if [ "$DRY_RUN" != "true" ] && [ "$EUID" -ne 0 ]; then
-    echo "Bitte mit sudo ausführen: sudo ./vm_setup_complete.sh"
-    exit 1
-fi
 
 # Der User, der sudo ausgeführt hat (nicht root)
 if [ -z "$REAL_USER" ] || [ "$REAL_USER" = "root" ]; then
@@ -223,85 +211,40 @@ case "$VERSION_CODENAME" in
     *) ROS_DISTRO="humble" ;;
 esac
 # ==============================================================================
-# --- INSTALLATIONS FUNKTIONEN ---
+# --- INSTALLATIONS WRAPPER ---
 # ==============================================================================
 
-install_picotool() {
-    run_action "install_picotool" bash "$SCRIPT_DIR/installers/install_picotool.sh"
-}
+install_picotool()   { run_action "install_picotool" bash "$SCRIPT_DIR/installers/install_picotool.sh"; }
+install_pico_sdk()   { run_action "install_pico_sdk" bash "$SCRIPT_DIR/installers/install_pico_sdk.sh"; }
+install_formatter()  { run_action "install_formatter" bash "$SCRIPT_DIR/installers/install_formatter.sh"; }
+install_just()       { run_action "install_just" bash "$SCRIPT_DIR/installers/install_just.sh"; }
+install_gh()         { run_action "install_gh" bash "$SCRIPT_DIR/installers/install_gh.sh"; }
+install_nvm()        { run_action "install_nvm" bash "$SCRIPT_DIR/installers/install_nvm.sh"; }
+install_docker()     { run_action "install_docker" bash "$SCRIPT_DIR/installers/install_docker.sh"; }
+install_ros()        { run_action "install_ros" bash "$SCRIPT_DIR/installers/install_ros_via_script.sh"; }
+install_oh_my_bash() { run_action "install_oh_my_bash" bash "$SCRIPT_DIR/installers/install_oh_my_bash.sh"; }
 
-install_pico_sdk() {
-    run_action "install_pico_sdk" bash "$SCRIPT_DIR/installers/install_pico_sdk.sh"
-}
-
-install_formatter() {
-    run_action "install_formatter" bash "$SCRIPT_DIR/installers/install_formatter.sh"
-}
-
-install_just() {
-    run_action "install_just" bash "$SCRIPT_DIR/installers/install_just.sh"
-}
-
-install_gh() {
-    run_action "install_gh" bash "$SCRIPT_DIR/installers/install_gh.sh"
-}
-
-install_nvm() {
-    run_action "install_nvm" bash "$SCRIPT_DIR/installers/install_nvm.sh"
-}
-
-install_docker() {
-    run_action "install_docker" bash "$SCRIPT_DIR/installers/install_docker.sh"
-}
-
-install_ros() {
-    run_action "install_ros" bash "$SCRIPT_DIR/installers/install_ros_via_script.sh"
-}
-install_ros_via_script() {
-    run_action "install_ros_via_script" bash "$SCRIPT_DIR/installers/install_ros_via_script.sh"
-}
-
-install_oh_my_bash() {
-    run_action "install_oh_my_bash" bash "$SCRIPT_DIR/installers/install_oh_my_bash.sh"
-}
+# ==============================================================================
+# MAIN EXECUTION
+# ==============================================================================
 # ==============================================================================
 # MAIN EXECUTION
 # ==============================================================================
 log_step "INITIALISIERUNG"
 log_result info "User: $REAL_USER"
 log_result info "Ubuntu: ${VERSION_ID:-unbekannt} ($VERSION_CODENAME)"
-log_result info "Nutze ROS 2 Distro: $ROS_DISTRO" # Hier wird es jetzt korrekt angezeigt!
+log_result info "Nutze ROS 2 Distro: $ROS_DISTRO"
 log_result info "Logs: $LOG_FILE"
 log_result info "Fehler: $ERR_FILE"
 
 log_step "SYSTEM AKTUALISIEREN"
-
 # Force Fix für defekte Quellen
 fix_broken_sources
 
 wait_for_apt || exit 1
-    log_task "apt update"
-    if [ "$DRY_RUN" = "true" ]; then
-        log_result info "DRY-RUN: apt update skipped"
-    else
-        if apt update -qq >/dev/null 2>&1; then
-            log_result ok "apt update"
-        else
-            log WARN "apt update mit Warnungen"
-        fi
-    fi
-
-wait_for_apt || exit 1
-    log_task "apt upgrade"
-    if [ "$DRY_RUN" = "true" ]; then
-        log_result info "DRY-RUN: apt upgrade skipped"
-    else
-        if apt upgrade -y -qq >/dev/null 2>&1; then
-            log_result ok "apt upgrade"
-        else
-            log WARN "apt upgrade übersprungen"
-        fi
-    fi
+log_task "apt update && upgrade"
+run_action "apt update" apt update -qq
+run_action "apt upgrade" apt upgrade -y -qq
 
 install_and_check "software-properties-common" || exit 1
 
