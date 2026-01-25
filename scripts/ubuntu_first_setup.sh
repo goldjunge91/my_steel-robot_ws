@@ -10,8 +10,8 @@ set -u -o pipefail -E
 
 # --- KONFIGURATION ---
 # Dry-run and verbose flags
-DRY_RUN=${DRY_RUN:-false}
-VERBOSE=${VERBOSE:-false}
+export DRY_RUN=${DRY_RUN:-false}  # Hinzugefügt: export
+export VERBOSE=${VERBOSE:-false}  # Hinzugefügt: export
 export REAL_USER=${SUDO_USER:-$USER}
 export USER_HOME="/home/$REAL_USER"
 # Falls root der REAL_USER ist (direkter Login), ist das Home /root
@@ -465,8 +465,12 @@ install_and_check() {
 add_to_shells() {
     local content="$1"
     local shell_type="${2:-both}"
+    if [ "$DRY_RUN" = "true" ]; then
+        log_task "[DRY-RUN] Würde in Shell-Configs schreiben: $content"
+        return 0
+    fi
     local targets=()
-
+    
     [[ "$shell_type" == "both" || "$shell_type" == "bash" ]] && targets+=("$USER_HOME/.bashrc")
     [[ "$shell_type" == "both" || "$shell_type" == "zsh" ]] && targets+=("$USER_HOME/.zshrc")
 
