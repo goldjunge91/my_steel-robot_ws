@@ -10,6 +10,12 @@ if command -v shfmt &>/dev/null; then
     log SUCCESS "shfmt bereits installiert"
     exit 0
 fi
+
+if command -v shfmt &>/dev/null; then
+    echo "ok [OK] shfmt ist bereits funktionsfähig installiert."
+    exit 0
+fi
+
 # --- ARCHITEKTUR-ERKENNUNG ---
 ARCH=$(uname -m)
 case "$ARCH" in
