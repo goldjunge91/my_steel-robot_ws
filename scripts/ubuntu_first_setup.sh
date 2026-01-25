@@ -17,6 +17,8 @@ USER_HOME="/home/$REAL_USER"
 PICO_DIR="$USER_HOME/pico-sdk"
 FAILURES=()
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Ensure ROS_DISTRO exists to avoid 'set -u' failures when dry-running
+ROS_DISTRO=""
 # Backup directory for changed files
 BACKUP_DIR="${SCRIPT_DIR}/backups/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
@@ -68,15 +70,22 @@ BLUE='\033[34m'
 RESET='\033[0m'  
 
 # 1. Root-Check & User-Variable bestimmen
-if [ "$EUID" -ne 0 ]; then
+if [ "$DRY_RUN" != "true" ] && [ "$EUID" -ne 0 ]; then
     echo "Bitte mit sudo ausführen: sudo ./vm_setup_complete.sh"
     exit 1
 fi
 
 # Der User, der sudo ausgeführt hat (nicht root)
 if [ -z "$REAL_USER" ] || [ "$REAL_USER" = "root" ]; then
-    echo "Konnte den normalen Benutzer nicht ermitteln. Bitte via sudo ausführen."
-    exit 1
+    if [ "$DRY_RUN" = "true" ]; then
+        # Allow dry-run without sudo: fall back to invoking user
+        REAL_USER=${SUDO_USER:-$USER}
+        USER_HOME="/home/$REAL_USER"
+        log INFO "DRY_RUN: using REAL_USER=$REAL_USER"
+    else
+        echo "Konnte den normalen Benutzer nicht ermitteln. Bitte via sudo ausführen."
+        exit 1
+    fi
 fi
 # Log files
 LOG_FILE="$SCRIPT_DIR/setup_$(date +%Y%m%d_%H%M%S).log"
@@ -119,7 +128,8 @@ run_action() {
     if [ "$DRY_RUN" = "true" ]; then
         log_task "[DRY-RUN] $desc"
         if [ "$VERBOSE" = "true" ]; then
-            "$@" || true
+            # Show what would run but do not execute in dry-run
+            log_result info "Would run: $*"
         fi
         return 0
     fi
@@ -245,28 +255,35 @@ run_command() {
     local description="$1"
     shift
     log_task "$description"
-    
+
     # Temporäres Log für besseres Error-Handling
     local tmplog
     tmplog=$(mktemp)
-    
+
+    # If DRY_RUN requested, avoid executing commands; optionally show output in VERBOSE
+    if [ "$DRY_RUN" = "true" ]; then
+        log_task "[DRY-RUN] $description"
+        if [ "$VERBOSE" = "true" ]; then
+            # Try to run in a subshell but don't fail the script
+            ("$@") > "$tmplog" 2>&1 || true
+            if [ -s "$tmplog" ]; then
+                cat "$tmplog"
+            fi
+        fi
+        rm -f "$tmplog"
+        log_result ok "$description (dry-run)"
+        return 0
+    fi
+
     if "$@" > "$tmplog" 2>&1; then
-        # Zeige Output nur wenn nicht leer
         if [ -s "$tmplog" ]; then
             cat "$tmplog"
         fi
-        
-        if [ -s "$tmplog" ]; then
-            # Output is already captured by global tee via stdout
-             :
-        fi
-        
         rm -f "$tmplog"
         log_result ok "$description"
         return 0
     else
         local ret=$?
-        # Zeige Error-Output
         cat "$tmplog"
         rm -f "$tmplog"
         log_result fail "$description (exit $ret)"
@@ -349,9 +366,15 @@ install_and_check() {
     fi
 
     log_task "Installiere ${#missing[@]} fehlende Paket(e)"
-    
+
+    # If DRY_RUN, do not perform installs — just show what would be installed
+    if [ "$DRY_RUN" = "true" ]; then
+        log_result info "DRY-RUN: would install: ${missing[*]}"
+        return 0
+    fi
+
     wait_for_apt || return 1
-    
+
     # Batch-Installation
     local install_output
     install_output=$(mktemp)
@@ -833,19 +856,27 @@ log_step "SYSTEM AKTUALISIEREN"
 fix_broken_sources
 
 wait_for_apt || exit 1
-log_task "apt update"
-if apt update -qq >/dev/null 2>&1; then
-    log_result ok "apt update"
-else
-    log WARN "apt update mit Warnungen"
-fi
+    log_task "apt update"
+    if [ "$DRY_RUN" = "true" ]; then
+        log_result info "DRY-RUN: apt update skipped"
+    else
+        if apt update -qq >/dev/null 2>&1; then
+            log_result ok "apt update"
+        else
+            log WARN "apt update mit Warnungen"
+        fi
+    fi
 wait_for_apt || exit 1
-log_task "apt upgrade"
-if apt upgrade -y -qq >/dev/null 2>&1; then
-    log_result ok "apt upgrade"
-else
-    log WARN "apt upgrade übersprungen"
-fi
+    log_task "apt upgrade"
+    if [ "$DRY_RUN" = "true" ]; then
+        log_result info "DRY-RUN: apt upgrade skipped"
+    else
+        if apt upgrade -y -qq >/dev/null 2>&1; then
+            log_result ok "apt upgrade"
+        else
+            log WARN "apt upgrade übersprungen"
+        fi
+    fi
 install_and_check "software-properties-common" || exit 1
 
 log_step "REPOSITORIES KONFIGURIEREN"
@@ -935,8 +966,12 @@ fi
 
 # Aufräumen & Rechte setzen
 log_task "Aufräumen"
-apt-get autoremove -y >/dev/null 2>&1
-apt-get clean >/dev/null 2>&1
+if [ "$DRY_RUN" != "true" ]; then
+    apt-get autoremove -y >/dev/null 2>&1
+    apt-get clean >/dev/null 2>&1
+else
+    log_result info "DRY-RUN: apt-get autoremove/clean skipped"
+fi
 # Logs dem User übergeben
 chown "$REAL_USER:$REAL_USER" "$LOG_FILE" "$ERR_FILE" 2>/dev/null || true
 
