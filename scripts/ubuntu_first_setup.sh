@@ -12,8 +12,11 @@ set -u -o pipefail -E
 # Dry-run and verbose flags
 DRY_RUN=${DRY_RUN:-false}
 VERBOSE=${VERBOSE:-false}
-REAL_USER=$SUDO_USER
-USER_HOME="/home/$REAL_USER"
+export REAL_USER=${SUDO_USER:-$USER}
+export USER_HOME="/home/$REAL_USER"
+# Falls root der REAL_USER ist (direkter Login), ist das Home /root
+[ "$REAL_USER" = "root" ] && export USER_HOME="/root"
+
 PICO_DIR="$USER_HOME/pico-sdk"
 FAILURES=()
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -442,29 +445,24 @@ install_and_check() {
 # Funktion um Konfigurationen sicher in .bashrc und .zshrc zu schreiben
 add_to_shells() {
     local content="$1"
-    local shell_type="${2:-both}" # both, bash, or zsh
+    local shell_type="${2:-both}"
     local targets=()
 
-    # Ziel-Dateien bestimmen
     [[ "$shell_type" == "both" || "$shell_type" == "bash" ]] && targets+=("$USER_HOME/.bashrc")
     [[ "$shell_type" == "both" || "$shell_type" == "zsh" ]] && targets+=("$USER_HOME/.zshrc")
 
     for target in "${targets[@]}"; do
-        # Sicherstellen, dass die Datei existiert und dem User gehört
+        # Sicherstellen, dass die Datei existiert
         if [ ! -f "$target" ]; then
-            touch "$target"
-            chown "$REAL_USER:$REAL_USER" "$target" 2>/dev/null || true
+            sudo -u "$REAL_USER" touch "$target"
         fi
 
-        # -F (Fixed strings) interpretiert den Inhalt nicht als Regex (wichtig für Pfade)
-        # -q (quiet) unterdrückt die Ausgabe
-        # -z (line-regexp) erzwingt die Übereinstimmung der ganzen Zeile
+        # -F (Fixed strings) verhindert Fehler bei Pfaden/Sonderzeichen
         if grep -Fq "$content" "$target"; then
             log_result skip "$(basename "$target"): bereits vorhanden"
         else
-            # Mit einer Leerzeile davor anhängen, um Dateien nicht zu "verkleben"
-            echo -e "\n$content" >> "$target"
-            chown "$REAL_USER:$REAL_USER" "$target" 2>/dev/null || true
+            # Schreibt die Zeile sauber mit neuem Zeilenumbruch als REAL_USER
+            echo -e "\n$content" | sudo -u "$REAL_USER" tee -a "$target" > /dev/null
             log_result ok "$(basename "$target"): Eintrag hinzugefügt"
             record_change "file:$target"
         fi
