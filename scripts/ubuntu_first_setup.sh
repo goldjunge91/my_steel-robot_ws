@@ -431,10 +431,16 @@ add_to_shells() {
     # .bashrc
     if [[ "$specific_file" == "both" || "$specific_file" == "bash" ]]; then
         local b_rc="$USER_HOME/.bashrc"
+        # Ensure file exists so grep won't error on some systems
+        if [ ! -f "$b_rc" ]; then
+            touch "$b_rc"
+            chown "$REAL_USER:$REAL_USER" "$b_rc" 2>/dev/null || true
+        fi
         if ! grep -Fq "$content" "$b_rc"; then
             echo "$content" >>"$b_rc"
-            chown "$REAL_USER:$REAL_USER" "$b_rc"
+            chown "$REAL_USER:$REAL_USER" "$b_rc" 2>/dev/null || true
             log INFO "Added to .bashrc: $content"
+            record_change "file:$b_rc"
         fi
     fi
     # .zshrc
@@ -449,6 +455,7 @@ add_to_shells() {
             echo "$content" >>"$z_rc"
             chown "$REAL_USER:$REAL_USER" "$z_rc"
             log INFO "Added to .zshrc: $content"
+            record_change "file:$z_rc"
         fi
     fi
 }
@@ -478,368 +485,42 @@ trap cleanup EXIT SIGINT SIGTERM
 # ==============================================================================
 
 install_picotool() {
-    # Picotool bauen
-    if command -v picotool &>/dev/null; then
-        log SUCCESS "picotool already installed"
-        return 0
-    fi
-
-    log INFO "Baue Picotool..."
-    local TMP_PICO
-    TMP_PICO=$(mktemp -d)
-    chmod 755 "$TMP_PICO"
-
-    if ! run_action "Picotool klonen" git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_PICO/picotool"; then
-        record_failure "Picotool clone failed"
-        return 1
-    fi
-
-    cd "$TMP_PICO/picotool" || {
-        record_failure "cd to picotool failed"
-        return 1
-    }
-
-    if ! mkdir build; then
-        record_failure "mkdir build failed"
-        return 1
-    fi
-    if ! cd build; then
-        record_failure "cd build failed"
-        return 1
-    fi
-
-    if ! run_action "Picotool cmake" cmake .. -DPICO_SDK_PATH="$PICO_DIR"; then
-        return 1
-    fi
-    if ! run_action "Picotool build" make -j"$(nproc)"; then
-        return 1
-    fi
-    if ! run_action "Picotool install" make install; then
-        return 1
-    fi
-
-    cd / || true
-    rm -rf "$TMP_PICO"
-    log SUCCESS "Picotool installiert."
+    run_action "install_picotool" bash "$SCRIPT_DIR/installers/install_picotool.sh"
 }
 
 install_pico_sdk() {
-    log INFO "Installiere Pico SDK Abhängigkeiten..."
-    install_and_check \
-        gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib \
-        libusb-1.0-0-dev pkg-config || return 1
-
-    export PICO_SDK_PATH="$PICO_DIR"
-
-    if [ ! -d "$PICO_DIR" ]; then
-        log INFO "Klone Pico SDK nach $PICO_DIR..."
-        if ! run_action "clone pico-sdk" sudo -u "$REAL_USER" git clone --depth 1 --recursive https://github.com/raspberrypi/pico-sdk.git "$PICO_DIR"; then
-            record_failure "clone pico-sdk failed"
-            return 1
-        fi
-        chown -R "$REAL_USER:$REAL_USER" "$PICO_DIR"
-    else
-        log INFO "Pico SDK bereits vorhanden."
-    fi
+    run_action "install_pico_sdk" bash "$SCRIPT_DIR/installers/install_pico_sdk.sh"
 }
 
 install_formatter() {
-    if command -v shfmt &>/dev/null; then
-        log SUCCESS "shfmt bereits installiert"
-        return 0
-    fi
-
-    log INFO "Installiere shfmt..."
-    local tmp_shfmt
-    tmp_shfmt=$(mktemp)
-    if ! curl -sLo "$tmp_shfmt" https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64; then
-        rm -f "$tmp_shfmt"
-        log ERROR "shfmt Download fehlgeschlagen"
-        record_failure "shfmt installation"
-        return 1
-    fi
-
-    # If existing binary identical, skip; otherwise backup and install
-    if [ -x /usr/local/bin/shfmt ] && cmp -s "$tmp_shfmt" /usr/local/bin/shfmt; then
-        log_result skip "shfmt already up-to-date"
-        rm -f "$tmp_shfmt"
-        return 0
-    fi
-    backup_file /usr/local/bin/shfmt
-    chmod +x "$tmp_shfmt"
-    run_action "Install shfmt" mv "$tmp_shfmt" /usr/local/bin/shfmt
-    log SUCCESS "shfmt installiert"
+    run_action "install_formatter" bash "$SCRIPT_DIR/installers/install_formatter.sh"
 }
 
 install_just() {
-    if command -v just &>/dev/null; then
-        log SUCCESS "just bereits installiert"
-        return 0
-    fi
-
-    log INFO "Installiere just..."
-    local just_tmp
-    just_tmp=$(mktemp)
-    if ! curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh -o "$just_tmp"; then
-        rm -f "$just_tmp"
-        log WARN "just download fehlgeschlagen (optional)"
-        return 1
-    fi
-    chmod +x "$just_tmp"
-    if run_action "Run just installer" bash "$just_tmp" -- --to /usr/local/bin; then
-        log SUCCESS "just installiert"
-    else
-        log WARN "just Installation fehlgeschlagen (optional)"
-        rm -f "$just_tmp"
-        return 1
-    fi
-    rm -f "$just_tmp"
+    run_action "install_just" bash "$SCRIPT_DIR/installers/install_just.sh"
 }
 
 install_gh() {
-    if command -v gh &>/dev/null; then
-        log SUCCESS "gh bereits installiert"
-        return 0
-    fi
-
-    log INFO "Installiere GitHub CLI..."
-    mkdir -p /etc/apt/keyrings
-    chmod 755 /etc/apt/keyrings
-
-    # Download key to temp and write only if changed
-    local gh_key_tmp
-    gh_key_tmp=$(mktemp)
-    if ! curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o "$gh_key_tmp"; then
-        rm -f "$gh_key_tmp"
-        log_result fail "gh key download"
-        return 1
-    fi
-    write_if_changed /etc/apt/keyrings/githubcli-archive-keyring.gpg < "$gh_key_tmp"
-    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg || true
-    rm -f "$gh_key_tmp"
-
-    # Write apt source list only if changed
-    local arch
-    arch=$(dpkg --print-architecture)
-    cat > /tmp/new_github_repo <<EOF
-    deb [arch=$arch signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main
-EOF
-    write_if_changed /etc/apt/sources.list.d/github-cli.list < /tmp/new_github_repo
-    rm -f /tmp/new_github_repo
-
-    wait_for_apt || return 1
-    if ! run_command "apt update (gh)" apt update -y -qq; then
-        log WARN "apt update (gh) had errors, proceeding..."
-    fi
-    install_and_check "gh" || return 1
+    run_action "install_gh" bash "$SCRIPT_DIR/installers/install_gh.sh"
 }
 
 install_nvm() {
-    # Check if nvm directory exists
-    if [ -d "$USER_HOME/.nvm" ]; then
-        log SUCCESS "nvm bereits installiert"
-        return 0
-    fi
-
-    log INFO "Installiere nvm..."
-    # Download installer to temp and run as REAL_USER for idempotence and safety
-    local nvm_tmp
-    nvm_tmp=$(mktemp)
-    if ! curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh -o "$nvm_tmp"; then
-        rm -f "$nvm_tmp"
-        log_result fail "nvm download fehlgeschlagen"
-        return 1
-    fi
-
-    if run_action "Run nvm installer" sudo -u "$REAL_USER" bash "$nvm_tmp"; then
-        log SUCCESS "nvm installiert"
-        export NVM_DIR="$USER_HOME/.nvm"
-        # shellcheck disable=SC1091
-        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    else
-        log_result fail "nvm Installation fehlgeschlagen"
-        rm -f "$nvm_tmp"
-        return 1
-    fi
-    rm -f "$nvm_tmp"
+    run_action "install_nvm" bash "$SCRIPT_DIR/installers/install_nvm.sh"
 }
 
 install_docker() {
-    # Check if Docker is already installed (e.g. in Codespaces)
-    if command -v docker &>/dev/null; then
-        log SUCCESS "Docker bereits installiert: $(docker --version)"
-        return 0
-    fi
-
-    # Entferne moby-tini falls vorhanden (verhindert Konflikt mit docker-ce)
-    if dpkg -l | grep -q moby-tini; then
-        log_task "Entferne moby-tini (Konflikt)"
-        apt-get remove -y -qq moby-tini >/dev/null 2>&1 || true
-        log_result ok "moby-tini entfernt"
-    fi
-    
-    log_task "GPG-Schlüssel hinzufügen"
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
-        gpg --dearmor -o /etc/apt/keyrings/docker.gpg || {
-        log_result fail "GPG-Key Download"
-        return 1
-    }
-    log_result ok "GPG-Schlüssel"
-    
-    log_task "Docker-Repository konfigurieren"
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-    https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
-        tee /etc/apt/sources.list.d/docker.list >/dev/null
-    log_result ok "Repository"
-    
-    log_task "Paketquellen aktualisieren"
-    wait_for_apt || return 1
-    if ! run_command "apt update (docker)" apt update -y -qq; then
-        log WARN "apt update (docker) had errors, proceeding..."
-    fi
-    
-    log_task "Docker-Pakete installieren"
-    # local DOCKER_PKGS=(docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
-    wait_for_apt || return 1
-    for pkg in "${DOCKER_PKGS[@]}"; do
-        install_and_check "$pkg" || return 1
-    done
-    
-    log_task "Docker-Dienst aktivieren"
-    if ! systemctl enable --now docker; then
-        log WARN "systemctl enable fehlgeschlagen"
-    fi
-    log_result ok "Docker-Dienst"
-    
-    log_task "Docker-Installation verifizieren"
-    if docker --version &>/dev/null; then
-        log_result ok "Docker: $(docker --version)"
-    else
-        log_result fail "Docker nicht verfügbar"
-        return 1
-    fi
-    
-    if docker compose version &>/dev/null; then
-        log_result ok "Docker Compose: $(docker compose version)"
-    else
-        log_result fail "Docker Compose nicht verfügbar"
-        return 1
-    fi
-    
-    log_task "Benutzer zu Gruppen hinzufügen"
-    # Add user to groups only if not already member
-    if id -nG "$REAL_USER" | tr ' ' '\n' | grep -q -w docker; then
-        log_result skip "User $REAL_USER ist bereits in Gruppe docker"
-    else
-        if run_action "Add $REAL_USER to groups" usermod -aG docker,dialout,video,plugdev,gpio,i2c,spi "$REAL_USER"; then
-            log_result ok "User $REAL_USER -> docker,dialout,video,plugdev,gpio,i2c,spi"
-        else
-            log_result fail "Failed to add $REAL_USER to groups"
-        fi
-    fi
+    run_action "install_docker" bash "$SCRIPT_DIR/installers/install_docker.sh"
 }
 
 install_ros() {
-    log_step "ROS 2 SETUP"
-    # OS Check & Distro Selection
-    # Note: ROS_DISTRO is intentionally global for later use in shell config
-    local ubuntu_codename=""
-    ROS_DISTRO=""
-
-    # Determine Ubuntu codename robustly: prefer lsb_release, fallback to /etc/os-release
-    if command -v lsb_release >/dev/null 2>&1; then
-        ubuntu_codename=$(lsb_release -cs 2>/dev/null || true)
-    fi
-    if [ -z "$ubuntu_codename" ] && [ -f /etc/os-release ]; then
-        ubuntu_codename=$(grep -E '^VERSION_CODENAME=' /etc/os-release | cut -d= -f2 | tr -d '"' || true)
-    fi
-    if [ -z "$ubuntu_codename" ]; then
-        log ERROR "Konnte Ubuntu-Codenamen nicht ermitteln"
-        return 1
-    fi
-
-    case "$ubuntu_codename" in
-        jammy) ROS_DISTRO="humble" ;;
-        noble) ROS_DISTRO="jazzy" ;;
-        *) 
-            log ERROR "Nicht unterstützte Ubuntu-Version: $ubuntu_codename (erwarte jammy oder noble)"
-            return 1
-            ;;
-    esac
-
-    log_result info "Ubuntu $ubuntu_codename -> ROS 2 $ROS_DISTRO"
-
-    # Locales
-    install_and_check "locales" || return 1
-    run_command "locale-gen" locale-gen en_US en_US.UTF-8 || return 1
-    run_command "update-locale" update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 || return 1
-    export LANG=en_US.UTF-8
-
-    # Repository
-    if ! curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
-        -o /usr/share/keyrings/ros-archive-keyring.gpg; then
-        log_result fail "ROS key download"
-        return 1
-    fi
-    log_result ok "ROS key download"
-    
-    # shellcheck disable=SC1091
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $ubuntu_codename main" | \
-        tee /etc/apt/sources.list.d/ros2.list >/dev/null
-    log_result ok "Repository konfiguriert"
-
-    # Installation
-    wait_for_apt || return 1
-    if ! run_command "apt update (ROS)" apt update -y; then
-        log WARN "apt update (ROS) had errors, proceeding..."
-    fi
-    install_and_check "ros-$ROS_DISTRO-desktop" || return 1
-    install_and_check "ros-dev-tools" || return 1
-
-    # Rosdep
-    log_task "Rosdep initialisieren"
-    if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
-        if ! rosdep init; then
-            log WARN "rosdep init fehlgeschlagen"
-        fi
-    fi
-    if ! sudo -u "$REAL_USER" rosdep update; then
-        log WARN "rosdep update fehlgeschlagen"
-    fi
-    log_result ok "Rosdep initialisiert"
+    run_action "install_ros" bash "$SCRIPT_DIR/installers/install_ros_via_script.sh"
 }
 install_ros_via_script() {
-    log INFO "Installiere ROS2..."
-    # Execute the installer as the real user to ensure files land in $USER_HOME
-    # and permissions are correct.
-    if sudo -u "$REAL_USER" bash "$SCRIPT_DIR/bash/install_ros2.sh"; then
-        log SUCCESS "ROS2 installiert (via script)"
-        return 0
-    fi
-    # Script failed — versuche internen Installer als Fallback
-    log INFO "Installationsskript fehlgeschlagen, versuche internen Installer..."
-    if run_action "Run internal ROS installer" install_ros; then
-        log SUCCESS "ROS2 installiert (via internal installer)"
-        return 0
-    else
-        log WARN "ROS2 Installation fehlgeschlagen"
-        record_failure "ROS2 Installation"
-        return 1
-    fi
+    run_action "install_ros_via_script" bash "$SCRIPT_DIR/installers/install_ros_via_script.sh"
 }
 
 install_oh_my_bash() {
-    log INFO "Installiere Oh My Bash..."
-    # Execute the installer as the real user to ensure files land in $USER_HOME
-    # and permissions are correct.
-    if sudo -u "$REAL_USER" bash "$SCRIPT_DIR/bash/install_omb.sh"; then
-        log SUCCESS "Oh My Bash installiert"
-    else
-        log WARN "Oh My Bash Installation fehlgeschlagen"
-        record_failure "Oh My Bash Installation"
-        return 1
-    fi
+    run_action "install_oh_my_bash" bash "$SCRIPT_DIR/installers/install_oh_my_bash.sh"
 }
 # ==============================================================================
 # MAIN EXECUTION
@@ -866,6 +547,7 @@ wait_for_apt || exit 1
             log WARN "apt update mit Warnungen"
         fi
     fi
+
 wait_for_apt || exit 1
     log_task "apt upgrade"
     if [ "$DRY_RUN" = "true" ]; then
@@ -877,6 +559,7 @@ wait_for_apt || exit 1
             log WARN "apt upgrade übersprungen"
         fi
     fi
+
 install_and_check "software-properties-common" || exit 1
 
 log_step "REPOSITORIES KONFIGURIEREN"
@@ -891,37 +574,43 @@ fi
 log_step "BASIS-TOOLS"
 install_and_check "${TOOLS[@]}" || exit 1
 
-log_step "OPTIONALE TOOLS"
-if ! run_action "install_formatter" bash "$SCRIPT_DIR/installers/install_formatter.sh"; then
-    log WARN "shfmt optional übersprungen"
+log_step "ERWEITERTE TOOLS (erforderlich)"
+# These tools are required. Fail fast if any installer returns non-zero.
+if ! install_formatter; then
+    log ERROR "shfmt installation failed"
+    exit 1
 fi
-if ! run_action "install_just" bash "$SCRIPT_DIR/installers/install_just.sh"; then
-    log WARN "just optional übersprungen"
+if ! install_just; then
+    log ERROR "just installation failed"
+    exit 1
 fi
-if ! run_action "install_gh" bash "$SCRIPT_DIR/installers/install_gh.sh"; then
-    log WARN "gh optional übersprungen"
+if ! install_gh; then
+    log ERROR "gh installation failed"
+    exit 1
 fi
-if ! run_action "install_nvm" bash "$SCRIPT_DIR/installers/install_nvm.sh"; then
-    log WARN "nvm optional übersprungen"
+if ! install_nvm; then
+    log ERROR "nvm installation failed"
+    exit 1
 fi
-if ! run_action "install_oh_my_bash" bash "$SCRIPT_DIR/installers/install_oh_my_bash.sh"; then
-    log WARN "Oh My Bash optional übersprungen"
+if ! install_oh_my_bash; then
+    log ERROR "Oh My Bash installation failed"
+    exit 1
 fi
 
 log_step "DOCKER"
-if ! run_action "install_docker" bash "$SCRIPT_DIR/installers/install_docker.sh"; then
+if ! install_docker; then
     exit 1
 fi
 
 log_step "PICO SDK & TOOLS"
-if ! run_action "install_pico_sdk" bash "$SCRIPT_DIR/installers/install_pico_sdk.sh"; then
+if ! install_pico_sdk; then
     exit 1
 fi
-if ! run_action "install_picotool" bash "$SCRIPT_DIR/installers/install_picotool.sh"; then
+if ! install_picotool; then
     exit 1
 fi
 
-if ! run_action "install_ros" bash "$SCRIPT_DIR/installers/install_ros_via_script.sh"; then
+if ! install_ros; then
     exit 1
 fi
 

@@ -50,6 +50,10 @@ The my_steel robot is an educational and research platform built on ROS2 Humble,
    git submodule update --init --recursive lib/
    ```
 
+   ```bash
+   # run 
+   sudo DRY_RUN=true VERBOSE=false bash scripts/ubuntu_first_setup.sh
+   ``
 4. Install ROS dependencies:
 
    ```bash
