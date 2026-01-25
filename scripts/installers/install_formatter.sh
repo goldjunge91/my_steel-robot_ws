@@ -10,10 +10,19 @@ if command -v shfmt &>/dev/null; then
     log SUCCESS "shfmt bereits installiert"
     exit 0
 fi
+# --- ARCHITEKTUR-ERKENNUNG ---
+ARCH=$(uname -m)
+case "$ARCH" in
+    x86_64)  BINARY_ARCH="amd64" ;;
+    aarch64) BINARY_ARCH="arm64" ;;
+    arm64)   BINARY_ARCH="arm64" ;;
+    *)       log ERROR "Nicht unterstützte Architektur: $ARCH"; exit 1 ;;
+esac
 
-log INFO "Installiere shfmt..."
+log INFO "Installiere shfmt ($BINARY_ARCH)..."
 TMP=$(mktemp)
-if ! curl -sLo "$TMP" https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64; then
+URL="https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_${BINARY_ARCH}"
+if ! curl -sLo "$TMP" "$URL"; then
     rm -f "$TMP"
     log ERROR "shfmt Download fehlgeschlagen"
     record_failure "shfmt installation"
