@@ -5,7 +5,7 @@ set -euo pipefail
 REPO_URL="https://github.com/ohmybash/oh-my-bash.git"
 OH_DIR="$HOME/.oh-my-bash"
 TEMPLATE_FILE="$OH_DIR/templates/bashrc.osh-template"
-
+MY_EXAMPLE="$SCRIPT_DIR/.bashrc_example"
 echo "==> Oh My Bash Installation gestartet..."
 
 # 1. Repository klonen oder aktualisieren
@@ -26,17 +26,16 @@ if [ -f "$HOME/.bashrc" ]; then
     fi
 fi
 
-# 3. Neue .bashrc aus Template erstellen
-if [ -f "$TEMPLATE_FILE" ]; then
-    echo "Erstelle neue .bashrc aus Template..."
-    cp "$TEMPLATE_FILE" "$HOME/.bashrc"
+if [ -f "$MY_EXAMPLE" ]; then
+    log INFO "Installiere deine benutzerdefinierte .bashrc aus $MY_EXAMPLE"
+    cp "$MY_EXAMPLE" "$HOME/.bashrc"
     
-    # Pfad zum OSH Verzeichnis in der Datei korrigieren
-    # Wir nutzen @ als Trenner für sed, falls Pfade Slashes enthalten
+    # Pfad zum OSH Verzeichnis in der Datei korrigieren (falls nötig)
     sed -i "s@export OSH=.*@export OSH=\"$OH_DIR\"@" "$HOME/.bashrc"
-    
-    echo "✓ Oh My Bash Template wurde erfolgreich nach ~/.bashrc kopiert."
+    chown "$REAL_USER:$REAL_USER" "$HOME/.bashrc"
+    log_result ok "Benutzerdefinierte .bashrc installiert"
 else
-    echo "ERROR: Template Datei nicht gefunden: $TEMPLATE_FILE" >&2
-    exit 1
+    log WARN "Kein benutzerdefiniertes Example gefunden, nutze OMB-Standard."
+    # Fallback auf Standard-Template
+    [ -f "$OH_DIR/templates/bashrc.osh-template" ] && cp "$OH_DIR/templates/bashrc.osh-template" "$HOME/.bashrc"
 fi
