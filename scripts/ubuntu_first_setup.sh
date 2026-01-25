@@ -18,7 +18,24 @@ PICO_DIR="$USER_HOME/pico-sdk"
 FAILURES=()
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Ensure ROS_DISTRO exists to avoid 'set -u' failures when dry-running
-ROS_DISTRO=""
+
+# --- Automatische ROS 2 Distro Auswahl ---
+if [ -f /etc/os-release ]; then
+    # Lädt System-Variablen wie VERSION_CODENAME
+    . /etc/os-release
+    case "$VERSION_CODENAME" in
+        "focal") ROS_DISTRO="foxy" ;;   # Ubuntu 20.04
+        "jammy") ROS_DISTRO="humble" ;; # Ubuntu 22.04
+        "noble") ROS_DISTRO="jazzy" ;;  # Ubuntu 24.04
+        *)
+            # Fallback auf Humble, falls Version unbekannt
+            ROS_DISTRO="humble" 
+            ;;
+    esac
+else
+    ROS_DISTRO="humble"
+fi
+
 # Backup directory for changed files
 BACKUP_DIR="${SCRIPT_DIR}/backups/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
@@ -524,9 +541,10 @@ install_oh_my_bash() {
 # ==============================================================================
 # MAIN EXECUTION
 # ==============================================================================
-
 log_step "INITIALISIERUNG"
 log_result info "User: $REAL_USER"
+log_result info "Ubuntu: ${VERSION_ID:-unbekannt} ($VERSION_CODENAME)"
+log_result info "Nutze ROS 2 Distro: $ROS_DISTRO" # Hier wird es jetzt korrekt angezeigt!
 log_result info "Logs: $LOG_FILE"
 log_result info "Fehler: $ERR_FILE"
 
