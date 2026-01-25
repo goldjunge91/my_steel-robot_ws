@@ -20,6 +20,37 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Backup directory for changed files
 BACKUP_DIR="${SCRIPT_DIR}/backups/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
+# Track applied changes for rollback
+APPLIED_CHANGES=()
+record_change() {
+    APPLIED_CHANGES+=("$1")
+}
+
+rollback_changes() {
+    if [ ${#APPLIED_CHANGES[@]} -eq 0 ]; then
+        log INFO "No changes recorded to rollback"
+        return 0
+    fi
+    log_step "Rollback: starte Wiederherstellung von ${#APPLIED_CHANGES[@]} Änderungen"
+    for ((i=${#APPLIED_CHANGES[@]}-1;i>=0;i--)); do
+        local ch="${APPLIED_CHANGES[i]}"
+        case "$ch" in
+            file:*)
+                local f="${ch#file:}"
+                restore_file "$f"
+                ;;
+            pkg:*)
+                local p="${ch#pkg:}"
+                log_task "Remove package $p"
+                apt remove -y "$p" >/dev/null 2>&1 || log WARN "Failed to remove $p"
+                ;;
+            *)
+                log WARN "Unknown change: $ch"
+                ;;
+        esac
+    done
+    log SUCCESS "Rollback abgeschlossen"
+}
 export DEBIAN_FRONTEND=noninteractive
 
 TOOLS=(
@@ -138,6 +169,8 @@ write_if_changed() {
     mv "$tmp" "$dest"
     chown "$REAL_USER:$REAL_USER" "$dest" 2>/dev/null || true
     log_result ok "Wrote $dest"
+    # record file change for potential rollback
+    record_change "file:$dest"
 }
 
 # Download, verify (sha256 optional) and run a script
@@ -329,9 +362,11 @@ install_and_check() {
             if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
                 log_result ok "$pkg"
                 INSTALL_CACHE="$INSTALL_CACHE $pkg"
+                record_change "pkg:$pkg"
             elif grep -qE "$pkg.*(is already the newest version|newly installed)" "$install_output"; then
                 log_result ok "$pkg (Meta-Paket)"
                 INSTALL_CACHE="$INSTALL_CACHE $pkg"
+                record_change "pkg:$pkg"
             else
                 log_result fail "$pkg"
                 failed+=("$pkg")
@@ -351,6 +386,7 @@ install_and_check() {
                 if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
                     log_result ok "$pkg"
                     INSTALL_CACHE="$INSTALL_CACHE $pkg"
+                    record_change "pkg:$pkg"
                 else
                     log_result fail "$pkg"
                     return 1
