@@ -126,3 +126,4 @@ _obsolet/# pixi environments
 !.pixi/config.toml
 .ros
 .codex
+.cache/
