@@ -232,21 +232,45 @@ else
 fi
 
 sudo apt install -y ca-certificates curl gnupg
-# Add GPG Key
-echo -e "${BLUE}[STEP] GPG-Schlüssel hinzufügen${RESET}"
+
+# Add GPG Key (idempotent - check if key exists)
+echo -e "${BLUE}[STEP] Docker GPG-Schlüssel prüfen/hinzufügen${RESET}"
 sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
-	sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-# Add Docker Repository for Ubuntu
-echo -e "${BLUE}[STEP] Docker-Repository hinzufügen${RESET}"
-echo \
-	"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+
+if [ -f /etc/apt/keyrings/docker.gpg ]; then
+	# Verify if the existing key is the correct Docker key
+	if gpg --show-keys /etc/apt/keyrings/docker.gpg 2>/dev/null | grep -q "Docker"; then
+		echo -e "${GREEN}✓ Docker GPG-Schlüssel bereits vorhanden und korrekt${RESET}"
+	else
+		echo -e "${BLUE}Vorhandener Schlüssel scheint nicht korrekt zu sein, ersetze ihn${RESET}"
+		sudo rm -f /etc/apt/keyrings/docker.gpg
+		curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
+			sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+		echo -e "${GREEN}✓ Docker GPG-Schlüssel aktualisiert${RESET}"
+	fi
+else
+	curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
+		sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+	echo -e "${GREEN}✓ Docker GPG-Schlüssel hinzugefügt${RESET}"
+fi
+
+# Add Docker Repository for Ubuntu (idempotent)
+echo -e "${BLUE}[STEP] Docker-Repository prüfen/hinzufügen${RESET}"
+DOCKER_LIST="/etc/apt/sources.list.d/docker.list"
+if [ -f "$DOCKER_LIST" ] && grep -q "download.docker.com" "$DOCKER_LIST"; then
+	echo -e "${GREEN}✓ Docker-Repository bereits konfiguriert${RESET}"
+else
+	echo \
+		"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
   https://download.docker.com/linux/ubuntu \
   $(lsb_release -cs) stable" |
-	sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+		sudo tee "$DOCKER_LIST" >/dev/null
+	echo -e "${GREEN}✓ Docker-Repository hinzugefügt${RESET}"
+fi
 
 # Update
 echo -e "${BLUE}[STEP] Paketlisten aktualisieren${RESET}"
+wait_for_apt
 sudo apt update
 echo -e "${GREEN}[DONE] Paketlisten aktualisiert${RESET}"
 
@@ -313,48 +337,116 @@ else
 fi
 
 ###############################################################################
-# ROS2 Humble Installation (optional)
-# https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#
+# ROS2 Installation (automatische Versionserkennung basierend auf Ubuntu)
+# https://docs.ros.org/
 ###############################################################################
-echo -e "${BLUE}[ABFRAGE] Soll ros-humble-desktop installiert werden? (y/N) [Standard: N -> ros-base]${RESET}"
-read -r response
-ROS_PACKAGE="ros-humble-ros-base"
+echo -e "${BLUE}[STEP] ROS 2 Version basierend auf Ubuntu-Version ermitteln${RESET}"
 
-if [[ "$response" =~ ^[Yy]$ ]]; then
-    ROS_PACKAGE="ros-humble-desktop"
-fi
+# Ubuntu-Version ermitteln
+UBUNTU_VERSION=$(lsb_release -rs)
+UBUNTU_CODENAME=$(lsb_release -cs)
 
-sudo apt update
-wait_for_apt
-export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
-curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo "${UBUNTU_CODENAME:-${VERSION_CODENAME}}")_all.deb"
-sudo dpkg -i /tmp/ros2-apt-source.deb
-wait_for_apt
-sudo apt update
-wait_for_apt
+# ROS-Version basierend auf Ubuntu-Version wählen
+case "$UBUNTU_VERSION" in
+	22.04)
+		ROS_DISTRO="humble"
+		echo -e "${GREEN}✓ Ubuntu 22.04 erkannt -> ROS 2 Humble${RESET}"
+		;;
+	24.04)
+		ROS_DISTRO="jazzy"
+		echo -e "${GREEN}✓ Ubuntu 24.04 erkannt -> ROS 2 Jazzy${RESET}"
+		;;
+	20.04)
+		ROS_DISTRO="foxy"
+		echo -e "${GREEN}✓ Ubuntu 20.04 erkannt -> ROS 2 Foxy${RESET}"
+		;;
+	*)
+		ROS_DISTRO="humble"
+		echo -e "${BLUE}Ubuntu $UBUNTU_VERSION nicht explizit unterstützt, verwende ROS 2 Humble als Fallback${RESET}"
+		;;
+esac
 
-echo -e "${BLUE}[ROS2 Install] Installiere $ROS_PACKAGE und Tools${RESET}"
-install_and_check "$ROS_PACKAGE" "ros-dev-tools" "ros-humble-v4l2-camera"
+# Für Raspberry Pi nur ros-base installieren (nicht desktop)
+ROS_PACKAGE="ros-${ROS_DISTRO}-ros-base"
+echo -e "${BLUE}Installation von $ROS_PACKAGE (optimiert für Raspberry Pi)${RESET}"
 
-if [ $? -eq 0 ]; then
-	echo -e "${GREEN}✓ ROS 2 ($ROS_PACKAGE) + Camera Treiber installiert${RESET}"
+# Prüfen ob ROS bereits installiert ist
+if dpkg-query -W -f='${Status}' "$ROS_PACKAGE" 2>/dev/null | grep -q "install ok installed"; then
+	echo -e "${GREEN}✓ $ROS_PACKAGE bereits installiert${RESET}"
 else
-	echo -e "${RED}✗ ROS 2 Installation fehlgeschlagen${RESET}"
+	# ROS APT Source installieren (idempotent)
+	echo -e "${BLUE}[STEP] ROS 2 APT-Quelle konfigurieren${RESET}"
+	wait_for_apt
+	
+	# Prüfen ob ros-apt-source bereits installiert ist
+	if ! dpkg -l | grep -q "ros2-apt-source"; then
+		export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
+		curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.${UBUNTU_CODENAME}_all.deb"
+		sudo dpkg -i /tmp/ros2-apt-source.deb
+		rm -f /tmp/ros2-apt-source.deb
+		echo -e "${GREEN}✓ ROS APT-Quelle installiert${RESET}"
+	else
+		echo -e "${GREEN}✓ ROS APT-Quelle bereits vorhanden${RESET}"
+	fi
+	
+	wait_for_apt
+	sudo apt update
+	wait_for_apt
+	
+	# ROS 2 installieren
+	echo -e "${BLUE}[ROS2 Install] Installiere $ROS_PACKAGE, ros-dev-tools und Camera-Treiber${RESET}"
+	install_and_check "$ROS_PACKAGE" "ros-dev-tools" "ros-${ROS_DISTRO}-v4l2-camera"
+	
+	if [ $? -eq 0 ]; then
+		echo -e "${GREEN}✓ ROS 2 ${ROS_DISTRO} ($ROS_PACKAGE) + Camera Treiber installiert${RESET}"
+		echo "$(date): ROS 2 ${ROS_DISTRO} erfolgreich installiert" >>setup.log
+	else
+		echo -e "${RED}✗ ROS 2 Installation fehlgeschlagen${RESET}"
+		echo "$(date): ROS 2 Installation fehlgeschlagen" >>errors.log
+	fi
 fi
 
 ###############################################################################
-# I2C/SPI/Kamera aktivieren
+# I2C/SPI/Kamera aktivieren (idempotent)
 ###############################################################################
-echo -e "${BLUE}[STEP]${RESET} I2C/SPI/Kamera aktivieren"
+echo -e "${BLUE}[STEP] I2C/SPI/Kamera aktivieren${RESET}"
 CFG=/boot/firmware/config.txt
-# echo -e "${BLUE}[INFO] Konfigurationsdatei: cp $CFG $CFG.bak${RESET}"
-sudo cp "$CFG" "$CFG.bak"
-sudo sed -i '/^dtparam=i2c_arm=/d; /^dtparam=spi=/d; /^camera_auto_detect=/d' "$CFG" 2>/dev/null || true
-echo -e 'dtparam=i2c_arm=on\ndtparam=spi=on\ncamera_auto_detect=1' | sudo tee -a "$CFG" >/dev/null
-echo 'i2c-dev
+
+if [ -f "$CFG" ]; then
+	# Backup nur erstellen, wenn noch keines existiert
+	if [ ! -f "$CFG.bak" ]; then
+		sudo cp "$CFG" "$CFG.bak"
+		echo -e "${GREEN}✓ Backup erstellt: $CFG.bak${RESET}"
+	fi
+	
+	# Prüfen ob Einstellungen bereits vorhanden sind
+	NEEDS_UPDATE=0
+	grep -q "^dtparam=i2c_arm=on" "$CFG" || NEEDS_UPDATE=1
+	grep -q "^dtparam=spi=on" "$CFG" || NEEDS_UPDATE=1
+	grep -q "^camera_auto_detect=1" "$CFG" || NEEDS_UPDATE=1
+	
+	if [ $NEEDS_UPDATE -eq 1 ]; then
+		# Entferne alte Einträge und füge neue hinzu
+		sudo sed -i '/^dtparam=i2c_arm=/d; /^dtparam=spi=/d; /^camera_auto_detect=/d' "$CFG" 2>/dev/null || true
+		echo -e 'dtparam=i2c_arm=on\ndtparam=spi=on\ncamera_auto_detect=1' | sudo tee -a "$CFG" >/dev/null
+		echo -e "${GREEN}✓ Hardware-Schnittstellen in $CFG konfiguriert${RESET}"
+	else
+		echo -e "${GREEN}✓ Hardware-Schnittstellen bereits in $CFG konfiguriert${RESET}"
+	fi
+else
+	echo -e "${RED}✗ $CFG nicht gefunden (evtl. kein Raspberry Pi?)${RESET}"
+fi
+
+# Module laden (idempotent)
+MODULES_CONF=/etc/modules-load.d/rpi-interfaces.conf
+if [ ! -f "$MODULES_CONF" ] || ! grep -q "i2c-dev" "$MODULES_CONF"; then
+	echo 'i2c-dev
 spi-bcm2835
-spi-dev' | sudo tee /etc/modules-load.d/rpi-interfaces.conf >/dev/null
-echo -e "${GREEN}✓ Schnittstellen aktiviert${RESET}"
+spi-dev' | sudo tee "$MODULES_CONF" >/dev/null
+	echo -e "${GREEN}✓ Kernel-Module konfiguriert${RESET}"
+else
+	echo -e "${GREEN}✓ Kernel-Module bereits konfiguriert${RESET}"
+fi
 
 ###############################################################################
 # Swap 2GB
@@ -377,18 +469,25 @@ echo -e "${BLUE}Reboot empfohlen: sudo reboot${RESET}"
 echo "$(date): Setup abgeschlossen" >>setup.log
 
 ###############################################################################
-# Udev Rules für USB Devices (Pico, Lidar, Camera)
+# Udev Rules für USB Devices (Pico, Lidar, Camera) - idempotent
 ###############################################################################
 echo -e "${BLUE}[STEP] Udev Rules einrichten${RESET}"
-# Pico: Erlaubt Zugriff ohne sudo
-# Camera: Erlaubt Video-Zugriff
-# Lidar: Erlaubt Serial-Zugriff
-echo 'SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000a", MODE="0666", SYMLINK+="pico"
-KERNEL=="video*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="*", ATTRS{idProduct}=="*", MODE="0666"
-SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE="0666", SYMLINK+="lidar"' | sudo tee /etc/udev/rules.d/99-robot.rules >/dev/null
+UDEV_RULES="/etc/udev/rules.d/99-robot.rules"
 
-sudo udevadm control --reload-rules && sudo udevadm trigger
-echo -e "${GREEN}✓ Udev Rules erstellt (/etc/udev/rules.d/99-robot.rules)${RESET}"
+# Prüfen ob Rules bereits existieren
+if [ -f "$UDEV_RULES" ] && grep -q "2e8a" "$UDEV_RULES" && grep -q "10c4" "$UDEV_RULES"; then
+	echo -e "${GREEN}✓ Udev Rules bereits vorhanden${RESET}"
+else
+	# Pico: Erlaubt Zugriff ohne sudo
+	# Camera: Erlaubt Video-Zugriff
+	# Lidar: Erlaubt Serial-Zugriff
+	echo 'SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000a", MODE="0666", SYMLINK+="pico"
+KERNEL=="video*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="*", ATTRS{idProduct}=="*", MODE="0666"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE="0666", SYMLINK+="lidar"' | sudo tee "$UDEV_RULES" >/dev/null
+	
+	sudo udevadm control --reload-rules && sudo udevadm trigger
+	echo -e "${GREEN}✓ Udev Rules erstellt: $UDEV_RULES${RESET}"
+fi
 
 ###############################################################################
 # Micro-ROS Agent (Docker)
@@ -505,31 +604,87 @@ else
 fi
 
 # --- Picotool Installation nur, wenn nicht vorhanden ---
+# Prüfe verschiedene mögliche Installationsorte
+PICOTOOL_FOUND=0
+PICOTOOL_LOCATION=""
+
+# 1. Prüfe ob picotool im PATH ist
 if command -v picotool >/dev/null 2>&1; then
-	echo -e "${GREEN}✓ Picotool bereits installiert: $(command -v picotool)${RESET}"
+	PICOTOOL_FOUND=1
+	PICOTOOL_LOCATION=$(command -v picotool)
+# 2. Prüfe ~/.local/bin (häufigster manueller Installationsort)
+elif [ -f "$HOME/.local/bin/picotool" ] && [ -x "$HOME/.local/bin/picotool" ]; then
+	PICOTOOL_FOUND=1
+	PICOTOOL_LOCATION="$HOME/.local/bin/picotool"
+# 3. Prüfe /usr/local/bin (systemweite Installation)
+elif [ -f "/usr/local/bin/picotool" ] && [ -x "/usr/local/bin/picotool" ]; then
+	PICOTOOL_FOUND=1
+	PICOTOOL_LOCATION="/usr/local/bin/picotool"
+fi
+
+if [ $PICOTOOL_FOUND -eq 1 ]; then
+	echo -e "${GREEN}✓ Picotool bereits installiert: $PICOTOOL_LOCATION${RESET}"
 	PICOTOOL_INSTALLED=1
-else
-	TMP_DIR=$(mktemp -d)
-	echo -e "${BLUE}[STEP] Picotool wird gebaut und installiert${RESET}"
-	# Klonen
-	if git clone --branch "$PICOTOOL_VERSION" --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_DIR/picotool"; then
-		# Build
-		cmake -S "$TMP_DIR/picotool" -B "$TMP_DIR/build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DPICO_SDK_PATH="$PICO_SDK_PATH"
-		cmake --build "$TMP_DIR/build" --target picotool
-		PICOTOOL_BIN="$TMP_DIR/build/picotool"
-		[ -f "$PICOTOOL_BIN" ] || PICOTOOL_BIN="$TMP_DIR/build/tools/picotool/picotool"
-		if [ -f "$PICOTOOL_BIN" ]; then
-			mkdir -p "$HOME/.local/bin"
-			install -m755 "$PICOTOOL_BIN" "$HOME/.local/bin/picotool"
-			echo -e "${GREEN}✓ Picotool installiert: $HOME/.local/bin/picotool${RESET}"
-			PICOTOOL_INSTALLED=1
-		else
-			echo -e "${RED}✗ Picotool Build fehlgeschlagen${RESET}"
-		fi
-	else
-		echo -e "${RED}✗ Picotool konnte nicht geklont werden${RESET}"
+	# Stelle sicher, dass es im PATH ist
+	if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+		export PATH="$HOME/.local/bin:$PATH"
 	fi
-	rm -rf "$TMP_DIR"
+else
+	# Picotool muss gebaut werden
+	if [ "$SKIP_PICOTOOL" -eq 1 ] || [ "$SDK_INSTALLED" -eq 0 ]; then
+		echo -e "${BLUE}Überspringe Picotool-Installation (Pico SDK nicht verfügbar)${RESET}"
+	else
+		TMP_DIR=$(mktemp -d)
+		echo -e "${BLUE}[STEP] Picotool wird gebaut und installiert${RESET}"
+		
+		# Klonen mit Fehlerbehandlung
+		if git clone --branch "$PICOTOOL_VERSION" --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_DIR/picotool" 2>/dev/null; then
+			log "✓ Picotool $PICOTOOL_VERSION geklont"
+		elif git clone --depth 1 https://github.com/raspberrypi/picotool.git "$TMP_DIR/picotool" 2>/dev/null; then
+			log "✓ Neueste Picotool-Version geklont (Version $PICOTOOL_VERSION nicht verfügbar)"
+		else
+			log_warn "✗ Picotool konnte nicht geklont werden"
+			record_failure "Picotool git clone fehlgeschlagen"
+			rm -rf "$TMP_DIR"
+			PICOTOOL_INSTALLED=0
+		fi
+		
+		# Build nur wenn Klonen erfolgreich war
+		if [ -d "$TMP_DIR/picotool" ]; then
+			if cmake -S "$TMP_DIR/picotool" -B "$TMP_DIR/build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DPICO_SDK_PATH="$PICO_SDK_PATH" 2>&1 | tee -a command.log; then
+				if cmake --build "$TMP_DIR/build" --target picotool 2>&1 | tee -a command.log; then
+					# Finde die Binary (verschiedene mögliche Pfade)
+					PICOTOOL_BIN=""
+					for possible_path in "$TMP_DIR/build/picotool" "$TMP_DIR/build/tools/picotool/picotool"; do
+						if [ -f "$possible_path" ] && [ -x "$possible_path" ]; then
+							PICOTOOL_BIN="$possible_path"
+							break
+						fi
+					done
+					
+					if [ -n "$PICOTOOL_BIN" ]; then
+						mkdir -p "$HOME/.local/bin"
+						install -m755 "$PICOTOOL_BIN" "$HOME/.local/bin/picotool"
+						echo -e "${GREEN}✓ Picotool installiert: $HOME/.local/bin/picotool${RESET}"
+						PICOTOOL_INSTALLED=1
+					else
+						echo -e "${RED}✗ Picotool Binary nicht gefunden nach Build${RESET}"
+						record_failure "Picotool Binary nicht gefunden"
+						PICOTOOL_INSTALLED=0
+					fi
+				else
+					echo -e "${RED}✗ Picotool Build fehlgeschlagen${RESET}"
+					record_failure "Picotool cmake build fehlgeschlagen"
+					PICOTOOL_INSTALLED=0
+				fi
+			else
+				echo -e "${RED}✗ Picotool CMake-Konfiguration fehlgeschlagen${RESET}"
+				record_failure "Picotool cmake configure fehlgeschlagen"
+				PICOTOOL_INSTALLED=0
+			fi
+			rm -rf "$TMP_DIR"
+		fi
+	fi
 fi
 
 if [ "$PICOTOOL_INSTALLED" -eq 1 ]; then
