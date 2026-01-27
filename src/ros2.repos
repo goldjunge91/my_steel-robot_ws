@@ -71,7 +71,7 @@ repositories:
     type: git
     url: https://github.com/goldjunge91/robot_firmware.git
     version: main
-robot_dashboard:
-    type: git
-    url: https://github.com/goldjunge91/robot_dashboard.git
-    version: main
+  robot_dashboard:
+      type: git
+      url: https://github.com/goldjunge91/robot_dashboard.git
+      version: main
