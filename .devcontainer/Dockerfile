@@ -19,6 +19,9 @@ RUN apt-get update \
     gettext-base \
     git-core \
     openssh-client \
+    wget \
+    curl \
+    ca-certificates \
     python3-argcomplete \
     python3-colcon-common-extensions \
     python3-pip \

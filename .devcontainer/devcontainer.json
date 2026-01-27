@@ -3,7 +3,7 @@
 	"dockerFile": "Dockerfile",
 	"context": "..",
 	"build": {
-		"platform": "linux/arm64",
+		// "platform": "linux/arm64",
 		"args": {
 			"WORKSPACE": "${containerWorkspaceFolder}"
 		}
