@@ -216,21 +216,6 @@ vcs pull src
 vcs custom src --args checkout humble
 ```
 
-### Git Submodules for Libraries (lib/)
-
-- **What**: External libraries that need exact versions
-- **Why**: Precise version control, important for firmware builds
-- **How**: Traditional git submodules with `lib/lib_repos.repos` as reference
-
-```yaml
-# lib/lib_repos.repos example
-repositories:
-  FreeRTOS-Kernel:
-    type: git
-    url: https://github.com/FreeRTOS/FreeRTOS-Kernel
-    version: V10.6.2  # Exact tag version
-```
-
 **Commands:**
 
 ```bash
@@ -262,6 +247,7 @@ my_steel-robot_ws/
 ├── src/                    # ROS2 Packages → VCS managed
 │   ├── robot/             # Your packages, frequent updates
 │   ├── robot_bringup/     # Development branches (humble/main)
+│   ├── .....
 │   └── ros2.repos         # VCS configuration
 ├── lib/                   # External Libraries → Git Submodules  
 │   ├── FreeRTOS-Kernel/  # Stable versions, exact tags

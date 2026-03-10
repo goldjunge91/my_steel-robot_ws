@@ -1,11 +1,9 @@
-```text
 # my_steel Robot — Architektur, Packages & Verantwortlichkeiten
 Ziel: Husarion‑ähnliche Gliederung für deinen omnidirektionalen ROS2‑Roboter (Mecanum, SBC = Raspberry Pi 4B / Jetson Nano; Digital board = Raspberry Pi Pico / STM32; Remote PC = Entwicklung / UI).
 
 Empfohlener Root: goldjunge91/my_steel-robot_ws (root workspace)
-```
 
-```markdown
+
 # Paket‑Matrix (Kurzbeschreibung, Rollen & Verantwortlichkeiten)
 
 | Package (folder)     | Typ / Rolle            | Läuft auf      | Haupt‑Artefakte / Nodes                                  | Publishes / Subscribes (Beispiele)                  | Key files / Notes (Wichtig für Doku)                                |
@@ -56,8 +54,7 @@ Empfohlener Root: goldjunge91/my_steel-robot_ws (root workspace)
 
 ----------------------------------------
 5) Deployment & Workflow
-- Empfehlung:
-  - Firmware in eigenem Repo (robot_firmware) mit eigener CI (PlatformIO build).
+  - Firmware in eigenem Repo (goldjunge91/my_steel-robot_firmware)
   - Workspace nutzt `ros2.repos` für `vcs import` → einfach reproduzierbar.
   - Entwicklung Flow:
     1. Firmware build & flash (robot_firmware)
@@ -67,21 +64,7 @@ Empfohlener Root: goldjunge91/my_steel-robot_ws (root workspace)
     5. Visualisiere per Foxglove/RViz
 
 ----------------------------------------
-6) Dateien die du erstellen / pflegen musst (Priorität)
-- configs:
-  - robot_controllers/config/my_steel/mecanum_drive_controller.yaml
-  - robot_controllers/config/my_steel/diff_drive_controller.yaml
-  - robot_hardware/config/ros2_control_params.yaml
-- urdf/xacro:
-  - robot_description/urdf/my_steel.urdf.xacro (mit ros2_control Block)
-- bringup:
-  - robot_bringup/launch/bringup.launch.py (Param: drive_type, microros, serial_port)
-- firmware:
-  - robot_firmware/docs/PINMAP.md (Pinmap authoritative)
-  - flashing scripts in robot_utils/scripts/
-
-----------------------------------------
-7) Empfehlungen & Best Practices
+6) Empfehlungen & Best Practices
 - Halte joint names und interface‑Namen synchron zwischen URDF, controller YAML und hardware interface.
 - Teste zuerst in Simulation (robot_sim).
 - Nutze den vorhandenen mecanum_drive_controller (ros2_controllers) statt eigener Implementationen, wenn möglich.
@@ -89,10 +72,9 @@ Empfohlener Root: goldjunge91/my_steel-robot_ws (root workspace)
 - Dokumentation: PINMAP.md ist Single Source of Truth für Pinbelegung; halte Firmware und docs synchron.
 
 ----------------------------------------
-8) Quick Checkliste zum Portieren / Finalisieren (Dokumentation)
+7) Quick Checkliste zum Portieren / Finalisieren (Dokumentation)
 - [ ] PINMAP.md fertig und in firmware/docs referenziert
 - [ ] controller YAMLs (mecanum + diff) vorhanden und in ros2_control params referenziert
 - [ ] bringup.launch.py akzeptiert drive_type und lädt passende controller configs
 - [ ] robot_hardware dokumentiert: Serial/USB Protokoll, expected topics/services, param list
 - [ ] ros2.repos aktualisiert mit allen neuen/umbenannten Repos
-```

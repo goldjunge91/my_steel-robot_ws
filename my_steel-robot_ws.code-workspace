@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.inc": "cpp",
+			"*.repos": "yaml",
+			"*.world": "xml",
+			"*.xacro": "xml"
+		},
+		"git.ignoreLimitWarning": true,
+		"ros.distro": "humble",
+		"ROS2.autoShowOutputChannel": true,
+		"ROS2.distro": "humble"
+	}
+}
